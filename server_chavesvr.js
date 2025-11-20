@@ -7,42 +7,10 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Caminho do banco: em produção (Render) usa /data, local usa arquivo na pasta
-const fs = require("fs");
-
 const isRender = !!process.env.RENDER;
-let dbPath;
-
-if (isRender) {
-  const dataDir = "/data";
-
-  try {
-    if (!fs.existsSync(dataDir)) {
-      fs.mkdirSync(dataDir);
-      console.log("Pasta /data criada com sucesso.");
-    }
-  } catch (err) {
-    console.error("Erro ao criar pasta /data:", err);
-  }
-
-  dbPath = path.join(dataDir, "chavesvr.db");
-} else {
-  dbPath = path.join(__dirname, "chavesvr.db");
-}
-console.log("Usando banco de dados em:", dbPath);
-
-// Se estiver no Render, usa /data e cria a pasta se não existir
-if (isRender) {
-  const fs = require("fs");
-  const dataDir = "/data";
-
-  if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir);
-  }
-
-  dbPath = path.join(dataDir, "chavesvr.db");
-} else {
-  dbPath = path.join(__dirname, "chavesvr.db");
-}
+const dbPath = isRender
+  ? "/data/chavesvr.db"
+  : path.join(__dirname, "chavesvr.db");
 
 console.log("Usando banco de dados em:", dbPath);
 
@@ -438,6 +406,3 @@ app.get("/", (req, res) => {
 app.listen(PORT, () => {
   console.log(`ChavesVR rodando na porta ${PORT}`);
 });
-
-
-
