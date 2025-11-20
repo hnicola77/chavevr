@@ -28,8 +28,7 @@ if (isRender) {
 } else {
   dbPath = path.join(__dirname, "chavesvr.db");
 }
-const isRender = !!process.env.RENDER;
-let dbPath;
+console.log("Usando banco de dados em:", dbPath);
 
 // Se estiver no Render, usa /data e cria a pasta se não existir
 if (isRender) {
@@ -439,5 +438,6 @@ app.get("/", (req, res) => {
 app.listen(PORT, () => {
   console.log(`ChavesVR rodando na porta ${PORT}`);
 });
+
 
 
