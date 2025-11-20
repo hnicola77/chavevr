@@ -11,6 +11,22 @@ const isRender = !!process.env.RENDER;
 const dbPath = isRender
   ? "/data/chavesvr.db"
   : path.join(__dirname, "chavesvr.db");
+const isRender = !!process.env.RENDER;
+let dbPath;
+
+// Se estiver no Render, usa /data e cria a pasta se não existir
+if (isRender) {
+  const fs = require("fs");
+  const dataDir = "/data";
+
+  if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir);
+  }
+
+  dbPath = path.join(dataDir, "chavesvr.db");
+} else {
+  dbPath = path.join(__dirname, "chavesvr.db");
+}
 
 console.log("Usando banco de dados em:", dbPath);
 
@@ -406,3 +422,4 @@ app.get("/", (req, res) => {
 app.listen(PORT, () => {
   console.log(`ChavesVR rodando na porta ${PORT}`);
 });
+
