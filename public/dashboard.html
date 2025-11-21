@@ -1,53 +1,66 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<title>ChavesVR - Dashboard</title>
-<link rel="stylesheet" href="/styles.css">
-<link rel="stylesheet" href="/chavevr/estilos.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - ChaveVR</title>
+    <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
 
-<div class="topbar">
-  <h1>ChavesVR – Dashboard</h1>
-</div>
+<header>
+    <h1>Dashboard</h1>
+    <nav>
+        <a href="/index.html">Início</a>
+        <a href="/dashboard.html" class="active">Dashboard</a>
+        <a href="/cadastro.html">Cadastrar</a>
+    </nav>
+</header>
 
-<a href="/" class="btn-voltar-portal">🔙 Voltar ao Portal</a>
-<a href="/chavevr/cadastro.html" class="btn primary">+ Cadastrar Unidades</a>
+<main class="container">
 
-<h3>Selecione o Empreendimento</h3>
-<select id="dashEmpreendimento"></select>
-<button id="btnReloadDash" class="btn primary">Atualizar</button>
+    <h2>Resumo das Unidades</h2>
 
-<p id="dashEmptyMessage"></p>
+    <div class="cards">
+        <div class="card">
+            <h3>Total</h3>
+            <p id="totalUnidades">0</p>
+        </div>
 
-<div id="dashContent" class="hidden">
+        <div class="card">
+            <h3>Pendentes</h3>
+            <p id="pendentes">0</p>
+        </div>
 
-  <div class="resumo-horizontal">
-    <div>Total: <span id="dashTotalUnidades"></span></div>
-    <div>Liberado: <span id="dashLiberado"></span></div>
-    <div>Aprovado: <span id="dashAprovado"></span></div>
-    <div>Pendentes: <span id="dashPendentes"></span></div>
-    <div>Habitável: <span id="dashHabitavelSim"></span></div>
-    <div>Chaves: <span id="dashChavesSim"></span></div>
-  </div>
+        <div class="card">
+            <h3>Liberadas</h3>
+            <p id="liberadas">0</p>
+        </div>
 
-  <h3>Unidades do Empreendimento</h3>
+        <div class="card">
+            <h3>Bloqueadas</h3>
+            <p id="bloqueadas">0</p>
+        </div>
+    </div>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Empreendimento</th><th>Bloco</th><th>Unidade</th><th>Pavimento</th>
-        <th>Situação</th><th>Status Financeiro</th><th>Habitável</th>
-        <th>Chaves</th><th>CVCO</th><th>Motivo</th>
-        <th>Agenda</th><th>Liberação</th><th>Observação</th>
-      </tr>
-    </thead>
-    <tbody id="dashTabelaCompleta"></tbody>
-  </table>
+    <section>
+        <h2>Lista Completa</h2>
+        <table id="tableUnidades">
+            <thead>
+                <tr>
+                    <th>Unidade</th>
+                    <th>Empreendimento</th>
+                    <th>Status</th>
+                    <th>Observação</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </section>
 
-</div>
+</main>
 
 <script src="/chavesvr.js"></script>
+
 </body>
 </html>
