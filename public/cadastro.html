@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>ChavesVR - Cadastro</title>
+<link rel="stylesheet" href="/styles.css">
+<link rel="stylesheet" href="/chavevr/estilos.css">
+</head>
+<body>
+
+<div class="topbar">
+  <h1>ChavesVR – Cadastro de Unidades</h1>
+</div>
+
+<a href="/" class="btn-voltar-portal">🔙 Voltar ao Portal</a>
+<a href="/chavevr/dashboard.html" class="btn">← Voltar ao Dashboard</a>
+
+<h3>Selecione o Empreendimento</h3>
+<input id="filterEmpreendimento" placeholder="Empreendimento" />
+
+<div class="filtros">
+  <input id="filterBloco" placeholder="Bloco">
+  <input id="filterUnidade" placeholder="Unidade">
+
+  <select id="filterSituacao">
+    <option value="">Situação</option>
+    <option>EM OBRA</option>
+    <option>AJUSTES CLIENTE</option>
+    <option>LIBERADO</option>
+    <option>APROVADO</option>
+  </select>
+
+  <select id="filterChavesEntregues">
+    <option value="">Chaves?</option>
+    <option value="SIM">SIM</option>
+    <option value="NÃO">NÃO</option>
+  </select>
+
+  <select id="filterHabitavel">
+    <option value="">Habitável?</option>
+    <option value="SIM">SIM</option>
+    <option>NÃO</option>
+  </select>
+
+  <button id="btnAplicarFiltros" class="btn primary">Aplicar</button>
+  <button id="btnLimparFiltros" class="btn">Limpar</button>
+  <button id="btnAddLinha" class="btn primary">+ Adicionar Unidade</button>
+  <button id="btnExportar" class="btn">Exportar CSV</button>
+</div>
+
+<p id="emptyMessage" class="hidden">Nenhuma unidade encontrada.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Empreendimento</th><th>Bloco</th><th>Unidade</th><th>Pavimento</th>
+      <th>Situação</th><th>Status Financeiro</th><th>Habitável</th>
+      <th>Chaves</th><th>CVCO</th><th>Motivo</th>
+      <th>Agenda</th><th>Liberação</th><th>Observação</th><th>Ações</th>
+    </tr>
+  </thead>
+  <tbody id="tabelaEntregas"></tbody>
+</table>
+
+<div id="modal" class="modal hidden">
+  <div class="modal-content">
+    <h2 id="tituloModal"></h2>
+
+    <label>Empreendimento</label><input id="empreendimento">
+    <label>Bloco</label><input id="bloco">
+    <label>Unidade</label><input id="unidade">
+    <label>Pavimento</label><input id="pavimento">
+    <label>Situação</label><select id="situacao">
+      <option value="">Selecione</option>
+      <option>EM OBRA</option>
+      <option>AJUSTES CLIENTE</option>
+      <option>LIBERADO</option>
+      <option>APROVADO</option>
+    </select>
+
+    <label>Status Financeiro</label><select id="statusFinanceiro">
+      <option value="">Selecione</option>
+      <option>Liberado</option>
+      <option>Bloqueado</option>
+    </select>
+
+    <label>Agendado</label><input id="agendado">
+    <label>Agenda Vistoria</label><input type="date" id="agendaVistoriaData">
+    <input type="time" id="agendaVistoriaHora">
+
+    <label>Habitável</label><select id="habitavel">
+      <option value="">Selecione</option>
+      <option>SIM</option><option>NÃO</option>
+    </select>
+
+    <label>Chaves Entregues</label><select id="chavesEntregues">
+      <option value="">Selecione</option>
+      <option>SIM</option><option>NÃO</option>
+    </select>
+
+    <label>CVCO</label><select id="cvco">
+      <option value="">Selecione</option>
+      <option>SIM</option><option>NÃO</option>
+    </select>
+
+    <label id="labelMotivo">Motivo</label>
+    <input id="motivo">
+
+    <label>Data Liberação Vistoria</label>
+    <input type="date" id="dataLiberacaoVistoria">
+
+    <label>Observação</label><textarea id="observacao"></textarea>
+
+    <button id="btnSalvar" class="btn primary">Salvar</button>
+    <button id="btnCancelar" class="btn">Cancelar</button>
+  </div>
+</div>
+
+<script src="/chavevr/chavesvr.js"></script>
+</body>
+</html>

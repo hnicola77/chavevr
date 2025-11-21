@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChavesVR – Controle de Entrega de Unidades</title>
+
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/chavevr/estilos.css">
+</head>
+<body>
+
+<div class="topbar">
+  <h1>ChavesVR – Controle de Entrega de Unidades</h1>
+</div>
+
+<a href="/" class="btn-voltar-portal">🔙 Voltar ao Portal</a>
+
+<div class="tabs">
+  <button id="tabDashboard" class="tab active">Dashboard</button>
+  <button id="tabCadastro" class="tab">Cadastro / Atualizações</button>
+</div>
+
+<!-- ======================
+     DASHBOARD
+     ====================== -->
+<div id="dashboardView">
+
+  <label>Empreendimento</label>
+  <select id="dashEmpreendimento"></select>
+  <button id="btnReloadDash" class="btn primary">Atualizar</button>
+
+  <p id="dashEmptyMessage"></p>
+
+  <div id="dashContent" class="hidden">
+
+    <h3>Resumo</h3>
+
+    <div id="dashboardResumo" class="resumo-boxes">
+      <div class="box">Total: <span id="dashTotalUnidades"></span></div>
+      <div class="box">Liberado: <span id="dashLiberado"></span></div>
+      <div class="box">Aprovado: <span id="dashAprovado"></span></div>
+      <div class="box">Pendentes: <span id="dashPendentes"></span></div>
+      <div class="box">Chaves SIM: <span id="dashChavesSim"></span></div>
+      <div class="box">Habitável SIM: <span id="dashHabitavelSim"></span></div>
+    </div>
+
+    <h3>Situação por Tipo</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Situação</th>
+          <th>Total</th>
+        </tr>
+      </thead>
+      <tbody id="dashTabelaSituacao"></tbody>
+    </table>
+
+  </div>
+</div>
+
+<!-- ======================
+     CADASTRO
+     ====================== -->
+<div id="cadastroView" class="hidden">
+
+  <div class="filtros">
+    <input id="filterEmpreendimento" placeholder="Empreendimento"/>
+    <input id="filterBloco" placeholder="Bloco"/>
+    <input id="filterUnidade" placeholder="Unidade"/>
+
+    <select id="filterSituacao">
+      <option value="">Situação</option>
+      <option>EM OBRA</option>
+      <option>AJUSTES CLIENTE</option>
+      <option>LIBERADO</option>
+      <option>APROVADO</option>
+    </select>
+
+    <select id="filterChavesEntregues">
+      <option value="">Chaves?</option>
+      <option value="SIM">SIM</option>
+      <option value="NÃO">NÃO</option>
+    </select>
+
+    <select id="filterHabitavel">
+      <option value="">Habitável?</option>
+      <option value="SIM">SIM</option>
+      <option value="NÃO">NÃO</option>
+    </select>
+
+    <button id="btnAplicarFiltros" class="btn primary">Aplicar</button>
+    <button id="btnLimparFiltros" class="btn">Limpar</button>
+    <button id="btnAddLinha" class="btn primary">+ Adicionar Unidade</button>
+    <button id="btnExportar" class="btn">Exportar CSV</button>
+  </div>
+
+  <p id="emptyMessage" class="hidden">Nenhuma unidade encontrada.</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Empreendimento</th>
+        <th>Bloco</th>
+        <th>Unidade</th>
+        <th>Pavimento</th>
+        <th>Situação</th>
+        <th>Status Financeiro</th>
+        <th>Habitável</th>
+        <th>Chaves</th>
+        <th>CVCO</th>
+        <th>Motivo</th>
+        <th>Agenda Vistoria</th>
+        <th>Data Lib.</th>
+        <th>Obs</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody id="tabelaEntregas"></tbody>
+  </table>
+
+</div>
+
+<!-- Modal -->
+<div id="modal" class="modal hidden">
+  <div class="modal-content">
+
+    <h2 id="tituloModal"></h2>
+
+    <label>Empreendimento</label>
+    <input id="empreendimento"/>
+
+    <label>Bloco</label>
+    <input id="bloco"/>
+
+    <label>Unidade</label>
+    <input id="unidade"/>
+
+    <label>Pavimento</label>
+    <input id="pavimento"/>
+
+    <label>Situação</label>
+    <select id="situacao">
+      <option value="">Selecione</option>
+      <option>EM OBRA</option>
+      <option>AJUSTES CLIENTE</option>
+      <option>LIBERADO</option>
+      <option>APROVADO</option>
+    </select>
+
+    <label>Status Financeiro</label>
+    <select id="statusFinanceiro">
+      <option value="">Selecione</option>
+      <option>Liberado</option>
+      <option>Bloqueado</option>
+    </select>
+
+    <label>Agendado</label>
+    <input id="agendado"/>
+
+    <label>Agenda Vistoria</label>
+    <input id="agendaVistoriaData" type="date"/>
+    <input id="agendaVistoriaHora" type="time"/>
+
+    <label>Habitável</label>
+    <select id="habitavel">
+      <option value="">Selecione</option>
+      <option>SIM</option>
+      <option>NÃO</option>
+    </select>
+
+    <label>Chaves Entregues</label>
+    <select id="chavesEntregues">
+      <option value="">Selecione</option>
+      <option>SIM</option>
+      <option>NÃO</option>
+    </select>
+
+    <label>CVCO</label>
+    <select id="cvco">
+      <option value="">Selecione</option>
+      <option>SIM</option>
+      <option>NÃO</option>
+    </select>
+
+    <label id="labelMotivo">Motivo (obrigatório se não estiver LIBERADO/APROVADO)</label>
+    <input id="motivo"/>
+
+    <label>Data Liberação</label>
+    <input id="dataLiberacaoVistoria" type="date"/>
+
+    <label>Observação</label>
+    <textarea id="observacao"></textarea>
+
+    <button id="btnSalvar" class="btn primary">Salvar</button>
+    <button id="btnCancelar" class="btn">Cancelar</button>
+  </div>
+</div>
+
+<script src="/chavevr/chavesvr.js"></script>
+
+</body>
+</html>

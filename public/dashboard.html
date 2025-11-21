@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>ChavesVR - Dashboard</title>
+<link rel="stylesheet" href="/styles.css">
+<link rel="stylesheet" href="/chavevr/estilos.css">
+</head>
+<body>
+
+<div class="topbar">
+  <h1>ChavesVR – Dashboard</h1>
+</div>
+
+<a href="/" class="btn-voltar-portal">🔙 Voltar ao Portal</a>
+<a href="/chavevr/cadastro.html" class="btn primary">+ Cadastrar Unidades</a>
+
+<h3>Selecione o Empreendimento</h3>
+<select id="dashEmpreendimento"></select>
+<button id="btnReloadDash" class="btn primary">Atualizar</button>
+
+<p id="dashEmptyMessage"></p>
+
+<div id="dashContent" class="hidden">
+
+  <div class="resumo-horizontal">
+    <div>Total: <span id="dashTotalUnidades"></span></div>
+    <div>Liberado: <span id="dashLiberado"></span></div>
+    <div>Aprovado: <span id="dashAprovado"></span></div>
+    <div>Pendentes: <span id="dashPendentes"></span></div>
+    <div>Habitável: <span id="dashHabitavelSim"></span></div>
+    <div>Chaves: <span id="dashChavesSim"></span></div>
+  </div>
+
+  <h3>Unidades do Empreendimento</h3>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Empreendimento</th><th>Bloco</th><th>Unidade</th><th>Pavimento</th>
+        <th>Situação</th><th>Status Financeiro</th><th>Habitável</th>
+        <th>Chaves</th><th>CVCO</th><th>Motivo</th>
+        <th>Agenda</th><th>Liberação</th><th>Observação</th>
+      </tr>
+    </thead>
+    <tbody id="dashTabelaCompleta"></tbody>
+  </table>
+
+</div>
+
+<script src="/chavevr/chavesvr.js"></script>
+</body>
+</html>
