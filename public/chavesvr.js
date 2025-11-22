@@ -1,33 +1,41 @@
 // =====================================================
-// CHAVEVR - FRONTEND FINAL (Dashboard + Cadastro + Edição)
+// CHAVEVR - FRONTEND COMPLETO
+// Dashboard + Empreendimentos + Unidades
 // =====================================================
 
 let todasUnidades = [];
 let unidadeEmEdicaoId = null;
 
+let empreendimentos = [];
+let empreendimentoEmEdicaoId = null;
+let empreendimentoSelecionado = null;
+
 // -----------------------------
-// Utilitários
+// Helpers
 // -----------------------------
 function lerValor(id) {
     const el = document.getElementById(id);
     return el ? el.value.trim() : "";
 }
-
-function setValor(id, valor) {
+function setValor(id, v) {
     const el = document.getElementById(id);
-    if (el) el.value = valor || "";
+    if (el) el.value = v || "";
 }
 
-// -----------------------------
+// =====================================================
 // CARREGAR DADOS DO SERVIDOR
-// -----------------------------
+// =====================================================
+
 async function carregarUnidadesDoServidor() {
     const resp = await fetch("/unidades");
-    if (!resp.ok) {
-        throw new Error("Erro ao buscar unidades no servidor.");
-    }
+    if (!resp.ok) throw new Error("Erro ao buscar unidades");
     todasUnidades = await resp.json();
-    console.log("Unidades carregadas:", todasUnidades);
+}
+
+async function carregarEmpreendimentosDoServidor() {
+    const resp = await fetch("/empreendimentos");
+    if (!resp.ok) throw new Error("Erro ao buscar empreendimentos");
+    empreendimentos = await resp.json();
 }
 
 // =====================================================
@@ -36,35 +44,27 @@ async function carregarUnidadesDoServidor() {
 
 function preencherSelectEmpreendimentoDashboard() {
     const select = document.getElementById("filtro-empreendimento");
-    if (!select || !todasUnidades.length) return;
+    if (!select) return;
 
-    const unicos = [...new Set(
-        todasUnidades
-            .map(u => u.empreendimento)
-            .filter(emp => emp && emp !== "")
-    )].sort();
-
-    select.innerHTML = `<option value="">Selecione o Empreendimento</option>`;
-    unicos.forEach(emp => {
+    const nomes = [...new Set(todasUnidades.map(u => u.empreendimento).filter(Boolean))].sort();
+    select.innerHTML = `<option value="">Empreendimento</option>`;
+    nomes.forEach(n => {
         const opt = document.createElement("option");
-        opt.value = emp;
-        opt.textContent = emp;
+        opt.value = n;
+        opt.textContent = n;
         select.appendChild(opt);
     });
 }
 
 function atualizarCards(lista) {
     const total = lista.length;
-    const pendentes   = lista.filter(u => u.situacao === "Pendente").length;
-    const liberadas   = lista.filter(u => u.situacao === "Liberada").length;
-    const reprovadas  = lista.filter(u => u.situacao === "Reprovada").length;
-    const chavesEnt   = lista.filter(u => u.chaves === "Sim" || u.chaves === "Entregue").length;
-    const cvcoLib     = lista.filter(u => u.cvco === "Sim" || u.cvco === "Liberado").length;
+    const pendentes = lista.filter(u => u.situacao === "Pendente").length;
+    const liberadas = lista.filter(u => u.situacao === "Liberada").length;
+    const reprovadas = lista.filter(u => u.situacao === "Reprovada").length;
+    const chavesEnt = lista.filter(u => u.chaves === "Entregue" || u.chaves === "Sim").length;
+    const cvcoLib   = lista.filter(u => u.cvco === "Liberado" || u.cvco === "Sim").length;
 
-    const setText = (id, val) => {
-        const el = document.getElementById(id);
-        if (el) el.textContent = val;
-    };
+    const setText = (id,val) => { const e=document.getElementById(id); if (e) e.textContent = val; };
 
     setText("card-total", total);
     setText("card-pendentes", pendentes);
@@ -79,11 +79,10 @@ function preencherTabelaDashboard(lista) {
     if (!tbody) return;
 
     tbody.innerHTML = "";
-
     if (!lista.length) {
         const tr = document.createElement("tr");
         const td = document.createElement("td");
-        td.colSpan = 15;
+        td.colSpan = 14;
         td.textContent = "Nenhuma unidade encontrada.";
         tr.appendChild(td);
         tbody.appendChild(tr);
@@ -107,7 +106,6 @@ function preencherTabelaDashboard(lista) {
             <td>${u.dataLiberacao || ""}</td>
             <td>${u.agendadoPor || ""}</td>
             <td>${u.observacao || ""}</td>
-            <td>-</td>
         `;
         tbody.appendChild(tr);
     });
@@ -116,36 +114,24 @@ function preencherTabelaDashboard(lista) {
 function aplicarFiltrosDashboard() {
     if (!todasUnidades.length) return;
 
-    const empSel     = lerValor("filtro-empreendimento");
-    const sitSel     = lerValor("filtro-situacao");
-    const statusSel  = lerValor("filtro-status-financeiro");
-    const cvcoSel    = lerValor("filtro-cvco");
-    const habiteSel  = lerValor("filtro-habitese");
-    const dataVisSel = lerValor("filtro-data-vistoria");
+    const emp  = lerValor("filtro-empreendimento");
+    const sit  = lerValor("filtro-situacao");
+    const stat = lerValor("filtro-status-financeiro");
+    const cvco = lerValor("filtro-cvco");
+    const hab  = lerValor("filtro-habitese");
+    const data = lerValor("filtro-data-vistoria");
 
-    let filtradas = [...todasUnidades];
+    let lista = [...todasUnidades];
 
-    if (empSel) {
-        filtradas = filtradas.filter(u => u.empreendimento === empSel);
-    }
-    if (sitSel) {
-        filtradas = filtradas.filter(u => u.situacao === sitSel);
-    }
-    if (statusSel) {
-        filtradas = filtradas.filter(u => u.statusFinanceiro === statusSel);
-    }
-    if (cvcoSel) {
-        filtradas = filtradas.filter(u => u.cvco === cvcoSel);
-    }
-    if (habiteSel) {
-        filtradas = filtradas.filter(u => u.habiteSe === habiteSel);
-    }
-    if (dataVisSel) {
-        filtradas = filtradas.filter(u => (u.dataVistoria || "") === dataVisSel);
-    }
+    if (emp)  lista = lista.filter(u => u.empreendimento === emp);
+    if (sit)  lista = lista.filter(u => u.situacao === sit);
+    if (stat) lista = lista.filter(u => u.statusFinanceiro === stat);
+    if (cvco) lista = lista.filter(u => u.cvco === cvco);
+    if (hab)  lista = lista.filter(u => u.habiteSe === hab);
+    if (data) lista = lista.filter(u => (u.dataVistoria || "") === data);
 
-    atualizarCards(filtradas);
-    preencherTabelaDashboard(filtradas);
+    atualizarCards(lista);
+    preencherTabelaDashboard(lista);
 }
 
 function filtrar() {
@@ -154,116 +140,170 @@ function filtrar() {
 
 async function initDashboard() {
     const tabela = document.getElementById("tabela-unidades");
-    if (!tabela) return; // não está na página de dashboard
+    if (!tabela) return;
 
     try {
         await carregarUnidadesDoServidor();
         preencherSelectEmpreendimentoDashboard();
-
-        const selEmp = document.getElementById("filtro-empreendimento");
-        if (selEmp) {
-            selEmp.addEventListener("change", aplicarFiltrosDashboard);
-        }
-
         aplicarFiltrosDashboard();
-    } catch (erro) {
-        console.error("Erro ao iniciar dashboard:", erro);
-        alert("Erro ao carregar o dashboard. Verifique o servidor.");
+    } catch (e) {
+        console.error(e);
+        alert("Erro ao carregar dashboard.");
     }
 }
 
 // =====================================================
-// CADASTRO + LISTA + EDIÇÃO
+// EMPREENDIMENTOS
 // =====================================================
 
-function preencherSelectEmpreendimentoCadastro() {
-    const select = document.getElementById("filtroEmpCad");
-    if (!select || !todasUnidades.length) return;
-
-    const unicos = [...new Set(
-        todasUnidades
-            .map(u => u.empreendimento)
-            .filter(emp => emp && emp !== "")
-    )].sort();
-
-    select.innerHTML = `<option value="">Todos os empreendimentos</option>`;
-    unicos.forEach(emp => {
-        const opt = document.createElement("option");
-        opt.value = emp;
-        opt.textContent = emp;
-        select.appendChild(opt);
-    });
+function limparFormEmpreendimento() {
+    empreendimentoEmEdicaoId = null;
+    setValor("nomeEmp", "");
+    setValor("cidadeEmp", "");
+    setValor("ufEmp", "");
+    setValor("faseEmp", "");
+    setValor("dataEntregaEmp", "");
+    setValor("codigoEmp", "");
+    setValor("obsEmp", "");
 }
 
-function atualizarListaCadastro() {
-    const tbody = document.getElementById("tabela-cadastro-unidades");
+function renderEmpreendimentos() {
+    const tbody = document.getElementById("tabela-empreendimentos");
     if (!tbody) return;
 
-    const filtroEmp = lerValor("filtroEmpCad");
-
-    let lista = [...todasUnidades];
-    if (filtroEmp) {
-        lista = lista.filter(u => u.empreendimento === filtroEmp);
-    }
-
     tbody.innerHTML = "";
-
-    if (!lista.length) {
+    if (!empreendimentos.length) {
         const tr = document.createElement("tr");
         const td = document.createElement("td");
-        td.colSpan = 15;
-        td.textContent = "Nenhuma unidade cadastrada para este filtro.";
+        td.colSpan = 6;
+        td.textContent = "Nenhum empreendimento cadastrado.";
         tr.appendChild(td);
         tbody.appendChild(tr);
         return;
     }
 
-    lista.forEach(u => {
+    empreendimentos.forEach(emp => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
-            <td>${u.id}</td>
-            <td>${u.empreendimento || ""}</td>
-            <td>${u.bloco || ""}</td>
-            <td>${u.pavimento || ""}</td>
-            <td>${u.unidade || ""}</td>
-            <td>${u.situacao || ""}</td>
-            <td>${u.statusFinanceiro || ""}</td>
-            <td>${u.habiteSe || ""}</td>
-            <td>${u.cvco || ""}</td>
-            <td>${u.chaves || ""}</td>
-            <td>${u.dataVistoria || ""}</td>
-            <td>${u.horaVistoria || ""}</td>
-            <td>${u.dataLiberacao || ""}</td>
-            <td>${u.agendadoPor || ""}</td>
-            <td>${u.observacao || ""}</td>
+            <td>${emp.id}</td>
+            <td>${emp.nome || ""}</td>
+            <td>${emp.cidade || ""}</td>
+            <td>${emp.fase || ""}</td>
+            <td>${emp.dataEntrega || ""}</td>
             <td>
-                <button type="button" onclick="editarUnidade(${u.id})">Editar</button>
+                <button class="btn-small btn-editar" onclick="editarEmpreendimento(${emp.id})">Editar</button>
+                <button class="btn-small btn-unidades" onclick="irParaUnidades(${emp.id})">Unidades</button>
             </td>
         `;
         tbody.appendChild(tr);
     });
 }
 
-function preencherFormularioCadastro(u) {
-    setValor("empreendimento", u.empreendimento);
-    setValor("bloco", u.bloco);
-    setValor("pavimento", u.pavimento);
-    setValor("unidade", u.unidade);
-    setValor("situacao", u.situacao);
-    setValor("statusFinanceiro", u.statusFinanceiro);
-    setValor("habiteSe", u.habiteSe);
-    setValor("cvco", u.cvco);
-    setValor("chaves", u.chaves);
-    setValor("dataVistoria", u.dataVistoria);
-    setValor("horaVistoria", u.horaVistoria);
-    setValor("dataLiberacao", u.dataLiberacao);
-    setValor("agendadoPor", u.agendadoPor);
-    setValor("observacao", u.observacao);
+function preencherFormEmpreendimento(emp) {
+    setValor("nomeEmp", emp.nome);
+    setValor("cidadeEmp", emp.cidade);
+    setValor("ufEmp", emp.uf);
+    setValor("faseEmp", emp.fase);
+    setValor("dataEntregaEmp", emp.dataEntrega);
+    setValor("codigoEmp", emp.codigoInterno);
+    setValor("obsEmp", emp.observacao);
 }
 
-function limparFormularioCadastro() {
+async function salvarEmpreendimento(event) {
+    event.preventDefault();
+
+    const dados = {
+        nome:          lerValor("nomeEmp"),
+        cidade:        lerValor("cidadeEmp"),
+        uf:            lerValor("ufEmp"),
+        fase:          lerValor("faseEmp"),
+        dataEntrega:   lerValor("dataEntregaEmp"),
+        codigoInterno: lerValor("codigoEmp"),
+        observacao:    lerValor("obsEmp")
+    };
+
+    if (!dados.nome) {
+        alert("Informe o nome do empreendimento.");
+        return;
+    }
+
+    const url = empreendimentoEmEdicaoId ? `/empreendimentos/${empreendimentoEmEdicaoId}` : "/empreendimentos";
+    const method = empreendimentoEmEdicaoId ? "PUT" : "POST";
+
+    const resp = await fetch(url, {
+        method,
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify(dados)
+    });
+
+    if (!resp.ok) {
+        console.error(await resp.text());
+        alert("Erro ao salvar empreendimento.");
+        return;
+    }
+
+    alert(empreendimentoEmEdicaoId ? "Empreendimento atualizado." : "Empreendimento cadastrado.");
+
+    await carregarEmpreendimentosDoServidor();
+    renderEmpreendimentos();
+    limparFormEmpreendimento();
+}
+
+function editarEmpreendimento(id) {
+    const emp = empreendimentos.find(e => e.id === id);
+    if (!emp) return;
+
+    empreendimentoEmEdicaoId = id;
+    preencherFormEmpreendimento(emp);
+    window.scrollTo({ top:0, behavior:"smooth" });
+}
+
+function irParaUnidades(id) {
+    window.location.href = `/unidades.html?empreendimentoId=${id}`;
+}
+
+async function initEmpreendimentos() {
+    const form = document.getElementById("form-empreendimento");
+    if (!form) return;
+
+    try {
+        await carregarEmpreendimentosDoServidor();
+        renderEmpreendimentos();
+
+        form.addEventListener("submit", salvarEmpreendimento);
+        const btnNovo = document.getElementById("btnNovoEmp");
+        if (btnNovo) btnNovo.addEventListener("click", limparFormEmpreendimento);
+    } catch (e) {
+        console.error(e);
+        alert("Erro ao carregar empreendimentos.");
+    }
+}
+
+// =====================================================
+// UNIDADES POR EMPREENDIMENTO
+// =====================================================
+
+function atualizarInfoEmpreendimento() {
+    const div = document.getElementById("infoEmpreendimento");
+    if (!div) return;
+
+    if (!empreendimentoSelecionado) {
+        div.style.display = "none";
+        div.innerHTML = "";
+        return;
+    }
+
+    div.style.display = "block";
+    div.innerHTML = `
+        <strong>Empreendimento:</strong> ${empreendimentoSelecionado.nome || ""}<br>
+        <strong>Cidade:</strong> ${empreendimentoSelecionado.cidade || ""} - ${empreendimentoSelecionado.uf || ""}<br>
+        <strong>Fase:</strong> ${empreendimentoSelecionado.fase || ""} • 
+        <strong>Entrega:</strong> ${empreendimentoSelecionado.dataEntrega || ""}
+    `;
+}
+
+function limparFormUnidade() {
     unidadeEmEdicaoId = null;
-    setValor("empreendimento", "");
     setValor("bloco", "");
     setValor("pavimento", "");
     setValor("unidade", "");
@@ -279,24 +319,102 @@ function limparFormularioCadastro() {
     setValor("observacao", "");
 }
 
-// função global para o onclick do botão "Editar"
-function editarUnidade(id) {
-    const u = todasUnidades.find(item => item.id === id);
-    if (!u) {
-        alert("Unidade não encontrada para edição.");
+function renderUnidadesDoEmpreendimento() {
+    const tbody = document.getElementById("tabela-unidades-empreendimento");
+    if (!tbody) return;
+
+    tbody.innerHTML = "";
+
+    if (!empreendimentoSelecionado) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 12;
+        td.textContent = "Selecione um empreendimento.";
+        tr.appendChild(td);
+        tbody.appendChild(tr);
         return;
     }
+
+    const nomeEmp = empreendimentoSelecionado.nome;
+    const lista = todasUnidades.filter(u => u.empreendimento === nomeEmp);
+
+    if (!lista.length) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 12;
+        td.textContent = "Nenhuma unidade cadastrada para este empreendimento.";
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+        return;
+    }
+
+    lista.forEach(u => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${u.id}</td>
+            <td>${u.unidade || ""}</td>
+            <td>${u.bloco || ""}</td>
+            <td>${u.pavimento || ""}</td>
+            <td>${u.situacao || ""}</td>
+            <td>${u.statusFinanceiro || ""}</td>
+            <td>${u.habiteSe || ""}</td>
+            <td>${u.cvco || ""}</td>
+            <td>${u.chaves || ""}</td>
+            <td>${u.dataVistoria || ""}</td>
+            <td>${u.dataLiberacao || ""}</td>
+            <td>
+                <button class="btn-small btn-editar" onclick="editarUnidade(${u.id})">Editar</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function preencherFormUnidade(u) {
+    setValor("bloco", u.bloco);
+    setValor("pavimento", u.pavimento);
+    setValor("unidade", u.unidade);
+    setValor("situacao", u.situacao);
+    setValor("statusFinanceiro", u.statusFinanceiro);
+    setValor("habiteSe", u.habiteSe);
+    setValor("cvco", u.cvco);
+    setValor("chaves", u.chaves);
+    setValor("dataVistoria", u.dataVistoria);
+    setValor("horaVistoria", u.horaVistoria);
+    setValor("dataLiberacao", u.dataLiberacao);
+    setValor("agendadoPor", u.agendadoPor);
+    setValor("observacao", u.observacao);
+}
+
+function editarUnidade(id) {
+    const u = todasUnidades.find(x => x.id === id);
+    if (!u) return;
+
     unidadeEmEdicaoId = id;
-    preencherFormularioCadastro(u);
+
+    if (!empreendimentoSelecionado || empreendimentoSelecionado.nome !== u.empreendimento) {
+        empreendimentoSelecionado = empreendimentos.find(e => e.nome === u.empreendimento) || null;
+        const sel = document.getElementById("selectEmpreendimento");
+        if (sel && empreendimentoSelecionado) {
+            sel.value = String(empreendimentoSelecionado.id);
+        }
+        atualizarInfoEmpreendimento();
+    }
+
+    preencherFormUnidade(u);
     window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-// salvar (novo ou edição)
-async function salvarCadastro(event) {
+async function salvarUnidade(event) {
     event.preventDefault();
 
+    if (!empreendimentoSelecionado) {
+        alert("Selecione um empreendimento primeiro.");
+        return;
+    }
+
     const dados = {
-        empreendimento:  lerValor("empreendimento"),
+        empreendimento:  empreendimentoSelecionado.nome,
         bloco:           lerValor("bloco"),
         pavimento:       lerValor("pavimento"),
         unidade:         lerValor("unidade"),
@@ -312,75 +430,101 @@ async function salvarCadastro(event) {
         observacao:      lerValor("observacao")
     };
 
-    if (!dados.empreendimento || !dados.unidade) {
-        alert("Preencha pelo menos Empreendimento e Unidade.");
+    if (!dados.unidade) {
+        alert("Informe a unidade.");
         return;
     }
 
     const url = unidadeEmEdicaoId ? `/unidades/${unidadeEmEdicaoId}` : "/unidades";
-    const metodo = unidadeEmEdicaoId ? "PUT" : "POST";
+    const method = unidadeEmEdicaoId ? "PUT" : "POST";
 
-    try {
-        const resp = await fetch(url, {
-            method: metodo,
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(dados)
-        });
+    const resp = await fetch(url, {
+        method,
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify(dados)
+    });
 
-        if (!resp.ok) {
-            console.error("Erro ao salvar:", await resp.text());
-            alert("Erro ao salvar a unidade.");
-            return;
-        }
-
-        const msg = unidadeEmEdicaoId
-            ? "Unidade atualizada com sucesso!"
-            : "Unidade cadastrada com sucesso!";
-        alert(msg);
-
-        // recarrega a lista a partir do servidor
-        await carregarUnidadesDoServidor();
-        atualizarListaCadastro();
-        atualizarCards(todasUnidades); // opcional, se quiser sincronizar dashboard
-
-        limparFormularioCadastro();
-
-    } catch (erro) {
-        console.error("Erro no envio:", erro);
-        alert("Erro de comunicação com o servidor.");
+    if (!resp.ok) {
+        console.error(await resp.text());
+        alert("Erro ao salvar unidade.");
+        return;
     }
+
+    alert(unidadeEmEdicaoId ? "Unidade atualizada." : "Unidade cadastrada.");
+
+    await carregarUnidadesDoServidor();
+    renderUnidadesDoEmpreendimento();
+    limparFormUnidade();
 }
 
-async function initCadastro() {
-    const form = document.getElementById("form-cadastro");
-    if (!form) return; // não está na página de cadastro
+function onChangeEmpreendimentoSelect() {
+    const sel = document.getElementById("selectEmpreendimento");
+    if (!sel) return;
 
-    form.addEventListener("submit", salvarCadastro);
+    const idStr = sel.value;
+    if (!idStr) {
+        empreendimentoSelecionado = null;
+        atualizarInfoEmpreendimento();
+        renderUnidadesDoEmpreendimento();
+        return;
+    }
+    const id = parseInt(idStr, 10);
+    empreendimentoSelecionado = empreendimentos.find(e => e.id === id) || null;
+    atualizarInfoEmpreendimento();
+    renderUnidadesDoEmpreendimento();
+    limparFormUnidade();
+}
+
+async function initUnidades() {
+    const form = document.getElementById("form-unidade");
+    const selEmp = document.getElementById("selectEmpreendimento");
+    if (!form || !selEmp) return;
 
     try {
+        await carregarEmpreendimentosDoServidor();
         await carregarUnidadesDoServidor();
-        preencherSelectEmpreendimentoCadastro();
-        atualizarListaCadastro();
 
-        const filtroCad = document.getElementById("filtroEmpCad");
-        if (filtroCad) {
-            filtroCad.addEventListener("change", atualizarListaCadastro);
+        // preencher select de empreendimentos
+        selEmp.innerHTML = `<option value="">Selecione...</option>`;
+        empreendimentos.forEach(emp => {
+            const opt = document.createElement("option");
+            opt.value = String(emp.id);
+            opt.textContent = emp.nome;
+            selEmp.appendChild(opt);
+        });
+
+        const params = new URLSearchParams(window.location.search);
+        const empIdParam = params.get("empreendimentoId");
+        if (empIdParam) {
+            selEmp.value = empIdParam;
+            onChangeEmpreendimentoSelect();
+        } else {
+            renderUnidadesDoEmpreendimento();
         }
 
-    } catch (erro) {
-        console.error("Erro ao iniciar cadastro:", erro);
-        alert("Erro ao carregar unidades já cadastradas.");
+        selEmp.addEventListener("change", onChangeEmpreendimentoSelect);
+        form.addEventListener("submit", salvarUnidade);
+
+        const btnNova = document.getElementById("btnNovaUnidade");
+        if (btnNova) btnNova.addEventListener("click", limparFormUnidade);
+
+    } catch (e) {
+        console.error(e);
+        alert("Erro ao carregar unidades / empreendimentos.");
     }
 }
 
 // =====================================================
-// INICIALIZAÇÃO GERAL
+// Inicialização global
 // =====================================================
 document.addEventListener("DOMContentLoaded", () => {
     initDashboard();
-    initCadastro();
+    initEmpreendimentos();
+    initUnidades();
 });
 
-// Deixar funções acessíveis no escopo global
+// Expor funções usadas em onclick
 window.filtrar = filtrar;
+window.editarEmpreendimento = editarEmpreendimento;
+window.irParaUnidades = irParaUnidades;
 window.editarUnidade = editarUnidade;
