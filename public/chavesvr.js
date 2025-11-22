@@ -11,7 +11,6 @@ const API = {
     unidadeId: (id) => `/api/unidades/${id}`
 };
 
-
 // ===============================================================
 // DASHBOARD — CARREGAR EMPREENDIMENTOS
 // ===============================================================
@@ -32,7 +31,6 @@ async function carregarEmpreendimentos() {
     });
 }
 
-
 // ===============================================================
 // DASHBOARD — QUANDO SELECIONA O EMPREENDIMENTO
 // ===============================================================
@@ -43,7 +41,6 @@ async function selecionarEmpreendimento() {
     await carregarDashboard(emp);
     await carregarTabela(emp);
 }
-
 
 // ===============================================================
 // DASHBOARD — CARDS
@@ -70,7 +67,6 @@ async function carregarDashboard(empreendimento) {
     document.getElementById("tabela-area").style.display = "block";
     document.getElementById("filtros-area").style.display = "flex";
 }
-
 
 // ===============================================================
 // DASHBOARD — TABELA
@@ -107,7 +103,6 @@ async function carregarTabela(empreendimento) {
         corpo.appendChild(tr);
     });
 }
-
 
 // ===============================================================
 // CADASTRO — SALVAR
@@ -246,3 +241,4 @@ document.addEventListener("DOMContentLoaded", () => {
     if (document.getElementById("selectEmp")) carregarEmpreendimentos();
     if (document.getElementById("btnSalvar")) carregarEdicaoSeExistir();
 });
+
