@@ -3,145 +3,217 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cadastrar Unidade</title>
+    <title>Cadastrar Unidade - ChaveVR</title>
+    <link rel="stylesheet" href="styles.css">
 
     <style>
         body {
-            background: #eef1f5;
+            font-family: Arial, sans-serif;
+            background: #f5f6fa;
             margin: 0;
             padding: 0;
-            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .top-menu {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            padding: 15px 30px;
+            background: white;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .top-menu a {
+            text-decoration: none;
             color: #333;
+            font-weight: bold;
         }
 
         .container {
-            width: 100%;
-            max-width: 600px;
-            margin: 60px auto;
-            background: #ffffff;
-            padding: 30px;
+            max-width: 900px;
+            margin: 40px auto;
+            background: white;
+            padding: 35px;
             border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.12);
         }
 
         h1 {
             text-align: center;
-            margin-bottom: 25px;
-            color: #2a2a2a;
+            color: #2c3e50;
             font-size: 26px;
+            margin-bottom: 25px;
         }
 
         label {
-            display: block;
-            font-size: 14px;
             font-weight: bold;
             margin-top: 12px;
+            display: block;
+            color: #34495e;
         }
 
         input, select, textarea {
             width: 100%;
             padding: 10px;
-            margin-top: 6px;
-            border: 1px solid #cdd4df;
             border-radius: 6px;
-            background: #f8fafc;
-            font-size: 14px;
+            border: 1px solid #ccc;
+            margin-top: 8px;
+            font-size: 15px;
         }
 
         textarea {
-            resize: none;
-            height: 80px;
+            height: 120px;
         }
 
-        .btn-area {
-            margin-top: 25px;
+        .row {
+            display: flex;
+            gap: 20px;
+        }
+
+        .row div {
+            flex: 1;
+        }
+
+        .actions {
             display: flex;
             justify-content: space-between;
+            margin-top: 25px;
         }
 
-        button {
-            padding: 10px 22px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 15px;
-            font-weight: bold;
-        }
-
-        .btn-salvar {
-            background: #1778f2;
+        .btn-primary {
+            background: #4070f4;
+            padding: 10px 25px;
             color: white;
-        }
-
-        .btn-cancelar {
-            background: #ddd;
-        }
-
-        a {
-            color: #1778f2;
+            border-radius: 6px;
             text-decoration: none;
-            font-size: 14px;
             font-weight: bold;
+            border: none;
+            cursor: pointer;
         }
 
-        .top-link {
-            margin: 20px;
-            display: block;
+        .btn-secondary {
+            background: #999;
+            padding: 10px 25px;
+            color: white;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
         }
+
     </style>
+
 </head>
 <body>
 
-    <a class="top-link" href="/index.html">← Voltar ao Dashboard</a>
-
-    <div class="container">
-        <h1>Cadastrar Nova Unidade</h1>
-
-        <label>Unidade</label>
-        <input id="unidade" type="text">
-
-        <label>Empreendimento</label>
-        <input id="empreendimento" type="text">
-
-        <label>Status</label>
-        <select id="status">
-            <option value="Pendente">Pendente</option>
-            <option value="OK">OK</option>
-            <option value="Irregular">Irregular</option>
-        </select>
-
-        <label>Observações</label>
-        <textarea id="obs"></textarea>
-
-        <div class="btn-area">
-            <button class="btn-salvar" onclick="salvarUnidade()">Salvar</button>
-            <button class="btn-cancelar" onclick="window.location.href='/index.html'">Cancelar</button>
-        </div>
+    <!-- Menu Superior -->
+    <div class="top-menu">
+        <a href="/dashboard.html">Voltar</a>
+        <a href="#">Relatório</a>
+        <a href="#">Sair</a>
     </div>
 
-    <script>
-        async function salvarUnidade() {
-            const unidade = document.getElementById("unidade").value;
-            const empreendimento = document.getElementById("empreendimento").value;
-            const status = document.getElementById("status").value;
-            const obs = document.getElementById("obs").value;
+    <div class="container">
 
-            const dados = { unidade, empreendimento, status, obs };
+        <h1>Cadastrar Nova Unidade</h1>
 
-            const resposta = await fetch("/api/unidades", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(dados)
-            });
+        <form id="form-cadastro">
 
-            if (resposta.ok) {
-                alert("Unidade cadastrada com sucesso!");
-                window.location.href = "/index.html";
-            } else {
-                alert("Erro ao salvar unidade.");
-            }
-        }
-    </script>
+            <label>Empreendimento</label>
+            <input type="text" id="empreendimento" required>
+
+            <div class="row">
+                <div>
+                    <label>Bloco</label>
+                    <input type="text" id="bloco">
+                </div>
+
+                <div>
+                    <label>Pavimento</label>
+                    <input type="text" id="pavimento">
+                </div>
+
+                <div>
+                    <label>Unidade</label>
+                    <input type="text" id="unidade" required>
+                </div>
+            </div>
+
+            <div class="row">
+                <div>
+                    <label>Situação</label>
+                    <select id="situacao">
+                        <option value="Pendente">Pendente</option>
+                        <option value="Liberada">Liberada</option>
+                        <option value="Reprovada">Reprovada</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label>Status Financeiro</label>
+                    <select id="status_financeiro">
+                        <option value="OK">OK</option>
+                        <option value="Pendente">Pendente</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label>Habite-se</label>
+                    <select id="habite_se">
+                        <option value="Sim">Sim</option>
+                        <option value="Não">Não</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row">
+                <div>
+                    <label>CVCO</label>
+                    <select id="cvco">
+                        <option value="Liberado">Liberado</option>
+                        <option value="Pendente">Pendente</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label>Chaves Entregues</label>
+                    <select id="chaves_entregues">
+                        <option value="Não">Não</option>
+                        <option value="Sim">Sim</option>
+                    </select>
+                </div>
+            </div>
+
+            <label>Agendamento da Vistoria</label>
+            <div class="row">
+                <div>
+                    <input type="date" id="data_vistoria">
+                </div>
+                <div>
+                    <input type="time" id="hora_vistoria">
+                </div>
+            </div>
+
+            <label>Data de Liberação</label>
+            <input type="date" id="data_liberacao">
+
+            <label>Agendado por</label>
+            <input type="text" id="agendado_por">
+
+            <label>Observação</label>
+            <textarea id="observacao"></textarea>
+
+            <div class="actions">
+                <button type="submit" class="btn-primary">Salvar</button>
+                <a href="/dashboard.html" class="btn-secondary">Cancelar</a>
+            </div>
+
+        </form>
+
+    </div>
+
+    <script src="chavesvr.js"></script>
 
 </body>
 </html>
