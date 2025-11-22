@@ -1,29 +1,47 @@
-// ===============================================================
-// CHAVEVR - FRONTEND COMPLETO (Dashboard + Cadastro)
-// ===============================================================
+// =====================================================
+// CHAVEVR - FRONTEND FINAL (Dashboard + Cadastro)
+// Compatível com server_chavesvr.js e tabela `unidades`
+// =====================================================
 
-// ============================
-// API
-// ============================
-const API = {
-    unidades: "/api/unidades",
-    empreendimentos: "/api/empreendimentos",
-    unidadeId: (id) => `/api/unidades/${id}`
-};
+let todasUnidades = [];
 
-// ===============================================================
-// DASHBOARD — CARREGAR EMPREENDIMENTOS
-// ===============================================================
-async function carregarEmpreendimentos() {
-    const select = document.getElementById("selectEmp");
-    if (!select) return;
+// -----------------------------
+// Utilitários
+// -----------------------------
+function lerValor(id) {
+    const el = document.getElementById(id);
+    return el ? el.value.trim() : "";
+}
 
-    const r = await fetch(API.empreendimentos);
-    const lista = await r.json();
+// -----------------------------
+// CARREGAR DADOS DO SERVIDOR
+// -----------------------------
+async function carregarUnidadesDoServidor() {
+    const resp = await fetch("/unidades");
 
-    select.innerHTML = `<option value="">Selecione o empreendimento</option>`;
+    if (!resp.ok) {
+        throw new Error("Erro ao buscar unidades no servidor.");
+    }
 
-    lista.forEach(emp => {
+    todasUnidades = await resp.json();
+    console.log("Unidades carregadas:", todasUnidades);
+}
+
+// -----------------------------
+// DASHBOARD - Preencher select de Empreendimento
+// -----------------------------
+function preencherSelectEmpreendimento() {
+    const select = document.getElementById("filtro-empreendimento");
+    if (!select || !todasUnidades.length) return;
+
+    const unicos = [...new Set(
+        todasUnidades
+            .map(u => u.empreendimento)
+            .filter(emp => emp && emp !== "")
+    )].sort();
+
+    select.innerHTML = `<option value="">Selecione o Empreendimento</option>`;
+    unicos.forEach(emp => {
         const opt = document.createElement("option");
         opt.value = emp;
         opt.textContent = emp;
@@ -31,214 +49,210 @@ async function carregarEmpreendimentos() {
     });
 }
 
-// ===============================================================
-// DASHBOARD — QUANDO SELECIONA O EMPREENDIMENTO
-// ===============================================================
-async function selecionarEmpreendimento() {
-    const emp = document.getElementById("selectEmp").value;
-    if (!emp) return;
+// -----------------------------
+// DASHBOARD - Atualizar cards
+// -----------------------------
+function atualizarCards(lista) {
+    const total = lista.length;
+    const pendentes   = lista.filter(u => u.situacao === "Pendente").length;
+    const liberadas   = lista.filter(u => u.situacao === "Liberada").length;
+    const reprovadas  = lista.filter(u => u.situacao === "Reprovada").length;
+    const chavesEnt   = lista.filter(u => u.chaves === "Sim" || u.chaves === "Entregue").length;
+    const cvcoLib     = lista.filter(u => u.cvco === "Sim" || u.cvco === "Liberado").length;
 
-    await carregarDashboard(emp);
-    await carregarTabela(emp);
-}
-
-// ===============================================================
-// DASHBOARD — CARDS
-// ===============================================================
-async function carregarDashboard(empreendimento) {
-    const r = await fetch(`${API.unidades}?empreendimento=${encodeURIComponent(empreendimento)}`);
-    const dados = await r.json();
-
-    const total = dados.length;
-    const pendentes = dados.filter(u => u.situacao === "Pendente").length;
-    const liberadas = dados.filter(u => u.situacao === "Liberado").length;
-    const reprovadas = dados.filter(u => u.situacao === "Reprovado").length;
-    const chaves = dados.filter(u => u.chaves_entregues === "Sim").length;
-    const cvco = dados.filter(u => u.cvco === "Sim").length;
-
-    document.getElementById("card-total").innerText = total;
-    document.getElementById("card-pendentes").innerText = pendentes;
-    document.getElementById("card-liberadas").innerText = liberadas;
-    document.getElementById("card-reprovadas").innerText = reprovadas;
-    document.getElementById("card-chaves").innerText = chaves;
-    document.getElementById("card-cvco").innerText = cvco;
-
-    document.getElementById("cards-area").style.display = "flex";
-    document.getElementById("tabela-area").style.display = "block";
-    document.getElementById("filtros-area").style.display = "flex";
-}
-
-// ===============================================================
-// DASHBOARD — TABELA
-// ===============================================================
-async function carregarTabela(empreendimento) {
-    const corpo = document.getElementById("tabela-unidades");
-    corpo.innerHTML = "";
-
-    const r = await fetch(`${API.unidades}?empreendimento=${encodeURIComponent(empreendimento)}`);
-    const dados = await r.json();
-
-    dados.forEach(u => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-            <td>${u.empreendimento}</td>
-            <td>${u.bloco}</td>
-            <td>${u.pavimento}</td>
-            <td>${u.unidade}</td>
-            <td>${u.situacao}</td>
-            <td>${u.status_financeiro}</td>
-            <td>${u.habite_se}</td>
-            <td>${u.cvco}</td>
-            <td>${u.chaves_entregues}</td>
-            <td>${u.data_vistoria || ""}</td>
-            <td>${u.hora_vistoria || ""}</td>
-            <td>${u.data_liberacao || ""}</td>
-            <td>${u.agendado_por || ""}</td>
-            <td>${u.observacao || ""}</td>
-            <td>
-                <button onclick="editarUnidade(${u.id})">✏️</button>
-                <button onclick="deletarUnidade(${u.id})">🗑️</button>
-            </td>
-        `;
-        corpo.appendChild(tr);
-    });
-}
-
-// ===============================================================
-// CADASTRO — SALVAR
-// ===============================================================
-async function salvarCadastro() {
-    const dados = {
-        empreendimento: document.getElementById("empreendimento").value,
-        bloco: document.getElementById("bloco").value,
-        pavimento: document.getElementById("pavimento").value,
-        unidade: document.getElementById("unidade").value,
-        situacao: document.getElementById("situacao").value,
-        status_financeiro: document.getElementById("status_financeiro").value,
-        habite_se: document.getElementById("habite_se").value,
-        cvco: document.getElementById("cvco").value,
-        chaves_entregues: document.getElementById("chaves_entregues").value,
-        data_vistoria: document.getElementById("data_vistoria").value,
-        hora_vistoria: document.getElementById("hora_vistoria").value,
-        data_liberacao: document.getElementById("data_liberacao").value,
-        agendado_por: document.getElementById("agendado_por").value,
-        observacao: document.getElementById("observacao").value
+    const setText = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val;
     };
 
-    const r = await fetch(API.unidades, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(dados)
-    });
+    setText("card-total", total);
+    setText("card-pendentes", pendentes);
+    setText("card-liberadas", liberadas);
+    setText("card-reprovadas", reprovadas);
+    setText("card-chaves", chavesEnt);
+    setText("card-cvco", cvcoLib);
+}
 
-    if (r.ok) {
+// -----------------------------
+// DASHBOARD - Preencher tabela
+// -----------------------------
+function preencherTabela(lista) {
+    const tbody = document.getElementById("tabela-unidades");
+    if (!tbody) return;
+
+    tbody.innerHTML = "";
+
+    if (!lista.length) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 15;
+        td.textContent = "Nenhuma unidade encontrada.";
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+        return;
+    }
+
+    lista.forEach(u => {
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+            <td>${u.empreendimento || ""}</td>
+            <td>${u.bloco || ""}</td>
+            <td>${u.pavimento || ""}</td>
+            <td>${u.unidade || ""}</td>
+            <td>${u.situacao || ""}</td>
+            <td>${u.statusFinanceiro || ""}</td>
+            <td>${u.habiteSe || ""}</td>
+            <td>${u.cvco || ""}</td>
+            <td>${u.chaves || ""}</td>
+            <td>${u.dataVistoria || ""}</td>
+            <td>${u.horaVistoria || ""}</td>
+            <td>${u.dataLiberacao || ""}</td>
+            <td>${u.agendadoPor || ""}</td>
+            <td>${u.observacao || ""}</td>
+            <td>-</td>
+        `;
+
+        tbody.appendChild(tr);
+    });
+}
+
+// -----------------------------
+// DASHBOARD - Aplicar filtros
+// -----------------------------
+function aplicarFiltros() {
+    if (!todasUnidades.length) return;
+
+    const empSel     = lerValor("filtro-empreendimento");
+    const sitSel     = lerValor("filtro-situacao");
+    const statusSel  = lerValor("filtro-status-financeiro");
+    const cvcoSel    = lerValor("filtro-cvco");
+    const habiteSel  = lerValor("filtro-habitese");
+    const dataVisSel = lerValor("filtro-data-vistoria"); // YYYY-MM-DD
+
+    let filtradas = [...todasUnidades];
+
+    if (empSel) {
+        filtradas = filtradas.filter(u => u.empreendimento === empSel);
+    }
+
+    if (sitSel) {
+        filtradas = filtradas.filter(u => u.situacao === sitSel);
+    }
+
+    if (statusSel) {
+        filtradas = filtradas.filter(u => u.statusFinanceiro === statusSel);
+    }
+
+    if (cvcoSel) {
+        filtradas = filtradas.filter(u => u.cvco === cvcoSel);
+    }
+
+    if (habiteSel) {
+        filtradas = filtradas.filter(u => u.habiteSe === habiteSel);
+    }
+
+    if (dataVisSel) {
+        filtradas = filtradas.filter(u => (u.dataVistoria || "") === dataVisSel);
+    }
+
+    atualizarCards(filtradas);
+    preencherTabela(filtradas);
+}
+
+// Chamado pelo botão "Buscar" no dashboard
+function filtrar() {
+    aplicarFiltros();
+}
+
+// -----------------------------
+// DASHBOARD - Inicialização
+// -----------------------------
+async function initDashboard() {
+    try {
+        await carregarUnidadesDoServidor();
+        preencherSelectEmpreendimento();
+
+        const selEmp = document.getElementById("filtro-empreendimento");
+        if (selEmp) {
+            selEmp.addEventListener("change", aplicarFiltros);
+        }
+
+        aplicarFiltros(); // primeira carga
+    } catch (erro) {
+        console.error("Erro ao iniciar dashboard:", erro);
+        alert("Erro ao carregar o dashboard. Verifique o servidor.");
+    }
+}
+
+// -----------------------------
+// CADASTRO - Enviar dados
+// -----------------------------
+async function salvarCadastro(event) {
+    event.preventDefault();
+
+    const dados = {
+        empreendimento:  lerValor("empreendimento"),
+        bloco:           lerValor("bloco"),
+        pavimento:       lerValor("pavimento"),
+        unidade:         lerValor("unidade"),
+        situacao:        lerValor("situacao"),
+        statusFinanceiro:lerValor("statusFinanceiro"),
+        habiteSe:        lerValor("habiteSe"),
+        cvco:            lerValor("cvco"),
+        chaves:          lerValor("chaves"),
+        dataVistoria:    lerValor("dataVistoria"),
+        horaVistoria:    lerValor("horaVistoria"),
+        dataLiberacao:   lerValor("dataLiberacao"),
+        agendadoPor:     lerValor("agendadoPor"),
+        observacao:      lerValor("observacao")
+    };
+
+    if (!dados.empreendimento || !dados.unidade) {
+        alert("Preencha pelo menos Empreendimento e Unidade.");
+        return;
+    }
+
+    try {
+        const resp = await fetch("/unidades", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(dados)
+        });
+
+        if (!resp.ok) {
+            console.error("Erro ao salvar:", await resp.text());
+            alert("Erro ao salvar a unidade.");
+            return;
+        }
+
         alert("Unidade cadastrada com sucesso!");
         window.location.href = "/dashboard.html";
-    } else {
-        alert("Erro ao salvar.");
+
+    } catch (erro) {
+        console.error("Erro no envio:", erro);
+        alert("Erro de comunicação com o servidor.");
     }
 }
 
+// -----------------------------
+// CADASTRO - Inicialização
+// -----------------------------
+function initCadastro() {
+    const form = document.getElementById("form-cadastro");
+    if (!form) return;
 
-// ===============================================================
-// EDIÇÃO — CARREGAR DADOS PARA O FORMULÁRIO
-// ===============================================================
-async function editarUnidade(id) {
-    const r = await fetch(API.unidadeId(id));
-    const lista = await fetch(API.unidades);
-    const dados = (await lista.json()).find(x => x.id == id);
-
-    if (!dados) return alert("Unidade não encontrada.");
-
-    // grava no localStorage para pré-preencher o cadastro
-    localStorage.setItem("editarUnidade", JSON.stringify(dados));
-    window.location.href = "/cadastro.html";
+    form.addEventListener("submit", salvarCadastro);
 }
 
-
-// ===============================================================
-// CADASTRO — SE ENTRAR EM MODO DE EDIÇÃO
-// ===============================================================
-function carregarEdicaoSeExistir() {
-    const dadosStr = localStorage.getItem("editarUnidade");
-    if (!dadosStr) return;
-
-    const d = JSON.parse(dadosStr);
-
-    document.getElementById("empreendimento").value = d.empreendimento;
-    document.getElementById("bloco").value = d.bloco;
-    document.getElementById("pavimento").value = d.pavimento;
-    document.getElementById("unidade").value = d.unidade;
-    document.getElementById("situacao").value = d.situacao;
-    document.getElementById("status_financeiro").value = d.status_financeiro;
-    document.getElementById("habite_se").value = d.habite_se;
-    document.getElementById("cvco").value = d.cvco;
-    document.getElementById("chaves_entregues").value = d.chaves_entregues;
-    document.getElementById("data_vistoria").value = d.data_vistoria;
-    document.getElementById("hora_vistoria").value = d.hora_vistoria;
-    document.getElementById("data_liberacao").value = d.data_liberacao;
-    document.getElementById("agendado_por").value = d.agendado_por;
-    document.getElementById("observacao").value = d.observacao;
-
-    // troca botão para "Salvar Edição"
-    document.getElementById("btnSalvar").onclick = () => salvarEdicao(d.id);
-}
-
-
-// ===============================================================
-// SALVAR EDIÇÃO
-// ===============================================================
-async function salvarEdicao(id) {
-    const dados = {
-        empreendimento: document.getElementById("empreendimento").value,
-        bloco: document.getElementById("bloco").value,
-        pavimento: document.getElementById("pavimento").value,
-        unidade: document.getElementById("unidade").value,
-        situacao: document.getElementById("situacao").value,
-        status_financeiro: document.getElementById("status_financeiro").value,
-        habite_se: document.getElementById("habite_se").value,
-        cvco: document.getElementById("cvco").value,
-        chaves_entregues: document.getElementById("chaves_entregues").value,
-        data_vistoria: document.getElementById("data_vistoria").value,
-        hora_vistoria: document.getElementById("hora_vistoria").value,
-        data_liberacao: document.getElementById("data_liberacao").value,
-        agendado_por: document.getElementById("agendado_por").value,
-        observacao: document.getElementById("observacao").value
-    };
-
-    const r = await fetch(API.unidadeId(id), {
-        method: "PUT",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify(dados)
-    });
-
-    if (r.ok) {
-        alert("Unidade atualizada.");
-        localStorage.removeItem("editarUnidade");
-        window.location.href = "/dashboard.html";
-    }
-}
-
-
-// ===============================================================
-// DELETAR
-// ===============================================================
-async function deletarUnidade(id) {
-    if (!confirm("Deseja realmente excluir esta unidade?")) return;
-
-    await fetch(API.unidadeId(id), { method: "DELETE" });
-
-    const emp = document.getElementById("selectEmp").value;
-    carregarDashboard(emp);
-    carregarTabela(emp);
-}
-
-
-// ===============================================================
-// INIT
-// ===============================================================
+// -----------------------------
+// INICIALIZAÇÃO GERAL
+// -----------------------------
 document.addEventListener("DOMContentLoaded", () => {
-    if (document.getElementById("selectEmp")) carregarEmpreendimentos();
-    if (document.getElementById("btnSalvar")) carregarEdicaoSeExistir();
+    if (document.getElementById("tabela-unidades")) {
+        initDashboard();
+    }
+    if (document.getElementById("form-cadastro")) {
+        initCadastro();
+    }
 });
-
