@@ -7,14 +7,14 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-// ======================================================
-// 🔥 SERVIR ARQUIVOS ESTÁTICOS
-// ======================================================
+// ---------------------------
+// Arquivos estáticos
+// ---------------------------
 app.use(express.static(path.join(__dirname, "public")));
 
-// ======================================================
-// 🔥 CAMINHO DO BANCO (Render usa /data)
-// ======================================================
+// ---------------------------
+// Banco de dados
+// ---------------------------
 const dbPath = "/data/chavesvr.db";
 
 const db = new sqlite3.Database(dbPath, (err) => {
@@ -25,39 +25,159 @@ const db = new sqlite3.Database(dbPath, (err) => {
     }
 });
 
-// ======================================================
-// 🔥 CRIAR TABELA SE NÃO EXISTIR
-// ======================================================
-db.run(`
-    CREATE TABLE IF NOT EXISTS unidades (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        empreendimento TEXT,
-        bloco TEXT,
-        pavimento TEXT,
-        unidade TEXT,
-        situacao TEXT,
-        statusFinanceiro TEXT,
-        habiteSe TEXT,
-        cvco TEXT,
-        chaves TEXT,
-        dataVistoria TEXT,
-        horaVistoria TEXT,
-        dataLiberacao TEXT,
-        agendadoPor TEXT,
-        observacao TEXT
-    )
-`);
+// Criação das tabelas
+db.serialize(() => {
+    db.run(`
+        CREATE TABLE IF NOT EXISTS empreendimentos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nome TEXT,
+            cidade TEXT,
+            uf TEXT,
+            fase TEXT,
+            dataEntrega TEXT,
+            codigoInterno TEXT,
+            observacao TEXT
+        )
+    `);
 
-// ======================================================
-// 🔥 ROTA RAIZ (CORRIGE "Cannot GET /")
-// ======================================================
+    db.run(`
+        CREATE TABLE IF NOT EXISTS unidades (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            empreendimento TEXT,
+            bloco TEXT,
+            pavimento TEXT,
+            unidade TEXT,
+            situacao TEXT,
+            statusFinanceiro TEXT,
+            habiteSe TEXT,
+            cvco TEXT,
+            chaves TEXT,
+            dataVistoria TEXT,
+            horaVistoria TEXT,
+            dataLiberacao TEXT,
+            agendadoPor TEXT,
+            observacao TEXT
+        )
+    `);
+});
+
+// ---------------------------
+// Rota raiz -> index.html
+// ---------------------------
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 // ======================================================
-// 🔥 ROTA PARA SALVAR CADASTRO
+// EMPREENDIMENTOS
 // ======================================================
+
+// Listar empreendimentos
+app.get("/empreendimentos", (req, res) => {
+    db.all("SELECT * FROM empreendimentos ORDER BY nome ASC", [], (err, rows) => {
+        if (err) {
+            console.error("Erro ao listar empreendimentos:", err);
+            return res.status(500).json({ error: "Erro ao listar empreendimentos" });
+        }
+        res.json(rows);
+    });
+});
+
+// Criar novo empreendimento
+app.post("/empreendimentos", (req, res) => {
+    const {
+        nome,
+        cidade,
+        uf,
+        fase,
+        dataEntrega,
+        codigoInterno,
+        observacao
+    } = req.body;
+
+    const sql = `
+        INSERT INTO empreendimentos
+        (nome, cidade, uf, fase, dataEntrega, codigoInterno, observacao)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    `;
+
+    db.run(
+        sql,
+        [nome, cidade, uf, fase, dataEntrega, codigoInterno, observacao],
+        function (err) {
+            if (err) {
+                console.error("Erro ao inserir empreendimento:", err);
+                return res.status(500).json({ error: "Erro ao inserir empreendimento" });
+            }
+            res.json({ message: "Empreendimento cadastrado com sucesso!", id: this.lastID });
+        }
+    );
+});
+
+// Atualizar empreendimento
+app.put("/empreendimentos/:id", (req, res) => {
+    const { id } = req.params;
+    const {
+        nome,
+        cidade,
+        uf,
+        fase,
+        dataEntrega,
+        codigoInterno,
+        observacao
+    } = req.body;
+
+    const sql = `
+        UPDATE empreendimentos SET
+            nome = ?,
+            cidade = ?,
+            uf = ?,
+            fase = ?,
+            dataEntrega = ?,
+            codigoInterno = ?,
+            observacao = ?
+        WHERE id = ?
+    `;
+
+    db.run(
+        sql,
+        [nome, cidade, uf, fase, dataEntrega, codigoInterno, observacao, id],
+        function (err) {
+            if (err) {
+                console.error("Erro ao atualizar empreendimento:", err);
+                return res.status(500).json({ error: "Erro ao atualizar empreendimento" });
+            }
+            res.json({ message: "Empreendimento atualizado com sucesso!" });
+        }
+    );
+});
+
+// ======================================================
+// UNIDADES
+// ======================================================
+
+// Listar unidades (opcional: filtrar por empreendimento)
+app.get("/unidades", (req, res) => {
+    const empNome = req.query.empreendimento;
+
+    let sql = "SELECT * FROM unidades";
+    const params = [];
+
+    if (empNome) {
+        sql += " WHERE empreendimento = ?";
+        params.push(empNome);
+    }
+
+    db.all(sql, params, (err, rows) => {
+        if (err) {
+            console.error("Erro ao listar unidades:", err);
+            return res.status(500).json({ error: "Erro ao listar unidades" });
+        }
+        res.json(rows);
+    });
+});
+
+// Criar nova unidade
 app.post("/unidades", (req, res) => {
     const {
         empreendimento,
@@ -77,12 +197,14 @@ app.post("/unidades", (req, res) => {
     } = req.body;
 
     const sql = `
-        INSERT INTO unidades (
+        INSERT INTO unidades
+        (
             empreendimento, bloco, pavimento, unidade,
             situacao, statusFinanceiro, habiteSe, cvco,
             chaves, dataVistoria, horaVistoria, dataLiberacao,
             agendadoPor, observacao
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     db.run(
@@ -95,33 +217,15 @@ app.post("/unidades", (req, res) => {
         ],
         function (err) {
             if (err) {
-                console.error("Erro ao salvar unidade:", err);
-                return res.status(500).json({ error: "Erro ao salvar unidade" });
+                console.error("Erro ao inserir unidade:", err);
+                return res.status(500).json({ error: "Erro ao inserir unidade" });
             }
-
-            return res.json({
-                message: "Unidade cadastrada com sucesso!",
-                id: this.lastID
-            });
+            res.json({ message: "Unidade cadastrada com sucesso!", id: this.lastID });
         }
     );
 });
 
-// ======================================================
-// 🔥 ROTA PARA LISTAR UNIDADES
-// ======================================================
-app.get("/unidades", (req, res) => {
-    db.all("SELECT * FROM unidades", [], (err, rows) => {
-        if (err) {
-            return res.status(500).json({ error: "Erro ao listar" });
-        }
-        res.json(rows);
-    });
-});
-
-// =========================
-// 🔥 ROTA PARA ATUALIZAR (EDITAR) UMA UNIDADE
-// =========================
+// Atualizar unidade
 app.put("/unidades/:id", (req, res) => {
     const { id } = req.params;
     const {
@@ -163,37 +267,25 @@ app.put("/unidades/:id", (req, res) => {
     db.run(
         sql,
         [
-            empreendimento,
-            bloco,
-            pavimento,
-            unidade,
-            situacao,
-            statusFinanceiro,
-            habiteSe,
-            cvco,
-            chaves,
-            dataVistoria,
-            horaVistoria,
-            dataLiberacao,
-            agendadoPor,
-            observacao,
-            id
+            empreendimento, bloco, pavimento, unidade,
+            situacao, statusFinanceiro, habiteSe, cvco,
+            chaves, dataVistoria, horaVistoria, dataLiberacao,
+            agendadoPor, observacao, id
         ],
         function (err) {
             if (err) {
                 console.error("Erro ao atualizar unidade:", err);
                 return res.status(500).json({ error: "Erro ao atualizar unidade" });
             }
-            return res.json({ message: "Unidade atualizada com sucesso!" });
+            res.json({ message: "Unidade atualizada com sucesso!" });
         }
     );
 });
 
 // ======================================================
-// 🔥 INICIAR SERVIDOR
+// Servidor
 // ======================================================
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
     console.log("ChaveVR rodando na porta " + PORT);
 });
-
