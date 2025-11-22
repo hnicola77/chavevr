@@ -3,54 +3,145 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cadastro de Unidades - ChaveVR</title>
-    <link rel="stylesheet" href="/styles.css">
+    <title>Cadastrar Unidade</title>
+
+    <style>
+        body {
+            background: #eef1f5;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            color: #333;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            margin: 60px auto;
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #2a2a2a;
+            font-size: 26px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: bold;
+            margin-top: 12px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            margin-top: 6px;
+            border: 1px solid #cdd4df;
+            border-radius: 6px;
+            background: #f8fafc;
+            font-size: 14px;
+        }
+
+        textarea {
+            resize: none;
+            height: 80px;
+        }
+
+        .btn-area {
+            margin-top: 25px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        button {
+            padding: 10px 22px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: bold;
+        }
+
+        .btn-salvar {
+            background: #1778f2;
+            color: white;
+        }
+
+        .btn-cancelar {
+            background: #ddd;
+        }
+
+        a {
+            color: #1778f2;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .top-link {
+            margin: 20px;
+            display: block;
+        }
+    </style>
 </head>
 <body>
 
-<header>
-    <h1>Cadastro de Unidades</h1>
-    <nav>
-        <a href="/index.html">Início</a>
-        <a href="/dashboard.html">Dashboard</a>
-        <a href="/cadastro.html" class="active">Cadastrar</a>
-    </nav>
-</header>
+    <a class="top-link" href="/index.html">← Voltar ao Dashboard</a>
 
-<main class="container">
+    <div class="container">
+        <h1>Cadastrar Nova Unidade</h1>
 
-    <button id="addUnitBtn" class="btn primary">+ Adicionar Unidade</button>
+        <label>Unidade</label>
+        <input id="unidade" type="text">
 
-    <div id="modal" class="modal hidden">
-        <div class="modal-content">
-            <h2>Nova Unidade</h2>
+        <label>Empreendimento</label>
+        <input id="empreendimento" type="text">
 
-            <label>Unidade</label>
-            <input type="text" id="unidade">
+        <label>Status</label>
+        <select id="status">
+            <option value="Pendente">Pendente</option>
+            <option value="OK">OK</option>
+            <option value="Irregular">Irregular</option>
+        </select>
 
-            <label>Empreendimento</label>
-            <input type="text" id="empreendimento">
+        <label>Observações</label>
+        <textarea id="obs"></textarea>
 
-            <label>Status</label>
-            <select id="status">
-                <option value="Pendente">Pendente</option>
-                <option value="Liberada">Liberada</option>
-                <option value="Bloqueada">Bloqueada</option>
-            </select>
-
-            <label>Observações</label>
-            <textarea id="obs"></textarea>
-
-            <button id="saveUnitBtn" class="btn success">Salvar</button>
-            <button id="closeModalBtn" class="btn danger">Cancelar</button>
+        <div class="btn-area">
+            <button class="btn-salvar" onclick="salvarUnidade()">Salvar</button>
+            <button class="btn-cancelar" onclick="window.location.href='/index.html'">Cancelar</button>
         </div>
     </div>
 
-    <section id="unitsList"></section>
+    <script>
+        async function salvarUnidade() {
+            const unidade = document.getElementById("unidade").value;
+            const empreendimento = document.getElementById("empreendimento").value;
+            const status = document.getElementById("status").value;
+            const obs = document.getElementById("obs").value;
 
-</main>
+            const dados = { unidade, empreendimento, status, obs };
 
-<script src="/chavesvr.js"></script>
+            const resposta = await fetch("/api/unidades", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(dados)
+            });
+
+            if (resposta.ok) {
+                alert("Unidade cadastrada com sucesso!");
+                window.location.href = "/index.html";
+            } else {
+                alert("Erro ao salvar unidade.");
+            }
+        }
+    </script>
 
 </body>
 </html>
