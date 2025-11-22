@@ -1,195 +1,248 @@
 // ===============================================================
-//  CHAVEVR - FRONTEND COMPLETO (Versão A)
-//  Suporte total a cadastro, edição, deleção, listagem, dashboard
-//  Compatível com server_chavesvr.js
+// CHAVEVR - FRONTEND COMPLETO (Dashboard + Cadastro)
 // ===============================================================
 
 // ============================
-// CONFIGURAÇÃO DA API
+// API
 // ============================
 const API = {
-    listar: "/api/unidades",
-    criar: "/api/unidades",
-    editar: (id) => `/api/unidades/${id}`,
-    deletar: (id) => `/api/unidades/${id}`
+    unidades: "/api/unidades",
+    empreendimentos: "/api/empreendimentos",
+    unidadeId: (id) => `/api/unidades/${id}`
 };
 
 
-// ============================
-// BUSCAR TODAS AS UNIDADES
-// ============================
-async function buscarUnidades() {
-    try {
-        const r = await fetch(API.listar);
-        return await r.json();
-    } catch (e) {
-        console.error("Erro ao buscar unidades:", e);
-        return [];
-    }
+// ===============================================================
+// DASHBOARD — CARREGAR EMPREENDIMENTOS
+// ===============================================================
+async function carregarEmpreendimentos() {
+    const select = document.getElementById("selectEmp");
+    if (!select) return;
+
+    const r = await fetch(API.empreendimentos);
+    const lista = await r.json();
+
+    select.innerHTML = `<option value="">Selecione o empreendimento</option>`;
+
+    lista.forEach(emp => {
+        const opt = document.createElement("option");
+        opt.value = emp;
+        opt.textContent = emp;
+        select.appendChild(opt);
+    });
 }
 
 
-// ============================
-// ATUALIZAR DASHBOARD
-// ============================
-async function atualizarDashboard() {
-    const unidades = await buscarUnidades();
+// ===============================================================
+// DASHBOARD — QUANDO SELECIONA O EMPREENDIMENTO
+// ===============================================================
+async function selecionarEmpreendimento() {
+    const emp = document.getElementById("selectEmp").value;
+    if (!emp) return;
 
-    const total = unidades.length;
-    const pendentes = unidades.filter(u => u.status === "Pendente").length;
-    const liberadas = unidades.filter(u => u.status === "Liberada").length;
-    const bloqueadas = unidades.filter(u => u.status === "Bloqueada").length;
-
-    if (document.getElementById("totalUnidades"))
-        document.getElementById("totalUnidades").innerText = total;
-
-    if (document.getElementById("pendentes"))
-        document.getElementById("pendentes").innerText = pendentes;
-
-    if (document.getElementById("liberadas"))
-        document.getElementById("liberadas").innerText = liberadas;
-
-    if (document.getElementById("bloqueadas"))
-        document.getElementById("bloqueadas").innerText = bloqueadas;
-
-    atualizarTabela(unidades);
+    await carregarDashboard(emp);
+    await carregarTabela(emp);
 }
 
 
-// ============================
-// ATUALIZAR TABELA PRINCIPAL
-// ============================
-function atualizarTabela(lista) {
-    const tbody = document.querySelector("#tableUnidades tbody");
-    if (!tbody) return;
+// ===============================================================
+// DASHBOARD — CARDS
+// ===============================================================
+async function carregarDashboard(empreendimento) {
+    const r = await fetch(`${API.unidades}?empreendimento=${encodeURIComponent(empreendimento)}`);
+    const dados = await r.json();
 
-    tbody.innerHTML = "";
+    const total = dados.length;
+    const pendentes = dados.filter(u => u.situacao === "Pendente").length;
+    const liberadas = dados.filter(u => u.situacao === "Liberado").length;
+    const reprovadas = dados.filter(u => u.situacao === "Reprovado").length;
+    const chaves = dados.filter(u => u.chaves_entregues === "Sim").length;
+    const cvco = dados.filter(u => u.cvco === "Sim").length;
 
-    lista.forEach(unidade => {
+    document.getElementById("card-total").innerText = total;
+    document.getElementById("card-pendentes").innerText = pendentes;
+    document.getElementById("card-liberadas").innerText = liberadas;
+    document.getElementById("card-reprovadas").innerText = reprovadas;
+    document.getElementById("card-chaves").innerText = chaves;
+    document.getElementById("card-cvco").innerText = cvco;
+
+    document.getElementById("cards-area").style.display = "flex";
+    document.getElementById("tabela-area").style.display = "block";
+    document.getElementById("filtros-area").style.display = "flex";
+}
+
+
+// ===============================================================
+// DASHBOARD — TABELA
+// ===============================================================
+async function carregarTabela(empreendimento) {
+    const corpo = document.getElementById("tabela-unidades");
+    corpo.innerHTML = "";
+
+    const r = await fetch(`${API.unidades}?empreendimento=${encodeURIComponent(empreendimento)}`);
+    const dados = await r.json();
+
+    dados.forEach(u => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
-            <td>${unidade.unidade}</td>
-            <td>${unidade.empreendimento}</td>
-            <td>${unidade.status}</td>
-            <td>${unidade.obs || ""}</td>
+            <td>${u.empreendimento}</td>
+            <td>${u.bloco}</td>
+            <td>${u.pavimento}</td>
+            <td>${u.unidade}</td>
+            <td>${u.situacao}</td>
+            <td>${u.status_financeiro}</td>
+            <td>${u.habite_se}</td>
+            <td>${u.cvco}</td>
+            <td>${u.chaves_entregues}</td>
+            <td>${u.data_vistoria || ""}</td>
+            <td>${u.hora_vistoria || ""}</td>
+            <td>${u.data_liberacao || ""}</td>
+            <td>${u.agendado_por || ""}</td>
+            <td>${u.observacao || ""}</td>
             <td>
-                <button class="btn small" onclick="abrirModalEdicao(${unidade.id})">Editar</button>
-                <button class="btn danger small" onclick="deletarUnidade(${unidade.id})">Excluir</button>
+                <button onclick="editarUnidade(${u.id})">✏️</button>
+                <button onclick="deletarUnidade(${u.id})">🗑️</button>
             </td>
         `;
-        tbody.appendChild(tr);
+        corpo.appendChild(tr);
     });
 }
 
 
-// ============================
-// ABRIR MODAL DE CADASTRO
-// ============================
-function abrirModalCadastro() {
-    document.getElementById("modal").classList.remove("hidden");
-    limparFormulario();
-}
+// ===============================================================
+// CADASTRO — SALVAR
+// ===============================================================
+async function salvarCadastro() {
+    const dados = {
+        empreendimento: document.getElementById("empreendimento").value,
+        bloco: document.getElementById("bloco").value,
+        pavimento: document.getElementById("pavimento").value,
+        unidade: document.getElementById("unidade").value,
+        situacao: document.getElementById("situacao").value,
+        status_financeiro: document.getElementById("status_financeiro").value,
+        habite_se: document.getElementById("habite_se").value,
+        cvco: document.getElementById("cvco").value,
+        chaves_entregues: document.getElementById("chaves_entregues").value,
+        data_vistoria: document.getElementById("data_vistoria").value,
+        hora_vistoria: document.getElementById("hora_vistoria").value,
+        data_liberacao: document.getElementById("data_liberacao").value,
+        agendado_por: document.getElementById("agendado_por").value,
+        observacao: document.getElementById("observacao").value
+    };
 
-
-// ============================
-// ABRIR MODAL DE EDIÇÃO
-// ============================
-async function abrirModalEdicao(id) {
-    const unidades = await buscarUnidades();
-    const u = unidades.find(x => x.id === id);
-    if (!u) return;
-
-    document.getElementById("unidade").value = u.unidade;
-    document.getElementById("empreendimento").value = u.empreendimento;
-    document.getElementById("status").value = u.status;
-    document.getElementById("obs").value = u.obs || "";
-
-    document.getElementById("saveUnitBtn").setAttribute("data-edit", id);
-    document.getElementById("modal").classList.remove("hidden");
-}
-
-
-// ============================
-// LIMPAR FORMULÁRIO
-// ============================
-function limparFormulario() {
-    document.getElementById("unidade").value = "";
-    document.getElementById("empreendimento").value = "";
-    document.getElementById("status").value = "Pendente";
-    document.getElementById("obs").value = "";
-    document.getElementById("saveUnitBtn").removeAttribute("data-edit");
-}
-
-
-// ============================
-// FECHAR MODAL
-// ============================
-function fecharModal() {
-    document.getElementById("modal").classList.add("hidden");
-    limparFormulario();
-}
-
-
-// ============================
-// SALVAR (CRIAR OU EDITAR)
-// ============================
-async function salvarUnidade() {
-    const unidade = document.getElementById("unidade").value.trim();
-    const empreendimento = document.getElementById("empreendimento").value.trim();
-    const status = document.getElementById("status").value;
-    const obs = document.getElementById("obs").value.trim();
-
-    if (!unidade || !empreendimento) {
-        alert("Preencha todos os campos!");
-        return;
-    }
-
-    const payload = { unidade, empreendimento, status, obs };
-    const editId = document.getElementById("saveUnitBtn").getAttribute("data-edit");
-
-    let url = API.criar;
-    let method = "POST";
-
-    if (editId) {
-        url = API.editar(editId);
-        method = "PUT";
-    }
-
-    await fetch(url, {
-        method,
+    const r = await fetch(API.unidades, {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(dados)
     });
 
-    fecharModal();
-    atualizarDashboard();
+    if (r.ok) {
+        alert("Unidade cadastrada com sucesso!");
+        window.location.href = "/dashboard.html";
+    } else {
+        alert("Erro ao salvar.");
+    }
 }
 
 
-// ============================
-// DELETAR UNIDADE
-// ============================
+// ===============================================================
+// EDIÇÃO — CARREGAR DADOS PARA O FORMULÁRIO
+// ===============================================================
+async function editarUnidade(id) {
+    const r = await fetch(API.unidadeId(id));
+    const lista = await fetch(API.unidades);
+    const dados = (await lista.json()).find(x => x.id == id);
+
+    if (!dados) return alert("Unidade não encontrada.");
+
+    // grava no localStorage para pré-preencher o cadastro
+    localStorage.setItem("editarUnidade", JSON.stringify(dados));
+    window.location.href = "/cadastro.html";
+}
+
+
+// ===============================================================
+// CADASTRO — SE ENTRAR EM MODO DE EDIÇÃO
+// ===============================================================
+function carregarEdicaoSeExistir() {
+    const dadosStr = localStorage.getItem("editarUnidade");
+    if (!dadosStr) return;
+
+    const d = JSON.parse(dadosStr);
+
+    document.getElementById("empreendimento").value = d.empreendimento;
+    document.getElementById("bloco").value = d.bloco;
+    document.getElementById("pavimento").value = d.pavimento;
+    document.getElementById("unidade").value = d.unidade;
+    document.getElementById("situacao").value = d.situacao;
+    document.getElementById("status_financeiro").value = d.status_financeiro;
+    document.getElementById("habite_se").value = d.habite_se;
+    document.getElementById("cvco").value = d.cvco;
+    document.getElementById("chaves_entregues").value = d.chaves_entregues;
+    document.getElementById("data_vistoria").value = d.data_vistoria;
+    document.getElementById("hora_vistoria").value = d.hora_vistoria;
+    document.getElementById("data_liberacao").value = d.data_liberacao;
+    document.getElementById("agendado_por").value = d.agendado_por;
+    document.getElementById("observacao").value = d.observacao;
+
+    // troca botão para "Salvar Edição"
+    document.getElementById("btnSalvar").onclick = () => salvarEdicao(d.id);
+}
+
+
+// ===============================================================
+// SALVAR EDIÇÃO
+// ===============================================================
+async function salvarEdicao(id) {
+    const dados = {
+        empreendimento: document.getElementById("empreendimento").value,
+        bloco: document.getElementById("bloco").value,
+        pavimento: document.getElementById("pavimento").value,
+        unidade: document.getElementById("unidade").value,
+        situacao: document.getElementById("situacao").value,
+        status_financeiro: document.getElementById("status_financeiro").value,
+        habite_se: document.getElementById("habite_se").value,
+        cvco: document.getElementById("cvco").value,
+        chaves_entregues: document.getElementById("chaves_entregues").value,
+        data_vistoria: document.getElementById("data_vistoria").value,
+        hora_vistoria: document.getElementById("hora_vistoria").value,
+        data_liberacao: document.getElementById("data_liberacao").value,
+        agendado_por: document.getElementById("agendado_por").value,
+        observacao: document.getElementById("observacao").value
+    };
+
+    const r = await fetch(API.unidadeId(id), {
+        method: "PUT",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(dados)
+    });
+
+    if (r.ok) {
+        alert("Unidade atualizada.");
+        localStorage.removeItem("editarUnidade");
+        window.location.href = "/dashboard.html";
+    }
+}
+
+
+// ===============================================================
+// DELETAR
+// ===============================================================
 async function deletarUnidade(id) {
     if (!confirm("Deseja realmente excluir esta unidade?")) return;
 
-    await fetch(API.deletar(id), { method: "DELETE" });
-    atualizarDashboard();
+    await fetch(API.unidadeId(id), { method: "DELETE" });
+
+    const emp = document.getElementById("selectEmp").value;
+    carregarDashboard(emp);
+    carregarTabela(emp);
 }
 
 
-// ============================
-// INICIALIZAÇÃO
-// ============================
+// ===============================================================
+// INIT
+// ===============================================================
 document.addEventListener("DOMContentLoaded", () => {
-
-    if (document.getElementById("addUnitBtn"))
-        document.getElementById("addUnitBtn").onclick = abrirModalCadastro;
-
-    if (document.getElementById("saveUnitBtn"))
-        document.getElementById("saveUnitBtn").onclick = salvarUnidade;
-
-    if (document.getElementById("closeModalBtn"))
-        document.getElementById("closeModalBtn").onclick = fecharModal;
-
-    atualizarDashboard();
+    if (document.getElementById("selectEmp")) carregarEmpreendimentos();
+    if (document.getElementById("btnSalvar")) carregarEdicaoSeExistir();
 });
