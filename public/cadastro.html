@@ -185,6 +185,46 @@
                 <a href="/dashboard.html" class="btn-secondary">Cancelar</a>
             </div>
         </form>
+            <hr style="margin:30px 0;">
+
+            <h2>Unidades cadastradas</h2>
+
+            <div class="row">
+                <div>
+                    <label for="filtroEmpCad">Filtrar por Empreendimento</label>
+                    <select id="filtroEmpCad">
+                        <option value="">Todos os empreendimentos</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="margin-top:20px; overflow-x:auto;">
+                <table class="tabela">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Empreendimento</th>
+                            <th>Bloco</th>
+                            <th>Pavimento</th>
+                            <th>Unidade</th>
+                            <th>Situação</th>
+                            <th>Status Financ.</th>
+                            <th>Habite-se</th>
+                            <th>CVCO</th>
+                            <th>Chaves</th>
+                            <th>Data Vistoria</th>
+                            <th>Hora</th>
+                            <th>Data Liberação</th>
+                            <th>Agendado Por</th>
+                            <th>Obs</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabela-cadastro-unidades">
+                        <!-- preenchido pelo chavesvr.js -->
+                    </tbody>
+                </table>
+            </div>       
     </div>
 
     <script src="/chavesvr.js"></script>
