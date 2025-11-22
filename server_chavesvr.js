@@ -7,10 +7,16 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-// 🔥 Caminho CORRETO do banco no Render
+// ======================================================
+// 🔥 SERVIR ARQUIVOS ESTÁTICOS
+// ======================================================
+app.use(express.static(path.join(__dirname, "public")));
+
+// ======================================================
+// 🔥 CAMINHO DO BANCO (Render usa /data)
+// ======================================================
 const dbPath = "/data/chavesvr.db";
 
-// 🔥 Abrir banco corretamente
 const db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
         console.error("Erro ao conectar ao banco:", err.message);
@@ -19,7 +25,9 @@ const db = new sqlite3.Database(dbPath, (err) => {
     }
 });
 
-// 🔥 Criar tabela caso não exista
+// ======================================================
+// 🔥 CRIAR TABELA SE NÃO EXISTIR
+// ======================================================
 db.run(`
     CREATE TABLE IF NOT EXISTS unidades (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -40,9 +48,16 @@ db.run(`
     )
 `);
 
-// =========================
+// ======================================================
+// 🔥 ROTA RAIZ (CORRIGE "Cannot GET /")
+// ======================================================
+app.get("/", (req, res) => {
+    res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+// ======================================================
 // 🔥 ROTA PARA SALVAR CADASTRO
-// =========================
+// ======================================================
 app.post("/unidades", (req, res) => {
     const {
         empreendimento,
@@ -92,9 +107,9 @@ app.post("/unidades", (req, res) => {
     );
 });
 
-// =========================
+// ======================================================
 // 🔥 ROTA PARA LISTAR UNIDADES
-// =========================
+// ======================================================
 app.get("/unidades", (req, res) => {
     db.all("SELECT * FROM unidades", [], (err, rows) => {
         if (err) {
@@ -104,9 +119,9 @@ app.get("/unidades", (req, res) => {
     });
 });
 
-// =========================
+// ======================================================
 // 🔥 INICIAR SERVIDOR
-// =========================
+// ======================================================
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
     console.log("ChaveVR rodando na porta " + PORT);
