@@ -119,6 +119,76 @@ app.get("/unidades", (req, res) => {
     });
 });
 
+// =========================
+// 🔥 ROTA PARA ATUALIZAR (EDITAR) UMA UNIDADE
+// =========================
+app.put("/unidades/:id", (req, res) => {
+    const { id } = req.params;
+    const {
+        empreendimento,
+        bloco,
+        pavimento,
+        unidade,
+        situacao,
+        statusFinanceiro,
+        habiteSe,
+        cvco,
+        chaves,
+        dataVistoria,
+        horaVistoria,
+        dataLiberacao,
+        agendadoPor,
+        observacao
+    } = req.body;
+
+    const sql = `
+        UPDATE unidades SET
+            empreendimento = ?,
+            bloco = ?,
+            pavimento = ?,
+            unidade = ?,
+            situacao = ?,
+            statusFinanceiro = ?,
+            habiteSe = ?,
+            cvco = ?,
+            chaves = ?,
+            dataVistoria = ?,
+            horaVistoria = ?,
+            dataLiberacao = ?,
+            agendadoPor = ?,
+            observacao = ?
+        WHERE id = ?
+    `;
+
+    db.run(
+        sql,
+        [
+            empreendimento,
+            bloco,
+            pavimento,
+            unidade,
+            situacao,
+            statusFinanceiro,
+            habiteSe,
+            cvco,
+            chaves,
+            dataVistoria,
+            horaVistoria,
+            dataLiberacao,
+            agendadoPor,
+            observacao,
+            id
+        ],
+        function (err) {
+            if (err) {
+                console.error("Erro ao atualizar unidade:", err);
+                return res.status(500).json({ error: "Erro ao atualizar unidade" });
+            }
+            return res.json({ message: "Unidade atualizada com sucesso!" });
+        }
+    );
+});
+
 // ======================================================
 // 🔥 INICIAR SERVIDOR
 // ======================================================
@@ -126,3 +196,4 @@ const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
     console.log("ChaveVR rodando na porta " + PORT);
 });
+
