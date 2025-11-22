@@ -1,125 +1,131 @@
 // ===============================================================
-// CHAVEVR - BACKEND COMPLETO (Versão Final)
-// Compatível com: FRONTEND vA + Render.com + SQLite
+// CHAVEVR - BACKEND COMPLETO VERSÃO FINAL
 // ===============================================================
 
 const express = require("express");
 const cors = require("cors");
 const sqlite3 = require("sqlite3").verbose();
 const path = require("path");
-const fs = require("fs");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
 // ============================
-// BANCO DE DADOS (Render ou Local)
+// BANCO DE DADOS
 // ============================
-const isRender = !!process.env.RENDER;
-
-let dbPath;
-if (isRender) {
-    dbPath = "/data/chavesvr.db"; // Render cria automaticamente
-} else {
-    dbPath = path.join(__dirname, "chavesvr.db"); // Local
-}
-
-console.log("Banco sendo usado em:", dbPath);
+const dbPath = process.env.RENDER ? "/data/chavesvr.db" : path.join(__dirname, "chavesvr.db");
 
 const db = new sqlite3.Database(dbPath, (err) => {
-    if (err) {
-        console.error("Erro ao conectar ao banco:", err);
-    } else {
-        console.log("Banco conectado com sucesso!");
-    }
+    if (err) console.error("Erro ao conectar no banco:", err);
+    else console.log("Banco conectado:", dbPath);
 });
 
 // ============================
-// CRIAÇÃO DA TABELA "unidades"
+// CRIAÇÃO DA TABELA
 // ============================
 db.serialize(() => {
     db.run(`
         CREATE TABLE IF NOT EXISTS unidades (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            unidade TEXT,
             empreendimento TEXT,
-            status TEXT,
-            obs TEXT
+            bloco TEXT,
+            pavimento TEXT,
+            unidade TEXT,
+            situacao TEXT,
+            status_financeiro TEXT,
+            habite_se TEXT,
+            cvco TEXT,
+            chaves_entregues TEXT,
+            data_vistoria TEXT,
+            hora_vistoria TEXT,
+            data_liberacao TEXT,
+            agendado_por TEXT,
+            observacao TEXT
         );
     `);
 });
 
 // ============================
-// SERVIR ARQUIVOS DO FRONTEND
+// SERVE ARQUIVOS FRONT
 // ============================
 app.use(express.static(path.join(__dirname, "public")));
 
 // ============================
-// ROTAS DA API
+// ROTAS API
 // ============================
 
-// LISTAR TODAS
+// LISTAR TODOS (ou filtrar por empreendimento)
 app.get("/api/unidades", (req, res) => {
-    db.all("SELECT * FROM unidades ORDER BY id DESC", (err, rows) => {
-        if (err) {
-            console.error("Erro ao listar unidades:", err);
-            return res.status(500).json({ error: "Erro ao listar" });
-        }
+    const emp = req.query.empreendimento;
+    const sql = emp ? 
+        `SELECT * FROM unidades WHERE empreendimento = ?` :
+        `SELECT * FROM unidades`;
+
+    db.all(sql, emp ? [emp] : [], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
         res.json(rows);
+    });
+});
+
+// LISTAR EMPREENDIMENTOS
+app.get("/api/empreendimentos", (req, res) => {
+    db.all(`SELECT DISTINCT empreendimento FROM unidades ORDER BY empreendimento ASC`, (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows.map(r => r.empreendimento));
     });
 });
 
 // CRIAR
 app.post("/api/unidades", (req, res) => {
-    const { unidade, empreendimento, status, obs } = req.body;
+    const d = req.body;
 
     const sql = `
-        INSERT INTO unidades (unidade, empreendimento, status, obs)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO unidades 
+        (empreendimento, bloco, pavimento, unidade, situacao, status_financeiro, habite_se, cvco, chaves_entregues, 
+        data_vistoria, hora_vistoria, data_liberacao, agendado_por, observacao)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
+    const params = [
+        d.empreendimento, d.bloco, d.pavimento, d.unidade, d.situacao, d.status_financeiro, d.habite_se, d.cvco, d.chaves_entregues,
+        d.data_vistoria, d.hora_vistoria, d.data_liberacao, d.agendado_por, d.observacao
+    ];
 
-    db.run(sql, [unidade, empreendimento, status, obs], function (err) {
-        if (err) {
-            console.error("Erro ao inserir unidade:", err);
-            return res.status(500).json({ error: "Erro ao cadastrar" });
-        }
+    db.run(sql, params, function(err) {
+        if (err) return res.status(500).json({ error: err.message });
         res.json({ id: this.lastID });
     });
 });
 
 // EDITAR
 app.put("/api/unidades/:id", (req, res) => {
+    const d = req.body;
     const { id } = req.params;
-    const { unidade, empreendimento, status, obs } = req.body;
 
     const sql = `
-        UPDATE unidades
-        SET unidade = ?, empreendimento = ?, status = ?, obs = ?
-        WHERE id = ?
+        UPDATE unidades SET 
+        empreendimento=?, bloco=?, pavimento=?, unidade=?, situacao=?, status_financeiro=?, habite_se=?, cvco=?, chaves_entregues=?,
+        data_vistoria=?, hora_vistoria=?, data_liberacao=?, agendado_por=?, observacao=?
+        WHERE id=?
     `;
+    
+    const params = [
+        d.empreendimento, d.bloco, d.pavimento, d.unidade, d.situacao, d.status_financeiro, d.habite_se, d.cvco, d.chaves_entregues,
+        d.data_vistoria, d.hora_vistoria, d.data_liberacao, d.agendado_por, d.observacao,
+        id
+    ];
 
-    db.run(sql, [unidade, empreendimento, status, obs, id], function (err) {
-        if (err) {
-            console.error("Erro ao editar unidade:", err);
-            return res.status(500).json({ error: "Erro ao editar" });
-        }
-        res.json({ success: true });
+    db.run(sql, params, function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ updated: true });
     });
 });
 
 // DELETAR
 app.delete("/api/unidades/:id", (req, res) => {
-    const { id } = req.params;
-
-    const sql = `DELETE FROM unidades WHERE id = ?`;
-
-    db.run(sql, [id], function (err) {
-        if (err) {
-            console.error("Erro ao deletar unidade:", err);
-            return res.status(500).json({ error: "Erro ao deletar" });
-        }
-        res.json({ success: true });
+    db.run(`DELETE FROM unidades WHERE id=?`, [req.params.id], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ deleted: true });
     });
 });
 
@@ -127,7 +133,4 @@ app.delete("/api/unidades/:id", (req, res) => {
 // INICIAR SERVIDOR
 // ============================
 const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-    console.log(`ChaveVR rodando na porta ${PORT}`);
-});
+app.listen(PORT, () => console.log("ChaveVR rodando na porta", PORT));
