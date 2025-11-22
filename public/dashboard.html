@@ -2,171 +2,71 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ChaveVR - Dashboard</title>
     <link rel="stylesheet" href="styles.css">
-
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f5f6fa;
-            margin: 0;
-            padding: 0;
-        }
-
+        body { background:#f5f6fa; margin:0; font-family:Arial,sans-serif; }
         .top-menu {
-            display: flex;
-            justify-content: flex-end;
-            gap: 15px;
-            padding: 15px 30px;
-            background: white;
-            border-bottom: 1px solid #ddd;
+            display:flex; justify-content:flex-end; gap:15px;
+            padding:15px 30px; background:white; border-bottom:1px solid #ddd;
         }
-
-        .top-menu a {
-            text-decoration: none;
-            color: #333;
-            font-weight: bold;
-        }
-
-        .dashboard-container {
-            padding: 30px;
-        }
-
-        h1 {
-            font-size: 26px;
-            margin-bottom: 25px;
-            color: #2c3e50;
-        }
-
-        .top-actions {
-            display: flex;
-            justify-content: flex-end;
-            margin-bottom: 25px;
-        }
-
+        .top-menu a { text-decoration:none; color:#333; font-weight:bold; }
+        .dashboard-container { padding:30px; }
+        h1 { font-size:26px; color:#2c3e50; margin-top:0; margin-bottom:25px;}
+        .top-actions { display:flex; justify-content:flex-end; margin-bottom:25px; }
         .btn-primary {
-            background: #4070f4;
-            padding: 10px 20px;
-            color: white;
-            border-radius: 6px;
-            text-decoration: none;
-            font-weight: bold;
+            background:#4070f4; padding:10px 20px; color:white;
+            border-radius:6px; text-decoration:none; font-weight:bold;
         }
-
-        .btn-primary:hover {
-            background: #3058c4;
-        }
-
         .cards {
-            display: flex;
-            gap: 20px;
-            margin-bottom: 25px;
+            display:flex; gap:20px; margin-bottom:25px;
         }
-
         .card {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            width: 180px;
-            box-shadow: 0px 2px 8px rgba(0,0,0,0.1);
-            text-align: center;
+            background:white; padding:20px; border-radius:8px;
+            width:180px; box-shadow:0 2px 8px rgba(0,0,0,0.1);
+            text-align:center;
         }
-
-        .card h3 {
-            margin: 0;
-            font-size: 16px;
-            color: #555;
-        }
-
-        .card p {
-            margin-top: 10px;
-            font-size: 22px;
-            font-weight: bold;
-            color: #000;
-        }
-
+        .card h3 { margin:0; font-size:16px; color:#555; }
+        .card p { margin-top:10px; font-size:22px; font-weight:bold; }
         .filters {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 25px;
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0px 2px 8px rgba(0,0,0,0.1);
-            flex-wrap: wrap;
+            display:flex; gap:10px; flex-wrap:wrap;
+            background:white; padding:15px; border-radius:8px;
+            box-shadow:0 2px 8px rgba(0,0,0,0.1); margin-bottom:25px;
         }
-
-        .filters select,
-        .filters input {
-            padding: 8px;
-            border-radius: 6px;
-            border: 1px solid #ccc;
+        .filters select, .filters input {
+            padding:8px; border-radius:6px; border:1px solid #ccc;
         }
-
         .btn-secondary {
-            background: #888;
-            padding: 10px 15px;
-            color: white;
-            border-radius: 6px;
-            border: none;
-            cursor: pointer;
+            background:#888; padding:10px 15px; color:white;
+            border-radius:6px; border:none; cursor:pointer;
         }
-
-        .tabela-container {
-            overflow-x: auto;
-        }
-
+        .tabela-container { overflow-x:auto; }
         table {
-            width: 100%;
-            background: white;
-            border-collapse: collapse;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0px 2px 8px rgba(0,0,0,0.1);
+            width:100%; border-collapse:collapse; background:white;
+            border-radius:10px; overflow:hidden;
+            box-shadow:0 2px 8px rgba(0,0,0,0.1);
         }
-
-        th, td {
-            padding: 10px;
-            text-align: left;
-            border-bottom: 1px solid #eee;
+        th,td {
+            padding:8px 10px; border-bottom:1px solid #eee;
+            text-align:left; font-size:13px;
         }
-
-        th {
-            background: #fafafa;
-            font-size: 14px;
-            font-weight: bold;
-        }
-
-        tr:hover {
-            background: #f2f6ff;
-        }
+        th { background:#fafafa; font-weight:bold; }
     </style>
 </head>
 <body>
 
-    <!-- Menu Superior -->
     <div class="top-menu">
-        <a href="/index.html">Voltar</a>
-        <a href="#">Relatório</a>
-        <a href="/">Sair</a>
+        <a href="/empreendimentos.html">Empreendimentos</a>
+        <a href="/unidades.html">Unidades</a>
+        <a href="/index.html">Módulos</a>
     </div>
 
     <div class="dashboard-container">
 
-        <!-- Título -->
         <h1>Dashboard - ChaveVR</h1>
 
-        <!-- Botão Cadastrar -->
         <div class="top-actions">
-            <a href="/cadastro.html" class="btn-primary">+ Cadastrar Unidade</a>
-        </div>
-
-        <!-- Filtro Empreendimento -->
-        <div class="filters" style="margin-bottom: 15px;">
-            <select id="filtro-empreendimento">
-                <option value="">Selecione o Empreendimento</option>
-            </select>
+            <a href="/unidades.html" class="btn-primary">+ Gerenciar unidades</a>
         </div>
 
         <!-- Cards -->
@@ -179,41 +79,39 @@
             <div class="card"><h3>CVCO Liberado</h3><p id="card-cvco">0</p></div>
         </div>
 
-        <!-- Filtros adicionais -->
+        <!-- Filtros -->
         <div class="filters">
+            <select id="filtro-empreendimento">
+                <option value="">Empreendimento</option>
+            </select>
             <select id="filtro-situacao">
                 <option value="">Situação</option>
                 <option>Pendente</option>
                 <option>Liberada</option>
                 <option>Reprovada</option>
             </select>
-
             <select id="filtro-status-financeiro">
                 <option value="">Status Financeiro</option>
                 <option>OK</option>
                 <option>Pendente</option>
             </select>
-
             <select id="filtro-cvco">
                 <option value="">CVCO</option>
                 <option>Liberado</option>
                 <option>Pendente</option>
             </select>
-
             <select id="filtro-habitese">
                 <option value="">Habite-se</option>
                 <option>Sim</option>
                 <option>Não</option>
             </select>
-
             <input type="date" id="filtro-data-vistoria">
-
             <button class="btn-secondary" onclick="filtrar()">Buscar</button>
         </div>
 
         <!-- Tabela -->
         <div class="tabela-container">
-            <table class="tabela">
+            <table>
                 <thead>
                     <tr>
                         <th>Empreendimento</th>
@@ -230,15 +128,13 @@
                         <th>Data Liberação</th>
                         <th>Agendado Por</th>
                         <th>Obs</th>
-                        <th>Ações</th>
                     </tr>
                 </thead>
                 <tbody id="tabela-unidades">
-                    <!-- preenchido pelo chavesvr.js -->
+                    <!-- preenchido via chavesvr.js -->
                 </tbody>
             </table>
         </div>
-
     </div>
 
     <script src="/chavesvr.js"></script>
