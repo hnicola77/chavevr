@@ -3,186 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ChaveVR - Dashboard</title>
+    <title>Dashboard – ChaveVR</title>
     <link rel="stylesheet" href="styles.css">
-
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f5f6fa;
-            margin: 0;
-            padding: 0;
-        }
-
-        .top-menu {
-            display: flex;
-            justify-content: flex-end;
-            gap: 15px;
-            padding: 15px 30px;
-            background: white;
-            border-bottom: 1px solid #ddd;
-        }
-
-        .top-menu a {
-            text-decoration: none;
-            color: #333;
-            font-weight: bold;
-        }
-
-        .dashboard-container {
-            padding: 30px;
-        }
-
-        h1 {
-            font-size: 26px;
-            margin-bottom: 25px;
-            color: #2c3e50;
-        }
-
-        .top-actions {
-            display: flex;
-            justify-content: flex-end;
-            margin-bottom: 25px;
-        }
-
-        .btn-primary {
-            background: #4070f4;
-            padding: 10px 20px;
-            color: white;
-            border-radius: 6px;
-            text-decoration: none;
-            font-weight: bold;
-            transition: 0.2s;
-        }
-
-        .btn-primary:hover {
-            background: #3058c4;
-        }
-
-        /* Cards */
-        .cards {
-            display: flex;
-            gap: 20px;
-            margin-bottom: 25px;
-        }
-
-        .card {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            width: 180px;
-            box-shadow: 0px 2px 8px rgba(0,0,0,0.1);
-            text-align: center;
-        }
-
-        .card h3 {
-            margin: 0;
-            font-size: 16px;
-            color: #555;
-        }
-
-        .card p {
-            margin-top: 10px;
-            font-size: 22px;
-            font-weight: bold;
-            color: #000;
-        }
-
-        /* Filtros */
-        .filters {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 25px;
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0px 2px 8px rgba(0,0,0,0.1);
-        }
-
-        .filters select,
-        .filters input {
-            padding: 8px;
-            border-radius: 6px;
-            border: 1px solid #ccc;
-        }
-
-        .btn-secondary {
-            background: #888;
-            padding: 10px 15px;
-            color: white;
-            border-radius: 6px;
-            border: none;
-        }
-
-        /* Tabela */
-        .tabela-container {
-            overflow-x: auto;
-        }
-
-        table {
-            width: 100%;
-            background: white;
-            border-collapse: collapse;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0px 2px 8px rgba(0,0,0,0.1);
-        }
-
-        th, td {
-            padding: 10px;
-            text-align: left;
-            border-bottom: 1px solid #eee;
-        }
-
-        th {
-            background: #fafafa;
-            font-size: 14px;
-            font-weight: bold;
-        }
-
-        tr:hover {
-            background: #f2f6ff;
-        }
-
-        .action-btn {
-            padding: 5px 10px;
-            background: #4070f4;
-            color: white;
-            border-radius: 4px;
-            cursor: pointer;
-            border: none;
-        }
-
-    </style>
 </head>
 
 <body>
 
-    <!-- Menu Superior -->
-    <div class="top-menu">
-        <a href="/index.html">Voltar</a>
-        <a href="#">Relatório</a>
-        <a href="#">Sair</a>
-    </div>
+    <!-- MENU SUPERIOR -->
+    <header class="top-menu">
+        <a href="index.html" class="menu-link">Voltar</a>
+        <a href="#" class="menu-link">Relatório</a>
+        <a href="/../index.html" class="menu-link">Sair</a>
+    </header>
 
     <div class="dashboard-container">
 
-        <!-- Título -->
+        <!-- TÍTULO -->
         <h1>Dashboard - ChaveVR</h1>
 
-        <!-- Botão -->
+        <!-- BOTÃO CADASTRAR -->
         <div class="top-actions">
-            <a href="/cadastro.html" class="btn-primary">+ Cadastrar Unidade</a>
+            <a href="cadastro.html" class="btn-primary">+ Cadastrar Unidade</a>
         </div>
 
-        <!-- Seletor de empreendimento -->
-        <div class="filters" style="margin-bottom:15px;">
-            <select id="filtro-empreendimento">
-                <option value="">Selecione o Empreendimento</option>
+        <!-- SELECT EMPREENDIMENTO -->
+        <div class="filtro-empreendimento">
+            <select id="filtroEmpreendimento">
+                <option selected>Selecione o Empreendimento</option>
             </select>
         </div>
 
-        <!-- Cards -->
+        <!-- CARDS -->
         <div class="cards">
             <div class="card"><h3>Total</h3><p id="card-total">0</p></div>
             <div class="card"><h3>Pendentes</h3><p id="card-pendentes">0</p></div>
@@ -192,39 +43,39 @@
             <div class="card"><h3>CVCO Liberado</h3><p id="card-cvco">0</p></div>
         </div>
 
-        <!-- Filtros adicionais -->
+        <!-- FILTROS -->
         <div class="filters">
-            <select id="filtro-situacao">
+            <select id="fSituacao">
                 <option value="">Situação</option>
                 <option>Pendente</option>
                 <option>Liberada</option>
                 <option>Reprovada</option>
             </select>
 
-            <select id="filtro-status-financeiro">
+            <select id="fStatusFinanceiro">
                 <option value="">Status Financeiro</option>
-                <option>OK</option>
+                <option>Ok</option>
                 <option>Pendente</option>
             </select>
 
-            <select id="filtro-cvco">
+            <select id="fCVCO">
                 <option value="">CVCO</option>
                 <option>Liberado</option>
                 <option>Pendente</option>
             </select>
 
-            <select id="filtro-habitese">
+            <select id="fHabiteSe">
                 <option value="">Habite-se</option>
-                <option>Sim</option>
-                <option>Não</option>
+                <option>Liberado</option>
+                <option>Pendente</option>
             </select>
 
-            <input type="date" id="filtro-data-vistoria">
+            <input type="date" id="fDataVistoria">
 
-            <button class="btn-secondary" onclick="filtrar()">Buscar</button>
+            <button class="btn-secondary" onclick="buscar()">Buscar</button>
         </div>
 
-        <!-- Tabela -->
+        <!-- TABELA -->
         <div class="tabela-container">
             <table class="tabela">
                 <thead>
@@ -243,17 +94,15 @@
                         <th>Data Liberação</th>
                         <th>Agendado Por</th>
                         <th>Obs</th>
-                        <th>Ações</th>
                     </tr>
                 </thead>
-                <tbody id="tabela-unidades">
-                    <!-- preenchido pelo chavesvr.js -->
-                </tbody>
+                <tbody id="tabela-unidades"></tbody>
             </table>
         </div>
 
     </div>
 
-    <script src="chavesvr.js"></script>
+    <!-- SCRIPT CORRETO -->
+    <script src="/chavesvr.js"></script>
 </body>
 </html>
