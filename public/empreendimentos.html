@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>ChaveVR - Empreendimentos</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body { background:#f5f6fa; margin:0; font-family:Arial,sans-serif; }
+        .top-menu {
+            display:flex; justify-content:flex-end; gap:15px;
+            padding:15px 30px; background:#fff; border-bottom:1px solid #ddd;
+        }
+        .top-menu a { text-decoration:none; color:#333; font-weight:bold; }
+        .container {
+            max-width:1000px; margin:30px auto; background:#fff;
+            padding:30px; border-radius:12px;
+            box-shadow:0 3px 10px rgba(0,0,0,0.12);
+        }
+        h1,h2 { margin-top:0; color:#2c3e50; }
+        label { display:block; font-weight:bold; margin-top:12px; color:#34495e; }
+        input, textarea {
+            width:100%; padding:8px 10px; border-radius:6px;
+            border:1px solid #ccc; margin-top:5px; font-size:14px;
+        }
+        textarea { resize:vertical; min-height:60px; }
+        .row { display:flex; gap:15px; }
+        .row > div { flex:1; }
+        .actions { margin-top:20px; display:flex; gap:10px; }
+        .btn-primary {
+            background:#4070f4; padding:10px 22px; color:#fff;
+            border-radius:6px; border:none; cursor:pointer; font-weight:bold;
+        }
+        .btn-secondary {
+            background:#888; padding:10px 22px; color:#fff;
+            border-radius:6px; border:none; cursor:pointer; font-weight:bold;
+        }
+        table {
+            width:100%; border-collapse:collapse; background:white;
+            border-radius:10px; overflow:hidden; margin-top:15px;
+        }
+        th,td {
+            padding:8px 10px; border-bottom:1px solid #eee;
+            text-align:left; font-size:14px;
+        }
+        th { background:#fafafa; font-weight:bold; }
+        .btn-small {
+            padding:4px 8px; border-radius:4px; border:none;
+            cursor:pointer; font-size:12px;
+        }
+        .btn-editar { background:#f1c40f; color:#000; }
+        .btn-unidades { background:#4070f4; color:#fff; }
+    </style>
+</head>
+<body>
+
+    <div class="top-menu">
+        <a href="/dashboard.html">Dashboard</a>
+        <a href="/unidades.html">Unidades</a>
+        <a href="/index.html">Módulos</a>
+    </div>
+
+    <div class="container">
+        <h1>Empreendimentos - ChaveVR</h1>
+        <p>1º passo: cadastre os empreendimentos. Depois gerencie as unidades de cada um.</p>
+
+        <!-- FORM EMPREENDIMENTO -->
+        <section>
+            <h2>Novo / editar empreendimento</h2>
+
+            <form id="form-empreendimento">
+                <label for="nomeEmp">Nome do empreendimento</label>
+                <input id="nomeEmp" type="text" required>
+
+                <div class="row">
+                    <div>
+                        <label for="cidadeEmp">Cidade</label>
+                        <input id="cidadeEmp" type="text">
+                    </div>
+                    <div>
+                        <label for="ufEmp">UF</label>
+                        <input id="ufEmp" type="text" maxlength="2">
+                    </div>
+                    <div>
+                        <label for="dataEntregaEmp">Data de entrega</label>
+                        <input id="dataEntregaEmp" type="date">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div>
+                        <label for="faseEmp">Fase / situação</label>
+                        <input id="faseEmp" type="text">
+                    </div>
+                    <div>
+                        <label for="codigoEmp">Código interno</label>
+                        <input id="codigoEmp" type="text">
+                    </div>
+                </div>
+
+                <label for="obsEmp">Observações</label>
+                <textarea id="obsEmp"></textarea>
+
+                <div class="actions">
+                    <button type="submit" class="btn-primary" id="btnSalvarEmp">Salvar empreendimento</button>
+                    <button type="button" class="btn-secondary" id="btnNovoEmp">Novo</button>
+                </div>
+            </form>
+        </section>
+
+        <!-- LISTA EMPREENDIMENTOS -->
+        <section style="margin-top:30px;">
+            <h2>Empreendimentos cadastrados</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Empreendimento</th>
+                        <th>Cidade</th>
+                        <th>Fase</th>
+                        <th>Data entrega</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="tabela-empreendimentos">
+                    <!-- preenchido via chavesvr.js -->
+                </tbody>
+            </table>
+        </section>
+    </div>
+
+    <script src="/chavesvr.js"></script>
+</body>
+</html>
