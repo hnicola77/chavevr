@@ -27,6 +27,13 @@ const db = new sqlite3.Database(dbPath, (err) => {
 
 // Criação das tabelas
 db.serialize(() => {
+    // ⚠️ APAGA a tabela 'unidades' antiga para recriar com o novo formato
+    // (só as UNIDADES são perdidas; empreendimentos ficam)
+    db.run("DROP TABLE IF EXISTS unidades");
+
+    // Se em algum momento quiser zerar também empreendimentos, descomente:
+    // db.run("DROP TABLE IF EXISTS empreendimentos");
+
     db.run(`
         CREATE TABLE IF NOT EXISTS empreendimentos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -289,3 +296,4 @@ const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
     console.log("ChaveVR rodando na porta " + PORT);
 });
+
