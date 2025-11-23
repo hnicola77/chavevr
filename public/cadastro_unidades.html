@@ -224,10 +224,16 @@ function editar(u) {
 async function salvarUnidade(e) {
     e.preventDefault();
 
+    // 1. Verificação de segurança: O Bloco ID existe?
+    if (!blocoId) {
+        alert("Erro: ID do Bloco não encontrado. Recarregue a página.");
+        return;
+    }
+
     const id = get("id").value;
 
     const dados = {
-        bloco_id: blocoId, // Importante: mantém o vínculo com o bloco
+        bloco_id: blocoId, // <--- O ERRO COSTUMA SER AQUI (Use a variável global blocoId)
         unidade: get("unidade").value,
         situacao: get("situacao").value,
         statusFinanceiro: get("statusFinanceiro").value,
@@ -241,28 +247,36 @@ async function salvarUnidade(e) {
         observacao: get("observacao").value
     };
 
+    console.log("Enviando dados:", dados); // Abra o F12 (Console) para ver isso
+
     const metodo = id ? "PUT" : "POST";
     const url = id ? `/unidades/${id}` : "/unidades";
 
     try {
-        await fetch(url, {
+        const res = await fetch(url, {
             method: metodo,
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(dados)
         });
 
-        alert("Salvo com sucesso!");
-        get("formUnidade").reset();
-        get("id").value = "";
-        get("bloco_id").value = blocoId; // Restaura o ID do bloco no hidden
+        if (!res.ok) {
+            throw new Error("Erro no servidor: " + res.statusText);
+        }
 
+        alert("Unidade salva com sucesso!");
+
+        // 2. Limpa o formulário
+        get("formUnidade").reset();
+        
+        // 3. REINSERE o ID no campo oculto (embora usemos a variável global, é boa prática manter o DOM limpo)
+        get("id").value = "";
+        get("bloco_id").value = blocoId; 
+
+        // 4. Atualiza a tabela
         listarUnidades();
-    } catch (error) {
-        alert("Erro ao salvar. Verifique a conexão.");
-        console.error(error);
+
+    } catch (erro) {
+        console.error("Erro ao salvar:", erro);
+        alert("Ocorreu um erro ao salvar. Verifique o console (F12).");
     }
 }
-</script>
-
-</body>
-</html>
