@@ -10,6 +10,7 @@
 
 <body>
 
+    <!-- MENU SUPERIOR -->
     <div class="top-menu">
         <a href="/index.html">Módulos</a>
         <a href="/dashboard.html">Dashboard</a>
@@ -21,63 +22,53 @@
 
         <p id="contexto" style="font-weight:bold; margin-bottom:20px;"></p>
 
+        <!-- FORMULÁRIO -->
         <form id="formUnidade" onsubmit="salvarUnidade(event)">
             <input type="hidden" id="id" />
-            
             <input type="hidden" id="bloco_id" />
 
-            <label>Unidade (Número/Nome)</label>
-            <input id="unidade" required placeholder="Ex: 101, 12B, Casa 05..." />
+            <label>Unidade</label>
+            <input id="unidade" required />
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <div>
-                    <label>Situação da Obra</label>
-                    <select id="situacao">
-                        <option value="Em obra">Em obra</option>
-                        <option value="Ajuste de cliente">Ajuste de cliente</option>
-                        <option value="Aprovada">Aprovada (Vistoria)</option>
-                        <option value="Liberada">Liberada (Pronta)</option>
-                    </select>
-                </div>
-                <div>
-                    <label>Status Financeiro</label>
-                    <select id="statusFinanceiro">
-                        <option value="Liberada">Liberada</option>
-                        <option value="Bloqueada">Bloqueada</option>
-                    </select>
-                </div>
-            </div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <div>
-                    <label>Condição Habitável?</label>
-                    <select id="habitavel">
-                        <option value="Sim">Sim</option>
-                        <option value="Não">Não</option>
-                    </select>
-                </div>
-                <div>
-                    <label>CVCO / Habite-se</label>
-                    <select id="cvco">
-                        <option value="Liberado">Liberado</option>
-                        <option value="Não liberado">Não liberado</option>
-                    </select>
-                </div>
-            </div>
-
-            <label>Entrega de Chaves</label>
-            <select id="chaves">
-                <option value="Não entregue">Não entregue</option>
-                <option value="Entregue">Entregue</option>
+            <label>Situação</label>
+            <select id="situacao">
+                <option value="Em obra">Em obra</option>
+                <option value="Ajuste de cliente">Ajuste de cliente</option>
+                <option value="Liberada">Liberada</option>
+                <option value="Aprovada">Aprovada</option>
             </select>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+            <label>Status Financeiro</label>
+            <select id="statusFinanceiro">
+                <option value="Liberada">Liberada</option>
+                <option value="Bloqueada">Bloqueada</option>
+            </select>
+
+            <label>Habitável</label>
+            <select id="habitavel">
+                <option value="Sim">Sim</option>
+                <option value="Não">Não</option>
+            </select>
+
+            <label>CVCO</label>
+            <select id="cvco">
+                <option value="Liberado">Liberado</option>
+                <option value="Não liberado">Não liberado</option>
+            </select>
+
+            <label>Chaves</label>
+            <select id="chaves">
+                <option value="Entregue">Entregue</option>
+                <option value="Não entregue">Não entregue</option>
+            </select>
+
+            <div class="row">
                 <div>
                     <label>Data Vistoria</label>
                     <input type="date" id="dataVistoria" />
                 </div>
                 <div>
-                    <label>Hora Vistoria</label>
+                    <label>Hora</label>
                     <input type="time" id="horaVistoria" />
                 </div>
             </div>
@@ -91,31 +82,33 @@
             <label>Observação</label>
             <textarea id="observacao"></textarea>
 
-            <button class="btn-primary" style="margin-top:20px;">Salvar Unidade</button>
+            <button class="btn-primary" style="margin-top:20px;">Salvar</button>
         </form>
 
         <hr style="margin:30px 0">
 
-        <h2>Unidades do Bloco</h2>
+        <h2>Unidades Cadastradas</h2>
 
-        <table style="font-size: 0.9em;">
+        <table>
             <thead>
                 <tr>
-                    <th>Unid.</th>
+                    <th>Unidade</th>
                     <th>Situação</th>
-                    <th>Financ.</th>
+                    <th>Financeiro</th>
+                    <th>Habitável</th>
                     <th>CVCO</th>
                     <th>Chaves</th>
                     <th>Vistoria</th>
+                    <th>Liberação</th>
                     <th>Ações</th>
                 </tr>
             </thead>
+
             <tbody id="tabelaUnidades"></tbody>
         </table>
     </div>
 
 <script>
-// --- VARIÁVEIS GLOBAIS (CRUCIAL: Devem estar aqui fora) ---
 let empId = null;
 let blocoId = null;
 
@@ -124,93 +117,75 @@ let blocoId = null;
  ****************************************************/
 document.addEventListener("DOMContentLoaded", async () => {
 
-    // 1. Ler IDs da URL
     const params = new URLSearchParams(location.search);
-    
-    // Atribui às variáveis globais (sem usar 'let' ou 'const' aqui)
     empId   = params.get("emp");
     blocoId = params.get("bloco");
 
-    // Validação de segurança
     if (!empId || !blocoId) {
         alert("Empreendimento ou bloco não informado!");
         location.href = "/cadastro_empreendimentos.html";
         return;
     }
 
-    // Define o ID do bloco no input hidden apenas visualmente
-    if(get("bloco_id")) get("bloco_id").value = blocoId;
+    get("bloco_id").value = blocoId;
 
-    // 2. Carregar contexto e lista
     await carregarContexto();
     await listarUnidades();
 });
 
 /****************************************************
- * MOSTRAR ONDE ESTAMOS
+ * MOSTRAR NOME DO EMPREENDIMENTO + BLOCO
  ****************************************************/
 async function carregarContexto() {
-    try {
-        // Busca nome do Empreendimento
-        const resEmp = await fetch("/empreendimentos");
-        const listaEmp = await resEmp.json();
-        const emp = listaEmp.find(e => e.id == empId);
+    const resEmp = await fetch("/empreendimentos");
+    const empreendimentos = await resEmp.json();
+    const emp = empreendimentos.find(e => e.id == empId);
 
-        // Busca nome do Bloco
-        const resBl = await fetch(`/blocos/${empId}`);
-        const listaBl = await resBl.json();
-        const bloco = listaBl.find(b => b.id == blocoId);
+    const resBl = await fetch(`/blocos/${empId}`);
+    const blocos = await resBl.json();
+    const bloco = blocos.find(b => b.id == blocoId);
 
-        if (emp && bloco) {
-            get("contexto").innerHTML = `
-                <span style="color:#666;">${emp.nome}</span> &raquo; 
-                <span style="color:#000;">${bloco.nome}</span>
-            `;
-        }
-    } catch (error) {
-        console.error("Erro ao carregar contexto:", error);
-    }
+    get("contexto").innerText =
+        `Empreendimento: ${emp.nome} — Bloco: ${bloco.nome}`;
 }
 
 /****************************************************
- * LISTAR UNIDADES
+ * LISTAR UNIDADES DO BLOCO
  ****************************************************/
 async function listarUnidades() {
-    try {
-        const res = await fetch(`/unidades/${blocoId}`);
-        const lista = await res.json();
+    const res = await fetch(`/unidades/${blocoId}`);
+    const lista = await res.json();
 
-        const tbody = get("tabelaUnidades");
-        tbody.innerHTML = "";
+    const tbody = get("tabelaUnidades");
+    tbody.innerHTML = "";
 
-        lista.forEach(u => {
-            const tr = document.createElement("tr");
+    lista.forEach(u => {
+        const tr = document.createElement("tr");
 
-            // Formatação simples para datas
-            const dataVist = u.dataVistoria ? new Date(u.dataVistoria).toLocaleDateString('pt-BR', {timeZone:'UTC'}) : '-';
+        tr.innerHTML = `
+            <td>${u.unidade}</td>
+            <td>${u.situacao}</td>
+            <td>${u.statusFinanceiro}</td>
+            <td>${u.habitavel}</td>
+            <td>${u.cvco}</td>
+            <td>${u.chaves}</td>
+            <td>${u.dataVistoria || ""}</td>
+            <td>${u.dataLiberacao || ""}</td>
 
-            tr.innerHTML = `
-                <td><strong>${u.unidade}</strong></td>
-                <td>${u.situacao}</td>
-                <td>${u.statusFinanceiro}</td>
-                <td>${u.cvco}</td>
-                <td>${u.chaves}</td>
-                <td>${dataVist} ${u.horaVistoria || ""}</td>
-                <td>
-                    <button class="btn-small btn-editar" onclick='editar(${JSON.stringify(u)})'>
-                        Editar
-                    </button>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-    } catch (error) {
-        console.error("Erro ao listar unidades:", error);
-    }
+            <td>
+                <button class="btn-small btn-editar"
+                        onclick='editar(${JSON.stringify(u)})'>
+                    Editar
+                </button>
+            </td>
+        `;
+
+        tbody.appendChild(tr);
+    });
 }
 
 /****************************************************
- * EDITAR
+ * EDITAR UNIDADE
  ****************************************************/
 function editar(u) {
     get("id").value = u.id;
@@ -225,27 +200,18 @@ function editar(u) {
     get("dataLiberacao").value = u.dataLiberacao || "";
     get("agendadoPor").value = u.agendadoPor || "";
     get("observacao").value = u.observacao || "";
-    
-    // Rola a tela para o formulário
-    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 /****************************************************
- * SALVAR (POST/PUT) - CORRIGIDO
+ * SALVAR UNIDADE
  ****************************************************/
 async function salvarUnidade(e) {
     e.preventDefault();
 
-    // Verificação extra de segurança
-    if (!blocoId) {
-        alert("Erro crítico: ID do Bloco perdido. Atualize a página.");
-        return;
-    }
-
     const id = get("id").value;
 
     const dados = {
-        bloco_id: blocoId, // <--- USO DA VARIÁVEL GLOBAL (Correção do erro)
+        bloco_id: blocoId,
         unidade: get("unidade").value,
         situacao: get("situacao").value,
         statusFinanceiro: get("statusFinanceiro").value,
@@ -259,37 +225,23 @@ async function salvarUnidade(e) {
         observacao: get("observacao").value
     };
 
-    console.log("Enviando:", dados); // Para debug
-
     const metodo = id ? "PUT" : "POST";
     const url = id ? `/unidades/${id}` : "/unidades";
 
-    try {
-        const res = await fetch(url, {
-            method: metodo,
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(dados)
-        });
+    await fetch(url, {
+        method: metodo,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(dados)
+    });
 
-        if (!res.ok) throw new Error("Falha ao salvar");
+    alert("Unidade salva com sucesso!");
 
-        alert("Salvo com sucesso!");
-        
-        // Limpa o formulário
-        get("formUnidade").reset();
-        get("id").value = "";
-        
-        // Garante que o input hidden tenha o valor de volta (caso precise)
-        if(get("bloco_id")) get("bloco_id").value = blocoId; 
+    get("formUnidade").reset();
+    get("id").value = "";
 
-        // Atualiza a tabela imediatamente
-        listarUnidades();
-
-    } catch (error) {
-        alert("Erro ao salvar. Verifique o console.");
-        console.error(error);
-    }
+    listarUnidades();
 }
+
 </script>
 
 </body>
