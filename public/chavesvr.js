@@ -1,6 +1,7 @@
 /*****************************************************
- * ChaveVR – Funções centrais (Frontend)
- * Controle geral de carregamento, filtros e utilidades
+ * ChaveVR – JS central para páginas
+ * Empreendimentos → Blocos → Unidades
+ * Dashboard completo
  *****************************************************/
 
 /************ HELPERS ************/
@@ -12,11 +13,12 @@ function qsa(sel) { return document.querySelectorAll(sel); }
 const API = {
     empreendimentos: "/empreendimentos",
     blocos: (idEmp) => `/blocos/${idEmp}`,
-    unidades: (idBloco) => `/unidades/${idBloco}`
+    unidades: (idBloco) => `/unidades/${idBloco}`,
+    unidadePorId: (id) => `/unidade/${id}`
 };
 
 /*****************************************************
- * CARREGAR EMPREENDIMENTOS (usado em várias telas)
+ * CARREGAR EMPREENDIMENTOS EM SELECTS
  *****************************************************/
 async function carregarEmpreendimentosSelect(selectId) {
     const sel = get(selectId);
@@ -38,7 +40,7 @@ async function carregarEmpreendimentosSelect(selectId) {
 }
 
 /*****************************************************
- * CARREGAR BLOCOS PARA UM EMPREENDIMENTO
+ * CARREGAR BLOCOS EM SELECTS
  *****************************************************/
 async function carregarBlocosSelect(selectId, empId) {
     const sel = get(selectId);
@@ -65,7 +67,7 @@ async function carregarBlocosSelect(selectId, empId) {
 }
 
 /*****************************************************
- * UTIL – Determinar cor de unidade
+ * COR DA UNIDADE (para Dashboard e Cadastro)
  *****************************************************/
 function corUnidade(u) {
     if (u.chaves === "Entregue") return "verde";
@@ -79,7 +81,7 @@ function corUnidade(u) {
 }
 
 /*****************************************************
- * DASHBOARD – Carregar tudo
+ * DASHBOARD – Carregar todas as unidades do sistema
  *****************************************************/
 async function carregarDashboardCompleto() {
     let listaCompleta = [];
@@ -106,7 +108,7 @@ async function carregarDashboardCompleto() {
 }
 
 /*****************************************************
- * DASHBOARD – Preencher Cards
+ * DASHBOARD – Atualizar cards
  *****************************************************/
 function atualizarCardsDash(lista) {
     get("cardTotal").innerText = lista.length;
@@ -156,7 +158,7 @@ function preencherTabelaDash(lista) {
 }
 
 /*****************************************************
- * DASHBOARD – Filtros dos Cards
+ * DASHBOARD – filtro pelos cards
  *****************************************************/
 function filtrarPorCard(lista, tipo) {
     if (tipo === "pendentes")
@@ -178,7 +180,7 @@ function filtrarPorCard(lista, tipo) {
 }
 
 /*****************************************************
- * DASHBOARD – Função central de carregamento
+ * DASHBOARD – inicialização
  *****************************************************/
 async function initDashboard() {
     const lista = await carregarDashboardCompleto();
@@ -186,7 +188,7 @@ async function initDashboard() {
     atualizarCardsDash(lista);
     preencherTabelaDash(lista);
 
-    // Evento dos selects
+    // Filtrar blocos ao escolher empreendimento
     get("filtroEmpreendimento")?.addEventListener("change", async (e) => {
         await carregarBlocosSelect("filtroBloco", e.target.value);
     });
@@ -195,7 +197,7 @@ async function initDashboard() {
 }
 
 /*****************************************************
- * EXPORTAR FUNÇÕES GLOBAIS (caso necessário)
+ * EXPORTAR GLOBALMENTE (opcional)
  *****************************************************/
 window.ChaveVR = {
     carregarEmpreendimentosSelect,
