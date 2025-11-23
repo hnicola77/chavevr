@@ -3,25 +3,22 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>ChaveVR – Dashboard</title>
+    <title>Dashboard – ChaveVR</title>
     <link rel="stylesheet" href="/styles.css" />
     <script src="/chavesvr.js"></script>
 </head>
 
 <body>
 
-    <!-- MENU -->
+    <!-- MENU SUPERIOR -->
     <div class="top-menu">
         <a href="/index.html">Módulos</a>
+        <a href="/dashboard.html">Dashboard</a>
         <a href="/cadastro_empreendimentos.html">Empreendimentos</a>
-        <a href="/cadastro_blocos.html">Blocos</a>
-        <a href="/cadastro_unidades.html">Unidades</a>
     </div>
 
     <div class="container">
-
         <h1>Dashboard – ChaveVR</h1>
-        <p>Visão geral das entregas de chaves.</p>
 
         <!-- FILTROS -->
         <div class="filtros">
@@ -33,12 +30,12 @@
                 <option value="">Bloco</option>
             </select>
 
-            <button class="btn-secondary" onclick="aplicarFiltros()">Buscar</button>
-            <button class="btn-secondary" onclick="limparFiltros()">Limpar</button>
+            <button class="btn-secondary" onclick="aplicarFiltro()">Aplicar Filtro</button>
         </div>
 
         <!-- CARDS -->
         <div class="cards">
+
             <div class="card" onclick="filtrarCard('total')">
                 <h3>Total</h3>
                 <p id="cardTotal">0</p>
@@ -65,7 +62,7 @@
             </div>
 
             <div class="card" onclick="filtrarCard('cvco')">
-                <h3>CVCO</h3>
+                <h3>CVCO Liberado</h3>
                 <p id="cardCVCO">0</p>
             </div>
         </div>
@@ -92,62 +89,49 @@
 
     </div>
 
+
 <script>
 let listaCompleta = [];
 
-// =====================
-// INICIAR DASHBOARD
-// =====================
+/****************************************************
+ * INICIALIZAR DASHBOARD
+ ****************************************************/
 document.addEventListener("DOMContentLoaded", async () => {
 
+    // Carrega empreendimentos no filtro
     await ChaveVR.carregarEmpreendimentosSelect("filtroEmpreendimento");
 
-    listaCompleta = await ChaveVR.carregarDashboardCompleto();
-
-    ChaveVR.atualizarCardsDash(listaCompleta);
-    ChaveVR.preencherTabelaDash(listaCompleta);
-
-    // Quando muda o empreendimento → carrega blocos
-    get("filtroEmpreendimento").addEventListener("change", async (e) => {
-        await ChaveVR.carregarBlocosSelect("filtroBloco", e.target.value);
-    });
+    // Carrega tudo
+    listaCompleta = await ChaveVR.initDashboard();
 });
 
-// =====================
-// FILTRAR
-// =====================
-async function aplicarFiltros() {
-    let lista = [...listaCompleta];
+/****************************************************
+ * QUANDO MUDA O EMPREENDIMENTO → CARREGAR BLOCOS
+ ****************************************************/
+get("filtroEmpreendimento").addEventListener("change", async (e) => {
+    await ChaveVR.carregarBlocosSelect("filtroBloco", e.target.value);
+});
 
+/****************************************************
+ * APLICAR FILTRO (EMP + BLOCO)
+ ****************************************************/
+function aplicarFiltro() {
     const empId = get("filtroEmpreendimento").value;
     const blocoId = get("filtroBloco").value;
 
-    if (empId) {
-        lista = lista.filter(u => u.emp_id == empId);
-    }
+    let filtrada = [...listaCompleta];
 
-    if (blocoId) {
-        lista = lista.filter(u => u.bloco_id == blocoId);
-    }
+    if (empId) filtrada = filtrada.filter(u => u.emp_id == empId);
+    if (blocoId) filtrada = filtrada.filter(u => u.bloco_id == blocoId);
 
-    ChaveVR.atualizarCardsDash(lista);
-    ChaveVR.preencherTabelaDash(lista);
+    ChaveVR.preencherTabelaDash(filtrada);
 }
 
-function limparFiltros() {
-    get("filtroEmpreendimento").value = "";
-    get("filtroBloco").innerHTML = `<option value="">Bloco</option>`;
-
-    ChaveVR.atualizarCardsDash(listaCompleta);
-    ChaveVR.preencherTabelaDash(listaCompleta);
-}
-
-// =====================
-// FILTRAR POR CARD
-// =====================
+/****************************************************
+ * FILTRO PELOS CARDS
+ ****************************************************/
 function filtrarCard(tipo) {
     const lista = ChaveVR.filtrarPorCard(listaCompleta, tipo);
-    ChaveVR.atualizarCardsDash(lista);
     ChaveVR.preencherTabelaDash(lista);
 }
 
