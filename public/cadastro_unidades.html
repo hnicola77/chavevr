@@ -10,7 +10,7 @@
 
 <body>
 
-    <!-- MENU -->
+    <!-- MENU SUPERIOR -->
     <div class="top-menu">
         <a href="/index.html">Módulos</a>
         <a href="/dashboard.html">Dashboard</a>
@@ -18,24 +18,22 @@
     </div>
 
     <div class="container">
-
         <h1>Cadastro de Unidades</h1>
 
-        <p id="tituloContexto"
-           style="font-weight:bold; margin-bottom:20px; font-size:16px;"></p>
+        <p id="contexto" style="font-weight:bold; margin-bottom:20px;"></p>
 
-        <!-- FORM -->
+        <!-- FORMULÁRIO -->
         <form id="formUnidade" onsubmit="salvarUnidade(event)">
             <input type="hidden" id="id" />
             <input type="hidden" id="bloco_id" />
 
-            <label>Número da Unidade</label>
+            <label>Unidade</label>
             <input id="unidade" required />
 
             <label>Situação</label>
             <select id="situacao">
-                <option value="Em obra">Em Obra</option>
-                <option value="Ajuste de cliente">Ajuste de Cliente</option>
+                <option value="Em obra">Em obra</option>
+                <option value="Ajuste de cliente">Ajuste de cliente</option>
                 <option value="Liberada">Liberada</option>
                 <option value="Aprovada">Aprovada</option>
             </select>
@@ -55,33 +53,33 @@
             <label>CVCO</label>
             <select id="cvco">
                 <option value="Liberado">Liberado</option>
-                <option value="Não liberado">Não Liberado</option>
+                <option value="Não liberado">Não liberado</option>
             </select>
 
             <label>Chaves</label>
             <select id="chaves">
                 <option value="Entregue">Entregue</option>
-                <option value="Não entregue">Não Entregue</option>
+                <option value="Não entregue">Não entregue</option>
             </select>
 
             <div class="row">
                 <div>
                     <label>Data Vistoria</label>
-                    <input type="date" id="dataVistoria">
+                    <input type="date" id="dataVistoria" />
                 </div>
                 <div>
                     <label>Hora</label>
-                    <input type="time" id="horaVistoria">
+                    <input type="time" id="horaVistoria" />
                 </div>
             </div>
 
             <label>Data Liberação</label>
-            <input type="date" id="dataLiberacao">
+            <input type="date" id="dataLiberacao" />
 
             <label>Agendado Por</label>
-            <input id="agendadoPor">
+            <input id="agendadoPor" />
 
-            <label>Observações</label>
+            <label>Observação</label>
             <textarea id="observacao"></textarea>
 
             <button class="btn-primary" style="margin-top:20px;">Salvar</button>
@@ -105,27 +103,26 @@
                     <th>Ações</th>
                 </tr>
             </thead>
+
             <tbody id="tabelaUnidades"></tbody>
         </table>
-
     </div>
 
 <script>
-let blocoId = null;
 let empId = null;
+let blocoId = null;
 
-/**********************************************
+/****************************************************
  * INICIAR TELA
- **********************************************/
+ ****************************************************/
 document.addEventListener("DOMContentLoaded", async () => {
 
-    // Ler parâmetros da URL
     const params = new URLSearchParams(location.search);
+    empId   = params.get("emp");
     blocoId = params.get("bloco");
-    empId = params.get("emp");
 
-    if (!blocoId || !empId) {
-        alert("Bloco ou Empreendimento não informado!");
+    if (!empId || !blocoId) {
+        alert("Empreendimento ou bloco não informado!");
         location.href = "/cadastro_empreendimentos.html";
         return;
     }
@@ -136,9 +133,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     await listarUnidades();
 });
 
-/**********************************************
- * MOSTRAR O CONTEXTO (Emp + Bloco)
- **********************************************/
+/****************************************************
+ * MOSTRAR NOME DO EMPREENDIMENTO + BLOCO
+ ****************************************************/
 async function carregarContexto() {
     const resEmp = await fetch("/empreendimentos");
     const empreendimentos = await resEmp.json();
@@ -148,13 +145,13 @@ async function carregarContexto() {
     const blocos = await resBl.json();
     const bloco = blocos.find(b => b.id == blocoId);
 
-    get("tituloContexto").innerText =
+    get("contexto").innerText =
         `Empreendimento: ${emp.nome} — Bloco: ${bloco.nome}`;
 }
 
-/**********************************************
- * LISTAR UNIDADES
- **********************************************/
+/****************************************************
+ * LISTAR UNIDADES DO BLOCO
+ ****************************************************/
 async function listarUnidades() {
     const res = await fetch(`/unidades/${blocoId}`);
     const lista = await res.json();
@@ -176,7 +173,8 @@ async function listarUnidades() {
             <td>${u.dataLiberacao || ""}</td>
 
             <td>
-                <button class="btn-small btn-editar" onclick='editar(${JSON.stringify(u)})'>
+                <button class="btn-small btn-editar"
+                        onclick='editar(${JSON.stringify(u)})'>
                     Editar
                 </button>
             </td>
@@ -186,9 +184,9 @@ async function listarUnidades() {
     });
 }
 
-/**********************************************
+/****************************************************
  * EDITAR UNIDADE
- **********************************************/
+ ****************************************************/
 function editar(u) {
     get("id").value = u.id;
     get("unidade").value = u.unidade;
@@ -204,9 +202,9 @@ function editar(u) {
     get("observacao").value = u.observacao || "";
 }
 
-/**********************************************
+/****************************************************
  * SALVAR UNIDADE
- **********************************************/
+ ****************************************************/
 async function salvarUnidade(e) {
     e.preventDefault();
 
