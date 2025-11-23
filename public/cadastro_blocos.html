@@ -1,97 +1,100 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
-    <title>ChaveVR - Blocos</title>
+    <title>Cadastro de Blocos – ChaveVR</title>
     <link rel="stylesheet" href="/styles.css" />
+    <script src="/chavesvr.js"></script>
 </head>
 
 <body>
 
-<!-- NAV SUPERIOR -->
-<div class="top-menu">
-    <a href="/dashboard.html">Dashboard</a>
-    <a href="/cadastro_empreendimentos.html">Empreendimentos</a>
-    <a href="/cadastro_unidades.html">Unidades</a>
-    <a href="/index.html">Módulos</a>
-</div>
+    <!-- MENU -->
+    <div class="top-menu">
+        <a href="/index.html">Módulos</a>
+        <a href="/dashboard.html">Dashboard</a>
+        <a href="/cadastro_empreendimentos.html">Empreendimentos</a>
+    </div>
 
-<div class="container">
+    <div class="container">
 
-    <h1 id="tituloPag">Blocos do Empreendimento</h1>
-    <p id="subtituloPag"></p>
+        <h1>Cadastro de Blocos</h1>
+        <p id="tituloEmp" style="font-weight:bold; margin-bottom:20px;"></p>
 
-    <!-- FORMULÁRIO -->
-    <h2 id="formTitulo">Novo Bloco</h2>
+        <!-- FORM -->
+        <form id="formBloco" onsubmit="salvarBloco(event)">
+            <input type="hidden" id="id" />
 
-    <form id="formBloco">
-        <input type="hidden" id="blocoId">
-        <input type="hidden" id="empId">
+            <label>Nome do Bloco</label>
+            <input id="nome" required>
 
-        <label>Nome do Bloco</label>
-        <input type="text" id="nomeBloco" required>
+            <label>Observações</label>
+            <textarea id="observacao"></textarea>
 
-        <label>Observações</label>
-        <textarea id="obsBloco"></textarea>
+            <button class="btn-primary" style="margin-top:20px;">Salvar</button>
+        </form>
 
-        <br>
-        <button type="submit" class="btn-primary" id="btnSalvarBloco">Salvar</button>
-        <button type="button" class="btn-secondary" id="btnCancelarBloco" style="display:none;" onclick="cancelarEdicaoBloco()">Cancelar</button>
-    </form>
+        <hr style="margin:30px 0">
 
-    <hr style="margin:40px 0;">
+        <h2>Blocos Cadastrados</h2>
 
-    <!-- LISTAGEM -->
-    <h2>Blocos Cadastrados</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Bloco</th>
+                    <th>Observação</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="tabelaBlocos"></tbody>
+        </table>
 
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Bloco</th>
-                <th>Observação</th>
-                <th>Ações</th>
-            </tr>
-        </thead>
-        <tbody id="tabelaBlocos"></tbody>
-    </table>
-
-</div>
+    </div>
 
 <script>
-// HELPERS
-function get(id) { return document.getElementById(id); }
+let empId = null;
 
-// CAPTURAR ID DO EMPREENDIMENTO
-const url = new URL(window.location.href);
-const empId = url.searchParams.get("emp");
+/**********************************************
+ * INICIAR TELA
+ **********************************************/
+document.addEventListener("DOMContentLoaded", async () => {
 
-if (!empId) {
-    alert("Nenhum empreendimento selecionado.");
-    window.location.href = "/cadastro_empreendimentos.html";
-}
+    // pegar o ID do empreendimento via URL
+    const params = new URLSearchParams(location.search);
+    empId = params.get("emp");
 
-// INICIAR ID DO EMP NO FORM
-get("empId").value = empId;
+    if (!empId) {
+        alert("Nenhum empreendimento selecionado!");
+        location.href = "/cadastro_empreendimentos.html";
+        return;
+    }
 
-// CARREGAR NOME DO EMPREENDIMENTO
-async function carregarNomeEmp() {
+    // carregar nome do empreendimento
+    await carregarTituloEmpreendimento();
+
+    // listar blocos
+    await listarBlocos();
+});
+
+/**********************************************
+ * MOSTRAR TITULO DO EMPREENDIMENTO
+ **********************************************/
+async function carregarTituloEmpreendimento() {
     const res = await fetch("/empreendimentos");
     const lista = await res.json();
+
     const emp = lista.find(e => e.id == empId);
-
-    get("tituloPag").innerText = "Blocos — " + emp.nome;
-    get("subtituloPag").innerText = `${emp.cidade} / ${emp.uf}`;
+    get("tituloEmp").innerText = `Empreendimento: ${emp.nome}`;
 }
 
-// LISTAR BLOCOS
-async function carregarBlocos() {
+/**********************************************
+ * LISTAR BLOCOS
+ **********************************************/
+async function listarBlocos() {
     const res = await fetch(`/blocos/${empId}`);
-    return await res.json();
-}
+    const lista = await res.json();
 
-async function preencherTabelaBlocos() {
-    const lista = await carregarBlocos();
     const tbody = get("tabelaBlocos");
     tbody.innerHTML = "";
 
@@ -99,12 +102,12 @@ async function preencherTabelaBlocos() {
         const tr = document.createElement("tr");
 
         tr.innerHTML = `
-            <td>${b.id}</td>
             <td>${b.nome}</td>
             <td>${b.observacao || ""}</td>
+
             <td>
-                <button class="btn-small btn-editar" onclick="editarBloco(${b.id})">Editar</button>
-                <button class="btn-small btn-unidades" onclick="abrirUnidades(${b.id})">Unidades</button>
+                <button class="btn-small btn-editar" onclick='editar(${JSON.stringify(b)})'>Editar</button>
+                <a class="btn-small btn-unidades" href="/cadastro_unidades.html?bloco=${b.id}&emp=${empId}">Unidades</a>
             </td>
         `;
 
@@ -112,71 +115,46 @@ async function preencherTabelaBlocos() {
     });
 }
 
-// ABRIR UNIDADES
-function abrirUnidades(blocoId) {
-    window.location.href = `/cadastro_unidades.html?emp=${empId}&bloco=${blocoId}`;
+/**********************************************
+ * EDITAR BLOCO
+ **********************************************/
+function editar(b) {
+    get("id").value = b.id;
+    get("nome").value = b.nome;
+    get("observacao").value = b.observacao || "";
 }
 
-// SALVAR BLOCO
-get("formBloco").addEventListener("submit", async (e) => {
+/**********************************************
+ * SALVAR BLOCO
+ **********************************************/
+async function salvarBloco(e) {
     e.preventDefault();
 
-    const bloco = {
+    const id = get("id").value;
+
+    const dados = {
         empreendimento_id: empId,
-        nome: get("nomeBloco").value,
-        observacao: get("obsBloco").value
+        nome: get("nome").value,
+        observacao: get("observacao").value
     };
 
-    const id = get("blocoId").value;
+    const metodo = id ? "PUT" : "POST";
+    const url = id ? `/blocos/${id}` : "/blocos";
 
-    if (id === "") {
-        await fetch("/blocos", {
-            method: "POST",
-            headers: {"Content-Type":"application/json"},
-            body: JSON.stringify(bloco)
-        });
-        alert("Bloco criado!");
-    } else {
-        await fetch(`/blocos/${id}`, {
-            method: "PUT",
-            headers: {"Content-Type":"application/json"},
-            body: JSON.stringify(bloco)
-        });
-        alert("Bloco atualizado!");
-    }
+    await fetch(url, {
+        method: metodo,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(dados)
+    });
 
-    cancelarEdicaoBloco();
-    preencherTabelaBlocos();
-});
+    alert("Bloco salvo com sucesso!");
 
-// EDITAR BLOCO
-async function editarBloco(id) {
-    const lista = await carregarBlocos();
-    const bloco = lista.find(b => b.id == id);
+    get("formBloco").reset();
+    get("id").value = "";
 
-    get("blocoId").value = bloco.id;
-    get("nomeBloco").value = bloco.nome;
-    get("obsBloco").value = bloco.observacao;
-
-    get("formTitulo").innerText = "Editar Bloco";
-    get("btnSalvarBloco").innerText = "Atualizar";
-    get("btnCancelarBloco").style.display = "inline-block";
+    listarBlocos();
 }
 
-// CANCELAR
-function cancelarEdicaoBloco() {
-    get("blocoId").value = "";
-    get("nomeBloco").value = "";
-    get("obsBloco").value = "";
-
-    get("formTitulo").innerText = "Novo Bloco";
-    get("btnSalvarBloco").innerText = "Salvar";
-    get("btnCancelarBloco").style.display = "none";
-}
-
-// INICIAR
-carregarNomeEmp();
-preencherTabelaBlocos();
 </script>
 
 </body>
