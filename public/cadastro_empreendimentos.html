@@ -86,9 +86,7 @@
 </div>
 
 <script>
-/***********************************************
- * AUXILIARES
- ***********************************************/
+// HELPERS
 function get(id) { return document.getElementById(id); }
 function limparEmpForm() {
     get("empId").value = "";
@@ -101,9 +99,7 @@ function limparEmpForm() {
     get("obsEmp").value = "";
 }
 
-/***********************************************
- * LISTAR EMPREENDIMENTOS
- ***********************************************/
+// LISTAR
 async function carregarEmpreendimentos() {
     const res = await fetch("/empreendimentos");
     return await res.json();
@@ -132,16 +128,12 @@ async function preencherTabelaEmp() {
     });
 }
 
-/***********************************************
- * ABRIR BLOCOS DO EMPREENDIMENTO
- ***********************************************/
+// ABRIR BLOCOS
 function abrirBlocos(idEmp) {
     window.location.href = `/cadastro_blocos.html?emp=${idEmp}`;
 }
 
-/***********************************************
- * SALVAR EMPREENDIMENTO
- ***********************************************/
+// SALVAR
 get("formEmp").addEventListener("submit", async (e) => {
     e.preventDefault();
 
@@ -158,7 +150,6 @@ get("formEmp").addEventListener("submit", async (e) => {
     const id = get("empId").value;
 
     if (id === "") {
-        // NOVO
         await fetch("/empreendimentos", {
             method: "POST",
             headers: {"Content-Type":"application/json"},
@@ -166,7 +157,6 @@ get("formEmp").addEventListener("submit", async (e) => {
         });
         alert("Empreendimento criado!");
     } else {
-        // EDITAR
         await fetch(`/empreendimentos/${id}`, {
             method: "PUT",
             headers: {"Content-Type":"application/json"},
@@ -179,9 +169,7 @@ get("formEmp").addEventListener("submit", async (e) => {
     preencherTabelaEmp();
 });
 
-/***********************************************
- * EDITAR EMPREENDIMENTO
- ***********************************************/
+// EDITAR
 async function editarEmp(id) {
     const res = await fetch("/empreendimentos");
     const lista = await res.json();
@@ -201,9 +189,7 @@ async function editarEmp(id) {
     get("btnCancelarEmp").style.display = "inline-block";
 }
 
-/***********************************************
- * CANCELAR EDIÇÃO
- ***********************************************/
+// CANCELAR
 function cancelarEdicaoEmp() {
     limparEmpForm();
     get("formTitulo").innerText = "Novo Empreendimento";
@@ -211,11 +197,8 @@ function cancelarEdicaoEmp() {
     get("btnCancelarEmp").style.display = "none";
 }
 
-/***********************************************
- * INICIAR
- ***********************************************/
+// INICIAR
 preencherTabelaEmp();
-
 </script>
 
 </body>
