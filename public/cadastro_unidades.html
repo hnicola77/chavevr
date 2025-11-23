@@ -23,6 +23,7 @@
 
         <form id="formUnidade" onsubmit="salvarUnidade(event)">
             <input type="hidden" id="id" />
+            
             <input type="hidden" id="bloco_id" />
 
             <label>Unidade (Número/Nome)</label>
@@ -114,6 +115,7 @@
     </div>
 
 <script>
+// --- VARIÁVEIS GLOBAIS (CRUCIAL: Devem estar aqui fora) ---
 let empId = null;
 let blocoId = null;
 
@@ -124,6 +126,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // 1. Ler IDs da URL
     const params = new URLSearchParams(location.search);
+    
+    // Atribui às variáveis globais (sem usar 'let' ou 'const' aqui)
     empId   = params.get("emp");
     blocoId = params.get("bloco");
 
@@ -134,8 +138,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
     }
 
-    // Define o ID do bloco no input hidden para garantir o vínculo ao salvar
-    get("bloco_id").value = blocoId;
+    // Define o ID do bloco no input hidden apenas visualmente
+    if(get("bloco_id")) get("bloco_id").value = blocoId;
 
     // 2. Carregar contexto e lista
     await carregarContexto();
@@ -143,24 +147,28 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 /****************************************************
- * MOSTRAR ONDE ESTAMOS (Breadcrumb visual)
+ * MOSTRAR ONDE ESTAMOS
  ****************************************************/
 async function carregarContexto() {
-    // Busca nome do Empreendimento
-    const resEmp = await fetch("/empreendimentos");
-    const listaEmp = await resEmp.json();
-    const emp = listaEmp.find(e => e.id == empId);
+    try {
+        // Busca nome do Empreendimento
+        const resEmp = await fetch("/empreendimentos");
+        const listaEmp = await resEmp.json();
+        const emp = listaEmp.find(e => e.id == empId);
 
-    // Busca nome do Bloco
-    const resBl = await fetch(`/blocos/${empId}`);
-    const listaBl = await resBl.json();
-    const bloco = listaBl.find(b => b.id == blocoId);
+        // Busca nome do Bloco
+        const resBl = await fetch(`/blocos/${empId}`);
+        const listaBl = await resBl.json();
+        const bloco = listaBl.find(b => b.id == blocoId);
 
-    if (emp && bloco) {
-        get("contexto").innerHTML = `
-            <span style="color:#666;">${emp.nome}</span> &raquo; 
-            <span style="color:#000;">${bloco.nome}</span>
-        `;
+        if (emp && bloco) {
+            get("contexto").innerHTML = `
+                <span style="color:#666;">${emp.nome}</span> &raquo; 
+                <span style="color:#000;">${bloco.nome}</span>
+            `;
+        }
+    } catch (error) {
+        console.error("Erro ao carregar contexto:", error);
     }
 }
 
@@ -168,33 +176,37 @@ async function carregarContexto() {
  * LISTAR UNIDADES
  ****************************************************/
 async function listarUnidades() {
-    const res = await fetch(`/unidades/${blocoId}`);
-    const lista = await res.json();
+    try {
+        const res = await fetch(`/unidades/${blocoId}`);
+        const lista = await res.json();
 
-    const tbody = get("tabelaUnidades");
-    tbody.innerHTML = "";
+        const tbody = get("tabelaUnidades");
+        tbody.innerHTML = "";
 
-    lista.forEach(u => {
-        const tr = document.createElement("tr");
+        lista.forEach(u => {
+            const tr = document.createElement("tr");
 
-        // Formatação simples para datas (opcional)
-        const dataVist = u.dataVistoria ? new Date(u.dataVistoria).toLocaleDateString('pt-BR', {timeZone:'UTC'}) : '-';
+            // Formatação simples para datas
+            const dataVist = u.dataVistoria ? new Date(u.dataVistoria).toLocaleDateString('pt-BR', {timeZone:'UTC'}) : '-';
 
-        tr.innerHTML = `
-            <td><strong>${u.unidade}</strong></td>
-            <td>${u.situacao}</td>
-            <td>${u.statusFinanceiro}</td>
-            <td>${u.cvco}</td>
-            <td>${u.chaves}</td>
-            <td>${dataVist} ${u.horaVistoria || ""}</td>
-            <td>
-                <button class="btn-small btn-editar" onclick='editar(${JSON.stringify(u)})'>
-                    Editar
-                </button>
-            </td>
-        `;
-        tbody.appendChild(tr);
-    });
+            tr.innerHTML = `
+                <td><strong>${u.unidade}</strong></td>
+                <td>${u.situacao}</td>
+                <td>${u.statusFinanceiro}</td>
+                <td>${u.cvco}</td>
+                <td>${u.chaves}</td>
+                <td>${dataVist} ${u.horaVistoria || ""}</td>
+                <td>
+                    <button class="btn-small btn-editar" onclick='editar(${JSON.stringify(u)})'>
+                        Editar
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    } catch (error) {
+        console.error("Erro ao listar unidades:", error);
+    }
 }
 
 /****************************************************
@@ -219,21 +231,21 @@ function editar(u) {
 }
 
 /****************************************************
- * SALVAR (POST/PUT)
+ * SALVAR (POST/PUT) - CORRIGIDO
  ****************************************************/
 async function salvarUnidade(e) {
     e.preventDefault();
 
-    // 1. Verificação de segurança: O Bloco ID existe?
+    // Verificação extra de segurança
     if (!blocoId) {
-        alert("Erro: ID do Bloco não encontrado. Recarregue a página.");
+        alert("Erro crítico: ID do Bloco perdido. Atualize a página.");
         return;
     }
 
     const id = get("id").value;
 
     const dados = {
-        bloco_id: blocoId, // <--- O ERRO COSTUMA SER AQUI (Use a variável global blocoId)
+        bloco_id: blocoId, // <--- USO DA VARIÁVEL GLOBAL (Correção do erro)
         unidade: get("unidade").value,
         situacao: get("situacao").value,
         statusFinanceiro: get("statusFinanceiro").value,
@@ -247,7 +259,7 @@ async function salvarUnidade(e) {
         observacao: get("observacao").value
     };
 
-    console.log("Enviando dados:", dados); // Abra o F12 (Console) para ver isso
+    console.log("Enviando:", dados); // Para debug
 
     const metodo = id ? "PUT" : "POST";
     const url = id ? `/unidades/${id}` : "/unidades";
@@ -259,24 +271,26 @@ async function salvarUnidade(e) {
             body: JSON.stringify(dados)
         });
 
-        if (!res.ok) {
-            throw new Error("Erro no servidor: " + res.statusText);
-        }
+        if (!res.ok) throw new Error("Falha ao salvar");
 
-        alert("Unidade salva com sucesso!");
-
-        // 2. Limpa o formulário
-        get("formUnidade").reset();
+        alert("Salvo com sucesso!");
         
-        // 3. REINSERE o ID no campo oculto (embora usemos a variável global, é boa prática manter o DOM limpo)
+        // Limpa o formulário
+        get("formUnidade").reset();
         get("id").value = "";
-        get("bloco_id").value = blocoId; 
+        
+        // Garante que o input hidden tenha o valor de volta (caso precise)
+        if(get("bloco_id")) get("bloco_id").value = blocoId; 
 
-        // 4. Atualiza a tabela
+        // Atualiza a tabela imediatamente
         listarUnidades();
 
-    } catch (erro) {
-        console.error("Erro ao salvar:", erro);
-        alert("Ocorreu um erro ao salvar. Verifique o console (F12).");
+    } catch (error) {
+        alert("Erro ao salvar. Verifique o console.");
+        console.error(error);
     }
 }
+</script>
+
+</body>
+</html>
