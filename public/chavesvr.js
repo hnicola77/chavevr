@@ -1,6 +1,5 @@
 /*****************************************************
  * ChaveVR – JS central (Dashboard + Suporte geral)
- * Agora compatível com /unidades_completas
  *****************************************************/
 
 /************ HELPERS ************/
@@ -12,6 +11,7 @@ function qsa(sel) { return document.querySelectorAll(sel); }
 const API = {
     empreendimentos: "/empreendimentos",
     blocos: (idEmp) => `/blocos/${idEmp}`,
+    unidades: (idBloco) => `/unidades/${idBloco}`,
     unidadesCompletas: "/unidades_completas"
 };
 
@@ -22,18 +22,13 @@ async function carregarEmpreendimentosSelect(selectId) {
     const sel = get(selectId);
     if (!sel) return;
 
-    sel.innerHTML = `<option value="">Carregando...</option>`;
-
     const res = await fetch(API.empreendimentos);
     const lista = await res.json();
 
     sel.innerHTML = `<option value="">Selecione</option>`;
 
     lista.forEach(emp => {
-        const opt = document.createElement("option");
-        opt.value = emp.id;
-        opt.textContent = emp.nome;
-        sel.appendChild(opt);
+        sel.innerHTML += `<option value="${emp.id}">${emp.nome}</option>`;
     });
 }
 
@@ -45,22 +40,17 @@ async function carregarBlocosSelect(selectId, empId) {
     if (!sel) return;
 
     if (!empId) {
-        sel.innerHTML = `<option value="">Selecione o Bloco</option>`;
+        sel.innerHTML = `<option value="">Bloco</option>`;
         return;
     }
 
-    sel.innerHTML = `<option value="">Carregando...</option>`;
-
     const res = await fetch(API.blocos(empId));
-    const lista = await res.json();
+    const blocos = await res.json();
 
-    sel.innerHTML = `<option value="">Selecione</option>`;
+    sel.innerHTML = `<option value="">Bloco</option>`;
 
-    lista.forEach(b => {
-        const opt = document.createElement("option");
-        opt.value = b.nome;
-        opt.textContent = b.nome;
-        sel.appendChild(opt);
+    blocos.forEach(b => {
+        sel.innerHTML += `<option value="${b.id}">${b.nome}</option>`;
     });
 }
 
@@ -69,12 +59,8 @@ async function carregarBlocosSelect(selectId, empId) {
  *****************************************************/
 function corUnidade(u) {
     if (u.chaves === "Entregue") return "verde";
-
-    if (
-        (u.situacao === "Liberada" || u.situacao === "Aprovada") &&
-        u.chaves === "Não entregue"
-    ) return "amarelo";
-
+    if ((u.situacao === "Liberada" || u.situacao === "Aprovada") &&
+        u.chaves === "Não entregue") return "amarelo";
     return "vermelho";
 }
 
@@ -83,35 +69,29 @@ function corUnidade(u) {
  *****************************************************/
 async function carregarDashboardCompleto() {
     const res = await fetch(API.unidadesCompletas);
-    const lista = await res.json();
-    return lista;
+    return await res.json();
 }
 
 /*****************************************************
  * DASHBOARD – Atualizar cards
  *****************************************************/
 function atualizarCardsDash(lista) {
-    get("cardTotal") && (get("cardTotal").innerText = lista.length);
+    get("cardTotal").innerText = lista.length;
 
-    get("cardPendentes") &&
-        (get("cardPendentes").innerText =
-            lista.filter(u => u.situacao === "Em obra" || u.situacao === "Ajuste de cliente").length);
+    get("cardPendentes").innerText =
+        lista.filter(u => u.situacao === "Em obra" || u.situacao === "Ajuste de cliente").length;
 
-    get("cardLiberadas") &&
-        (get("cardLiberadas").innerText =
-            lista.filter(u => u.situacao === "Liberada").length);
+    get("cardLiberadas").innerText =
+        lista.filter(u => u.situacao === "Liberada").length;
 
-    get("cardReprovadas") &&
-        (get("cardReprovadas").innerText =
-            lista.filter(u => u.situacao === "Aprovada").length);
+    get("cardReprovadas").innerText =
+        lista.filter(u => u.situacao === "Aprovada").length;
 
-    get("cardChaves") &&
-        (get("cardChaves").innerText =
-            lista.filter(u => u.chaves === "Entregue").length);
+    get("cardChaves").innerText =
+        lista.filter(u => u.chaves === "Entregue").length;
 
-    get("cardCVCO") &&
-        (get("cardCVCO").innerText =
-            lista.filter(u => u.cvco === "Liberado").length);
+    get("cardCVCO").innerText =
+        lista.filter(u => u.cvco === "Liberado").length;
 }
 
 /*****************************************************
@@ -119,8 +99,6 @@ function atualizarCardsDash(lista) {
  *****************************************************/
 function preencherTabelaDash(lista) {
     const tbody = get("tabelaDash");
-    if (!tbody) return;
-
     tbody.innerHTML = "";
 
     lista.forEach(u => {
@@ -175,7 +153,6 @@ async function initDashboard() {
     atualizarCardsDash(lista);
     preencherTabelaDash(lista);
 
-    // Atualizar blocos quando muda o empreendimento
     get("filtroEmpreendimento")?.addEventListener("change", async (e) => {
         await carregarBlocosSelect("filtroBloco", e.target.value);
     });
