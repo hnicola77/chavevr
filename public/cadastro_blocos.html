@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <title>ChaveVR - Blocos</title>
-    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/styles.css" />
 </head>
 
 <body>
 
-<!-- MENU SUPERIOR -->
+<!-- NAV SUPERIOR -->
 <div class="top-menu">
     <a href="/dashboard.html">Dashboard</a>
     <a href="/cadastro_empreendimentos.html">Empreendimentos</a>
@@ -18,16 +18,15 @@
 
 <div class="container">
 
-    <h1>Cadastro de Blocos</h1>
-    <p>Gerencie os blocos de cada empreendimento.</p>
+    <h1 id="tituloPag">Blocos do Empreendimento</h1>
+    <p id="subtituloPag"></p>
 
-    <h2 id="tituloForm">Novo Bloco</h2>
+    <!-- FORMULÁRIO -->
+    <h2 id="formTitulo">Novo Bloco</h2>
 
     <form id="formBloco">
-        <input type="hidden" id="idBloco">
-
-        <label>Empreendimento</label>
-        <select id="selEmp" required></select>
+        <input type="hidden" id="blocoId">
+        <input type="hidden" id="empId">
 
         <label>Nome do Bloco</label>
         <input type="text" id="nomeBloco" required>
@@ -36,12 +35,13 @@
         <textarea id="obsBloco"></textarea>
 
         <br>
-        <button class="btn-primary" type="submit" id="btnSalvar">Salvar</button>
-        <button class="btn-secondary" type="button" id="btnCancelar" style="display:none;" onclick="cancelarEdicao()">Cancelar</button>
+        <button type="submit" class="btn-primary" id="btnSalvarBloco">Salvar</button>
+        <button type="button" class="btn-secondary" id="btnCancelarBloco" style="display:none;" onclick="cancelarEdicaoBloco()">Cancelar</button>
     </form>
 
     <hr style="margin:40px 0;">
 
+    <!-- LISTAGEM -->
     <h2>Blocos Cadastrados</h2>
 
     <table>
@@ -59,83 +59,77 @@
 </div>
 
 <script>
-/*************************************
- * HELPERS
- *************************************/
-function get(id){ return document.getElementById(id); }
-function qs(sel){ return document.querySelector(sel); }
+// HELPERS
+function get(id) { return document.getElementById(id); }
 
-function limpar() {
-    get("idBloco").value = "";
-    get("nomeBloco").value = "";
-    get("obsBloco").value = "";
+// CAPTURAR ID DO EMPREENDIMENTO
+const url = new URL(window.location.href);
+const empId = url.searchParams.get("emp");
+
+if (!empId) {
+    alert("Nenhum empreendimento selecionado.");
+    window.location.href = "/cadastro_empreendimentos.html";
 }
 
-/*************************************
- * CARREGAR EMPREENDIMENTOS
- *************************************/
-async function carregarEmpreendimentos() {
+// INICIAR ID DO EMP NO FORM
+get("empId").value = empId;
+
+// CARREGAR NOME DO EMPREENDIMENTO
+async function carregarNomeEmp() {
     const res = await fetch("/empreendimentos");
     const lista = await res.json();
+    const emp = lista.find(e => e.id == empId);
 
-    const sel = get("selEmp");
-    sel.innerHTML = "";
-
-    lista.forEach(emp => {
-        const opt = document.createElement("option");
-        opt.value = emp.id;
-        opt.textContent = emp.nome;
-        sel.appendChild(opt);
-    });
-
-    const url = new URLSearchParams(window.location.search);
-    const empURL = url.get("emp");
-
-    if (empURL) sel.value = empURL;
+    get("tituloPag").innerText = "Blocos — " + emp.nome;
+    get("subtituloPag").innerText = `${emp.cidade} / ${emp.uf}`;
 }
 
-/*************************************
- * CARREGAR BLOCOS DO EMPREENDIMENTO
- *************************************/
+// LISTAR BLOCOS
 async function carregarBlocos() {
-    const empId = get("selEmp").value;
     const res = await fetch(`/blocos/${empId}`);
-    const blocos = await res.json();
+    return await res.json();
+}
 
+async function preencherTabelaBlocos() {
+    const lista = await carregarBlocos();
     const tbody = get("tabelaBlocos");
     tbody.innerHTML = "";
 
-    blocos.forEach(b => {
+    lista.forEach(b => {
         const tr = document.createElement("tr");
+
         tr.innerHTML = `
             <td>${b.id}</td>
             <td>${b.nome}</td>
             <td>${b.observacao || ""}</td>
             <td>
-                <button class="btn-small btn-editar" onclick="editar(${b.id})">Editar</button>
+                <button class="btn-small btn-editar" onclick="editarBloco(${b.id})">Editar</button>
                 <button class="btn-small btn-unidades" onclick="abrirUnidades(${b.id})">Unidades</button>
             </td>
         `;
+
         tbody.appendChild(tr);
     });
 }
 
-/*************************************
- * SALVAR BLOCO
- *************************************/
+// ABRIR UNIDADES
+function abrirUnidades(blocoId) {
+    window.location.href = `/cadastro_unidades.html?emp=${empId}&bloco=${blocoId}`;
+}
+
+// SALVAR BLOCO
 get("formBloco").addEventListener("submit", async (e) => {
     e.preventDefault();
 
     const bloco = {
-        empreendimento_id: get("selEmp").value,
+        empreendimento_id: empId,
         nome: get("nomeBloco").value,
         observacao: get("obsBloco").value
     };
 
-    const id = get("idBloco").value;
+    const id = get("blocoId").value;
 
     if (id === "") {
-        // Criar
         await fetch("/blocos", {
             method: "POST",
             headers: {"Content-Type":"application/json"},
@@ -143,7 +137,6 @@ get("formBloco").addEventListener("submit", async (e) => {
         });
         alert("Bloco criado!");
     } else {
-        // Editar
         await fetch(`/blocos/${id}`, {
             method: "PUT",
             headers: {"Content-Type":"application/json"},
@@ -152,53 +145,38 @@ get("formBloco").addEventListener("submit", async (e) => {
         alert("Bloco atualizado!");
     }
 
-    cancelarEdicao();
-    carregarBlocos();
+    cancelarEdicaoBloco();
+    preencherTabelaBlocos();
 });
 
-/*************************************
- * EDITAR BLOCO
- *************************************/
-async function editar(id) {
-    const empId = get("selEmp").value;
+// EDITAR BLOCO
+async function editarBloco(id) {
+    const lista = await carregarBlocos();
+    const bloco = lista.find(b => b.id == id);
 
-    const res = await fetch(`/blocos/${empId}`);
-    const blocos = await res.json();
-    const b = blocos.find(x => x.id == id);
+    get("blocoId").value = bloco.id;
+    get("nomeBloco").value = bloco.nome;
+    get("obsBloco").value = bloco.observacao;
 
-    get("idBloco").value = b.id;
-    get("nomeBloco").value = b.nome;
-    get("obsBloco").value = b.observacao;
-
-    get("tituloForm").innerText = "Editar Bloco";
-    get("btnSalvar").innerText = "Atualizar";
-    get("btnCancelar").style.display = "inline-block";
+    get("formTitulo").innerText = "Editar Bloco";
+    get("btnSalvarBloco").innerText = "Atualizar";
+    get("btnCancelarBloco").style.display = "inline-block";
 }
 
-function cancelarEdicao() {
-    limpar();
-    get("tituloForm").innerText = "Novo Bloco";
-    get("btnSalvar").innerText = "Salvar";
-    get("btnCancelar").style.display = "none";
+// CANCELAR
+function cancelarEdicaoBloco() {
+    get("blocoId").value = "";
+    get("nomeBloco").value = "";
+    get("obsBloco").value = "";
+
+    get("formTitulo").innerText = "Novo Bloco";
+    get("btnSalvarBloco").innerText = "Salvar";
+    get("btnCancelarBloco").style.display = "none";
 }
 
-/*************************************
- * ABRIR UNIDADES
- *************************************/
-function abrirUnidades(idBloco) {
-    const empId = get("selEmp").value;
-    window.location.href = `/cadastro_unidades.html?emp=${empId}&bloco=${idBloco}`;
-}
-
-/*************************************
- * INICIAR
- *************************************/
-(async () => {
-    await carregarEmpreendimentos();
-    await carregarBlocos();
-
-    get("selEmp").addEventListener("change", carregarBlocos);
-})();
+// INICIAR
+carregarNomeEmp();
+preencherTabelaBlocos();
 </script>
 
 </body>
