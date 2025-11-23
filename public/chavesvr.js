@@ -1,7 +1,6 @@
 /*****************************************************
- * ChaveVR – JS central para páginas
- * Empreendimentos → Blocos → Unidades
- * Dashboard completo
+ * ChaveVR – JS central (Dashboard + Suporte geral)
+ * Agora compatível com /unidades_completas
  *****************************************************/
 
 /************ HELPERS ************/
@@ -13,8 +12,7 @@ function qsa(sel) { return document.querySelectorAll(sel); }
 const API = {
     empreendimentos: "/empreendimentos",
     blocos: (idEmp) => `/blocos/${idEmp}`,
-    unidades: (idBloco) => `/unidades/${idBloco}`,
-    unidadePorId: (id) => `/unidade/${id}`
+    unidadesCompletas: "/unidades_completas"
 };
 
 /*****************************************************
@@ -47,7 +45,7 @@ async function carregarBlocosSelect(selectId, empId) {
     if (!sel) return;
 
     if (!empId) {
-        sel.innerHTML = `<option value="">Selecione um Empreendimento</option>`;
+        sel.innerHTML = `<option value="">Selecione o Bloco</option>`;
         return;
     }
 
@@ -60,14 +58,14 @@ async function carregarBlocosSelect(selectId, empId) {
 
     lista.forEach(b => {
         const opt = document.createElement("option");
-        opt.value = b.id;
+        opt.value = b.nome;
         opt.textContent = b.nome;
         sel.appendChild(opt);
     });
 }
 
 /*****************************************************
- * COR DA UNIDADE (para Dashboard e Cadastro)
+ * COR DA UNIDADE
  *****************************************************/
 function corUnidade(u) {
     if (u.chaves === "Entregue") return "verde";
@@ -81,52 +79,39 @@ function corUnidade(u) {
 }
 
 /*****************************************************
- * DASHBOARD – Carregar todas as unidades do sistema
+ * DASHBOARD – Carregar todas unidades completas
  *****************************************************/
 async function carregarDashboardCompleto() {
-    let listaCompleta = [];
-
-    const empreendimentos = await (await fetch(API.empreendimentos)).json();
-
-    for (const emp of empreendimentos) {
-        const blocos = await (await fetch(API.blocos(emp.id))).json();
-
-        for (const bloco of blocos) {
-            const unidades = await (await fetch(API.unidades(bloco.id))).json();
-
-            unidades.forEach(u => {
-                listaCompleta.push({
-                    emp: emp.nome,
-                    bloco: bloco.nome,
-                    ...u
-                });
-            });
-        }
-    }
-
-    return listaCompleta;
+    const res = await fetch(API.unidadesCompletas);
+    const lista = await res.json();
+    return lista;
 }
 
 /*****************************************************
  * DASHBOARD – Atualizar cards
  *****************************************************/
 function atualizarCardsDash(lista) {
-    get("cardTotal").innerText = lista.length;
+    get("cardTotal") && (get("cardTotal").innerText = lista.length);
 
-    get("cardPendentes").innerText =
-        lista.filter(u => u.situacao === "Em obra" || u.situacao === "Ajuste de cliente").length;
+    get("cardPendentes") &&
+        (get("cardPendentes").innerText =
+            lista.filter(u => u.situacao === "Em obra" || u.situacao === "Ajuste de cliente").length);
 
-    get("cardLiberadas").innerText =
-        lista.filter(u => u.situacao === "Liberada").length;
+    get("cardLiberadas") &&
+        (get("cardLiberadas").innerText =
+            lista.filter(u => u.situacao === "Liberada").length);
 
-    get("cardReprovadas").innerText =
-        lista.filter(u => u.situacao === "Aprovada").length;
+    get("cardReprovadas") &&
+        (get("cardReprovadas").innerText =
+            lista.filter(u => u.situacao === "Aprovada").length);
 
-    get("cardChaves").innerText =
-        lista.filter(u => u.chaves === "Entregue").length;
+    get("cardChaves") &&
+        (get("cardChaves").innerText =
+            lista.filter(u => u.chaves === "Entregue").length);
 
-    get("cardCVCO").innerText =
-        lista.filter(u => u.cvco === "Liberado").length;
+    get("cardCVCO") &&
+        (get("cardCVCO").innerText =
+            lista.filter(u => u.cvco === "Liberado").length);
 }
 
 /*****************************************************
@@ -134,6 +119,8 @@ function atualizarCardsDash(lista) {
  *****************************************************/
 function preencherTabelaDash(lista) {
     const tbody = get("tabelaDash");
+    if (!tbody) return;
+
     tbody.innerHTML = "";
 
     lista.forEach(u => {
@@ -141,8 +128,8 @@ function preencherTabelaDash(lista) {
         tr.classList.add(corUnidade(u));
 
         tr.innerHTML = `
-            <td>${u.emp}</td>
-            <td>${u.bloco}</td>
+            <td>${u.emp_nome}</td>
+            <td>${u.bloco_nome}</td>
             <td>${u.unidade}</td>
             <td>${u.situacao}</td>
             <td>${u.statusFinanceiro}</td>
@@ -158,7 +145,7 @@ function preencherTabelaDash(lista) {
 }
 
 /*****************************************************
- * DASHBOARD – filtro pelos cards
+ * FILTRO PELOS CARDS
  *****************************************************/
 function filtrarPorCard(lista, tipo) {
     if (tipo === "pendentes")
@@ -180,7 +167,7 @@ function filtrarPorCard(lista, tipo) {
 }
 
 /*****************************************************
- * DASHBOARD – inicialização
+ * INICIALIZAR DASHBOARD
  *****************************************************/
 async function initDashboard() {
     const lista = await carregarDashboardCompleto();
@@ -188,7 +175,7 @@ async function initDashboard() {
     atualizarCardsDash(lista);
     preencherTabelaDash(lista);
 
-    // Filtrar blocos ao escolher empreendimento
+    // Atualizar blocos quando muda o empreendimento
     get("filtroEmpreendimento")?.addEventListener("change", async (e) => {
         await carregarBlocosSelect("filtroBloco", e.target.value);
     });
@@ -197,7 +184,7 @@ async function initDashboard() {
 }
 
 /*****************************************************
- * EXPORTAR GLOBALMENTE (opcional)
+ * EXPORT GLOBAL
  *****************************************************/
 window.ChaveVR = {
     carregarEmpreendimentosSelect,
