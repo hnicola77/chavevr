@@ -1,117 +1,46 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ChaveVR - Início</title>
-    <link rel="stylesheet" href="styles.css">
-
-    <style>
-        body {
-            background: #f5f6fa;
-            margin: 0;
-            font-family: Arial, sans-serif;
-        }
-
-        /* MENU SUPERIOR */
-        .top-menu {
-            display: flex;
-            justify-content: flex-end;
-            gap: 20px;
-            padding: 18px 35px;
-            background: #ffffff;
-            border-bottom: 1px solid #ddd;
-        }
-
-        .top-menu a {
-            text-decoration: none;
-            color: #333;
-            font-weight: bold;
-        }
-
-        /* CONTEÚDO CENTRAL */
-        .container {
-            max-width: 900px;
-            margin: 60px auto;
-            background: white;
-            padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.12);
-            text-align: center;
-        }
-
-        h1 {
-            font-size: 32px;
-            color: #2c3e50;
-            margin-bottom: 10px;
-        }
-
-        p.subtitle {
-            font-size: 18px;
-            color: #555;
-            margin-bottom: 40px;
-        }
-
-        /* BOTÕES */
-        .menu-buttons {
-            display: flex;
-            justify-content: center;
-            gap: 25px;
-            margin-top: 30px;
-        }
-
-        .btn-primary {
-            background: #4070f4;
-            padding: 12px 30px;
-            color: white;
-            border-radius: 6px;
-            text-decoration: none;
-            font-size: 16px;
-            font-weight: bold;
-        }
-
-        .btn-primary:hover {
-            background: #2f59d3;
-        }
-
-        .btn-secondary {
-            background: #888;
-            padding: 12px 30px;
-            color: white;
-            border-radius: 6px;
-            text-decoration: none;
-            font-size: 16px;
-            font-weight: bold;
-        }
-
-        .btn-secondary:hover {
-            background: #666;
-        }
-    </style>
-
+  <meta charset="UTF-8" />
+  <title>Portal VR - Mapa Engenharia</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="/styles.css" />
 </head>
 
 <body>
 
-    <!-- MENU SUPERIOR -->
-    <div class="top-menu">
-        <a href="/dashboard.html">Dashboard</a>
-        </div>
+  <!-- TOPO -->
+  <div class="top-menu">
+    <span style="color:white; font-size:18px; font-weight:bold;">Portal VR – Mapa Engenharia</span>
+  </div>
 
-    <!-- CONTEÚDO PRINCIPAL -->
-    <div class="container">
+  <!-- CONTEÚDO -->
+  <div class="container" style="text-align:center; padding:50px;">
 
-        <h1>ChaveVR</h1>
-        <p class="subtitle">
-            Sistema de Gestão e Entrega de Chaves  
-        </p>
+    <h1>Bem-vindo ao Portal VR</h1>
+    <p>Selecione o módulo desejado abaixo:</p>
 
-        <div class="menu-buttons">
-            <a href="/dashboard.html" class="btn-primary">Ir para o Dashboard</a>
-        </div>
+    <div style="display:flex; justify-content:center; gap:40px; margin-top:40px;">
+
+      <!-- Módulo EngVR -->
+      <a class="btn-primary" 
+         href="/index.html" 
+         style="font-size:20px; padding:20px 40px;">
+         EngVR
+      </a>
+
+      <!-- Módulo ChaveVR (vai direto ao Dashboard!) -->
+      <a class="btn-primary" 
+         href="/dashboard.html" 
+         style="font-size:20px; padding:20px 40px;">
+         ChaveVR
+      </a>
 
     </div>
 
-</body>
-</html>
+  </div>
 
+</body>
+
+</html>
