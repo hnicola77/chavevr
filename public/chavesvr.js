@@ -1,5 +1,6 @@
 /*****************************************************
- * ChaveVR – JS central (Dashboard + Suporte geral)
+ * ChaveVR – JS central (Dashboard + Carregamentos)
+ * Versão FINAL compatível com /unidades_completas
  *****************************************************/
 
 /************ HELPERS ************/
@@ -11,7 +12,7 @@ function qsa(sel) { return document.querySelectorAll(sel); }
 const API = {
     empreendimentos: "/empreendimentos",
     blocos: (idEmp) => `/blocos/${idEmp}`,
-    unidades: (idBloco) => `/unidades/${idBloco}`,
+    unidadesPorBloco: (blocoId) => `/unidades/${blocoId}`,
     unidadesCompletas: "/unidades_completas"
 };
 
@@ -22,13 +23,18 @@ async function carregarEmpreendimentosSelect(selectId) {
     const sel = get(selectId);
     if (!sel) return;
 
+    sel.innerHTML = `<option value="">Carregando...</option>`;
+
     const res = await fetch(API.empreendimentos);
     const lista = await res.json();
 
     sel.innerHTML = `<option value="">Selecione</option>`;
 
     lista.forEach(emp => {
-        sel.innerHTML += `<option value="${emp.id}">${emp.nome}</option>`;
+        const opt = document.createElement("option");
+        opt.value = emp.id;
+        opt.textContent = emp.nome;
+        sel.appendChild(opt);
     });
 }
 
@@ -40,65 +46,81 @@ async function carregarBlocosSelect(selectId, empId) {
     if (!sel) return;
 
     if (!empId) {
-        sel.innerHTML = `<option value="">Bloco</option>`;
+        sel.innerHTML = `<option value="">Selecione o bloco</option>`;
         return;
     }
 
+    sel.innerHTML = `<option value="">Carregando...</option>`;
+
     const res = await fetch(API.blocos(empId));
-    const blocos = await res.json();
+    const lista = await res.json();
 
-    sel.innerHTML = `<option value="">Bloco</option>`;
+    sel.innerHTML = `<option value="">Selecione</option>`;
 
-    blocos.forEach(b => {
-        sel.innerHTML += `<option value="${b.id}">${b.nome}</option>`;
+    lista.forEach(b => {
+        const opt = document.createElement("option");
+        opt.value = b.id;
+        opt.textContent = b.nome;
+        sel.appendChild(opt);
     });
 }
 
 /*****************************************************
- * COR DA UNIDADE
+ * COR DA UNIDADE NA TABELA
  *****************************************************/
 function corUnidade(u) {
     if (u.chaves === "Entregue") return "verde";
-    if ((u.situacao === "Liberada" || u.situacao === "Aprovada") &&
-        u.chaves === "Não entregue") return "amarelo";
+
+    if (
+        (u.situacao === "Liberada" || u.situacao === "Aprovada") &&
+        u.chaves === "Não entregue"
+    ) return "amarelo";
+
     return "vermelho";
 }
 
 /*****************************************************
- * DASHBOARD – Carregar todas unidades completas
+ * DASHBOARD – CARREGAR TODAS AS UNIDADES
  *****************************************************/
 async function carregarDashboardCompleto() {
     const res = await fetch(API.unidadesCompletas);
-    return await res.json();
+    const lista = await res.json();
+    return lista;
 }
 
 /*****************************************************
- * DASHBOARD – Atualizar cards
+ * DASHBOARD – Atualizar Cards
  *****************************************************/
 function atualizarCardsDash(lista) {
-    get("cardTotal").innerText = lista.length;
+    if (get("cardTotal")) get("cardTotal").innerText = lista.length;
 
-    get("cardPendentes").innerText =
-        lista.filter(u => u.situacao === "Em obra" || u.situacao === "Ajuste de cliente").length;
+    if (get("cardPendentes"))
+        get("cardPendentes").innerText =
+            lista.filter(u => u.situacao === "Em obra" || u.situacao === "Ajuste de cliente").length;
 
-    get("cardLiberadas").innerText =
-        lista.filter(u => u.situacao === "Liberada").length;
+    if (get("cardLiberadas"))
+        get("cardLiberadas").innerText =
+            lista.filter(u => u.situacao === "Liberada").length;
 
-    get("cardReprovadas").innerText =
-        lista.filter(u => u.situacao === "Aprovada").length;
+    if (get("cardReprovadas"))
+        get("cardReprovadas").innerText =
+            lista.filter(u => u.situacao === "Aprovada").length;
 
-    get("cardChaves").innerText =
-        lista.filter(u => u.chaves === "Entregue").length;
+    if (get("cardChaves"))
+        get("cardChaves").innerText =
+            lista.filter(u => u.chaves === "Entregue").length;
 
-    get("cardCVCO").innerText =
-        lista.filter(u => u.cvco === "Liberado").length;
+    if (get("cardCVCO"))
+        get("cardCVCO").innerText =
+            lista.filter(u => u.cvco === "Liberado").length;
 }
 
 /*****************************************************
- * DASHBOARD – Preencher tabela
+ * DASHBOARD – Preencher Tabela
  *****************************************************/
 function preencherTabelaDash(lista) {
     const tbody = get("tabelaDash");
+    if (!tbody) return;
     tbody.innerHTML = "";
 
     lista.forEach(u => {
@@ -123,7 +145,7 @@ function preencherTabelaDash(lista) {
 }
 
 /*****************************************************
- * FILTRO PELOS CARDS
+ * DASHBOARD – FILTRAR POR CARDS
  *****************************************************/
 function filtrarPorCard(lista, tipo) {
     if (tipo === "pendentes")
@@ -153,6 +175,7 @@ async function initDashboard() {
     atualizarCardsDash(lista);
     preencherTabelaDash(lista);
 
+    // Atualizar blocos quando muda o empreendimento no filtro
     get("filtroEmpreendimento")?.addEventListener("change", async (e) => {
         await carregarBlocosSelect("filtroBloco", e.target.value);
     });
@@ -161,7 +184,7 @@ async function initDashboard() {
 }
 
 /*****************************************************
- * EXPORT GLOBAL
+ * EXPORTAR FUNÇÕES PARA AS TELAS
  *****************************************************/
 window.ChaveVR = {
     carregarEmpreendimentosSelect,
