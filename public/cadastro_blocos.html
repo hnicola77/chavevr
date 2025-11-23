@@ -2,161 +2,204 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>ChaveVR - Cadastro de Blocos</title>
+    <title>ChaveVR - Blocos</title>
     <link rel="stylesheet" href="/styles.css">
-
-    <style>
-        body {
-            background:#f4f6f9;
-            margin:0;
-            font-family:Arial, sans-serif;
-        }
-        .top-menu {
-            display:flex;
-            justify-content:flex-end;
-            gap:20px;
-            padding:15px 30px;
-            background:#fff;
-            border-bottom:1px solid #ddd;
-        }
-        .top-menu a {
-            text-decoration:none;
-            color:#333;
-            font-weight:bold;
-        }
-        .container {
-            max-width:1100px;
-            margin:30px auto;
-            background:#fff;
-            padding:30px;
-            border-radius:12px;
-            box-shadow:0 3px 10px rgba(0,0,0,0.12);
-        }
-        h1, h2 {
-            margin-top:0;
-            color:#333;
-        }
-        label {
-            display:block;
-            margin-top:10px;
-            font-weight:bold;
-            color:#444;
-        }
-        select, input, textarea {
-            width:100%;
-            padding:10px;
-            margin-top:5px;
-            border-radius:6px;
-            border:1px solid #ccc;
-            font-size:14px;
-        }
-        textarea {
-            resize:vertical;
-            min-height:80px;
-        }
-        .row {
-            display:flex;
-            gap:15px;
-        }
-        .row > div {
-            flex:1;
-        }
-        .btn-primary {
-            background:#007bff;
-            padding:10px 18px;
-            border-radius:6px;
-            color:white;
-            border:none;
-            font-weight:bold;
-            cursor:pointer;
-        }
-        .btn-secondary {
-            background:#6c757d;
-            padding:10px 18px;
-            border-radius:6px;
-            color:white;
-            border:none;
-            font-weight:bold;
-            cursor:pointer;
-        }
-        table {
-            width:100%;
-            border-collapse:collapse;
-            margin-top:20px;
-            background:white;
-        }
-        th, td {
-            padding:10px;
-            border-bottom:1px solid #eee;
-            text-align:left;
-            font-size:13px;
-        }
-        th {
-            background:#f7f7f7;
-            font-weight:bold;
-        }
-        .btn-unidades {
-            padding:6px 12px;
-            background:#17a2b8;
-            color:white;
-            border:none;
-            border-radius:4px;
-            cursor:pointer;
-        }
-    </style>
 </head>
+
 <body>
 
-    <!-- MENU SUPERIOR -->
-    <div class="top-menu">
-        <a href="/dashboard.html">Dashboard</a>
-        <a href="/cadastro_empreendimentos.html">Empreendimentos</a>
-        <a href="/index.html">Módulos</a>
-    </div>
+<!-- MENU SUPERIOR -->
+<div class="top-menu">
+    <a href="/dashboard.html">Dashboard</a>
+    <a href="/cadastro_empreendimentos.html">Empreendimentos</a>
+    <a href="/cadastro_unidades.html">Unidades</a>
+    <a href="/index.html">Módulos</a>
+</div>
 
-    <div class="container">
-        <h1>Cadastro de Blocos</h1>
-        <p>Selecione o empreendimento e cadastre os blocos associados a ele.</p>
+<div class="container">
 
-        <!-- FORMULÁRIO -->
-        <h2>Novo Bloco</h2>
+    <h1>Cadastro de Blocos</h1>
+    <p>Gerencie os blocos de cada empreendimento.</p>
 
-        <form id="formBloco">
+    <h2 id="tituloForm">Novo Bloco</h2>
 
-            <label>Empreendimento</label>
-            <select id="selEmpBloco" required>
-                <option value="">Selecione...</option>
-            </select>
+    <form id="formBloco">
+        <input type="hidden" id="idBloco">
 
-            <label>Nome do Bloco</label>
-            <input type="text" id="nomeBloco" required>
+        <label>Empreendimento</label>
+        <select id="selEmp" required></select>
 
-            <label>Observações</label>
-            <textarea id="obsBloco"></textarea>
+        <label>Nome do Bloco</label>
+        <input type="text" id="nomeBloco" required>
 
-            <br>
-            <button class="btn-primary" type="submit">Salvar Bloco</button>
-        </form>
+        <label>Observações</label>
+        <textarea id="obsBloco"></textarea>
 
-        <!-- LISTAGEM -->
-        <h2 style="margin-top:40px;">Blocos Cadastrados</h2>
+        <br>
+        <button class="btn-primary" type="submit" id="btnSalvar">Salvar</button>
+        <button class="btn-secondary" type="button" id="btnCancelar" style="display:none;" onclick="cancelarEdicao()">Cancelar</button>
+    </form>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Bloco</th>
-                    <th>Observação</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody id="tabelaBlocos">
-                <!-- preenchido via JS -->
-            </tbody>
-        </table>
+    <hr style="margin:40px 0;">
 
-    </div>
+    <h2>Blocos Cadastrados</h2>
 
-    <script src="/chavesvr.js"></script>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Bloco</th>
+                <th>Observação</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody id="tabelaBlocos"></tbody>
+    </table>
+
+</div>
+
+<script>
+/*************************************
+ * HELPERS
+ *************************************/
+function get(id){ return document.getElementById(id); }
+function qs(sel){ return document.querySelector(sel); }
+
+function limpar() {
+    get("idBloco").value = "";
+    get("nomeBloco").value = "";
+    get("obsBloco").value = "";
+}
+
+/*************************************
+ * CARREGAR EMPREENDIMENTOS
+ *************************************/
+async function carregarEmpreendimentos() {
+    const res = await fetch("/empreendimentos");
+    const lista = await res.json();
+
+    const sel = get("selEmp");
+    sel.innerHTML = "";
+
+    lista.forEach(emp => {
+        const opt = document.createElement("option");
+        opt.value = emp.id;
+        opt.textContent = emp.nome;
+        sel.appendChild(opt);
+    });
+
+    const url = new URLSearchParams(window.location.search);
+    const empURL = url.get("emp");
+
+    if (empURL) sel.value = empURL;
+}
+
+/*************************************
+ * CARREGAR BLOCOS DO EMPREENDIMENTO
+ *************************************/
+async function carregarBlocos() {
+    const empId = get("selEmp").value;
+    const res = await fetch(`/blocos/${empId}`);
+    const blocos = await res.json();
+
+    const tbody = get("tabelaBlocos");
+    tbody.innerHTML = "";
+
+    blocos.forEach(b => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${b.id}</td>
+            <td>${b.nome}</td>
+            <td>${b.observacao || ""}</td>
+            <td>
+                <button class="btn-small btn-editar" onclick="editar(${b.id})">Editar</button>
+                <button class="btn-small btn-unidades" onclick="abrirUnidades(${b.id})">Unidades</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+/*************************************
+ * SALVAR BLOCO
+ *************************************/
+get("formBloco").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const bloco = {
+        empreendimento_id: get("selEmp").value,
+        nome: get("nomeBloco").value,
+        observacao: get("obsBloco").value
+    };
+
+    const id = get("idBloco").value;
+
+    if (id === "") {
+        // Criar
+        await fetch("/blocos", {
+            method: "POST",
+            headers: {"Content-Type":"application/json"},
+            body: JSON.stringify(bloco)
+        });
+        alert("Bloco criado!");
+    } else {
+        // Editar
+        await fetch(`/blocos/${id}`, {
+            method: "PUT",
+            headers: {"Content-Type":"application/json"},
+            body: JSON.stringify(bloco)
+        });
+        alert("Bloco atualizado!");
+    }
+
+    cancelarEdicao();
+    carregarBlocos();
+});
+
+/*************************************
+ * EDITAR BLOCO
+ *************************************/
+async function editar(id) {
+    const empId = get("selEmp").value;
+
+    const res = await fetch(`/blocos/${empId}`);
+    const blocos = await res.json();
+    const b = blocos.find(x => x.id == id);
+
+    get("idBloco").value = b.id;
+    get("nomeBloco").value = b.nome;
+    get("obsBloco").value = b.observacao;
+
+    get("tituloForm").innerText = "Editar Bloco";
+    get("btnSalvar").innerText = "Atualizar";
+    get("btnCancelar").style.display = "inline-block";
+}
+
+function cancelarEdicao() {
+    limpar();
+    get("tituloForm").innerText = "Novo Bloco";
+    get("btnSalvar").innerText = "Salvar";
+    get("btnCancelar").style.display = "none";
+}
+
+/*************************************
+ * ABRIR UNIDADES
+ *************************************/
+function abrirUnidades(idBloco) {
+    const empId = get("selEmp").value;
+    window.location.href = `/cadastro_unidades.html?emp=${empId}&bloco=${idBloco}`;
+}
+
+/*************************************
+ * INICIAR
+ *************************************/
+(async () => {
+    await carregarEmpreendimentos();
+    await carregarBlocos();
+
+    get("selEmp").addEventListener("change", carregarBlocos);
+})();
+</script>
+
 </body>
 </html>
