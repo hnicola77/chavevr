@@ -10,7 +10,7 @@
 
 <body>
 
-    <!-- MENU -->
+    <!-- MENU SUPERIOR -->
     <div class="top-menu">
         <a href="/index.html">Módulos</a>
         <a href="/dashboard.html">Dashboard</a>
@@ -55,12 +55,12 @@
 <script>
 let empId = null;
 
-/**********************************************
+/****************************************************
  * INICIAR TELA
- **********************************************/
+ ****************************************************/
 document.addEventListener("DOMContentLoaded", async () => {
 
-    // pegar o ID do empreendimento via URL
+    // 1) Ler o ID do empreendimento via URL
     const params = new URLSearchParams(location.search);
     empId = params.get("emp");
 
@@ -70,27 +70,32 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
     }
 
-    // carregar nome do empreendimento
+    // 2) carregar nome do empreendimento
     await carregarTituloEmpreendimento();
 
-    // listar blocos
+    // 3) listar blocos
     await listarBlocos();
 });
 
-/**********************************************
- * MOSTRAR TITULO DO EMPREENDIMENTO
- **********************************************/
+/****************************************************
+ * MOSTRAR NOME DO EMPREENDIMENTO
+ ****************************************************/
 async function carregarTituloEmpreendimento() {
     const res = await fetch("/empreendimentos");
     const lista = await res.json();
 
     const emp = lista.find(e => e.id == empId);
+    if (!emp) {
+        get("tituloEmp").innerText = "Empreendimento não encontrado.";
+        return;
+    }
+
     get("tituloEmp").innerText = `Empreendimento: ${emp.nome}`;
 }
 
-/**********************************************
+/****************************************************
  * LISTAR BLOCOS
- **********************************************/
+ ****************************************************/
 async function listarBlocos() {
     const res = await fetch(`/blocos/${empId}`);
     const lista = await res.json();
@@ -104,10 +109,17 @@ async function listarBlocos() {
         tr.innerHTML = `
             <td>${b.nome}</td>
             <td>${b.observacao || ""}</td>
-
             <td>
-                <button class="btn-small btn-editar" onclick='editar(${JSON.stringify(b)})'>Editar</button>
-                <a class="btn-small btn-unidades" href="/cadastro_unidades.html?bloco=${b.id}&emp=${empId}">Unidades</a>
+                <button class="btn-small btn-editar"
+                        onclick='editar(${JSON.stringify(b)})'>
+                    Editar
+                </button>
+
+                <!-- 🔥 PASSAGEM CORRETA DOS PARÂMETROS -->
+                <a class="btn-small btn-unidades"
+                   href="/cadastro_unidades.html?emp=${empId}&bloco=${b.id}">
+                    Unidades
+                </a>
             </td>
         `;
 
@@ -115,18 +127,18 @@ async function listarBlocos() {
     });
 }
 
-/**********************************************
+/****************************************************
  * EDITAR BLOCO
- **********************************************/
+ ****************************************************/
 function editar(b) {
     get("id").value = b.id;
     get("nome").value = b.nome;
     get("observacao").value = b.observacao || "";
 }
 
-/**********************************************
+/****************************************************
  * SALVAR BLOCO
- **********************************************/
+ ****************************************************/
 async function salvarBloco(e) {
     e.preventDefault();
 
