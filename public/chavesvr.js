@@ -135,7 +135,7 @@ async function salvarBloco(e) {
 }
 
 async function abrirBlocos(empreendimentoId) {
-    window.location.href = `/chavevr/cadastro_blocos.html?emp=${empreendimentoId}`;
+    window.location.href = `/cadastro_blocos.html?emp=${empreendimentoId}`;
 }
 
 async function initBlocos() {
@@ -217,7 +217,7 @@ async function salvarUnidade(e) {
 }
 
 async function abrirUnidades(blocoId) {
-    window.location.href = `/chavevr/cadastro_unidades.html?bloco=${blocoId}`;
+    window.location.href = `/cadastro_unidades.html?bloco=${blocoId}`;
 }
 
 async function initUnidades() {
@@ -340,3 +340,4 @@ function preencherDashboard() {
         tabela.appendChild(tr);
     });
 }
+
