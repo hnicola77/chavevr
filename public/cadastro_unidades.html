@@ -1,201 +1,190 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <title>ChaveVR - Unidades</title>
-    <link rel="stylesheet" href="/styles.css">
-
-    <style>
-        tr.verde { background:#d4ffd4 !important; }
-        tr.amarelo { background:#fff6b0 !important; }
-        tr.vermelho { background:#ffc4c4 !important; }
-    </style>
+    <link rel="stylesheet" href="/styles.css" />
 </head>
 
 <body>
 
-<!-- MENU SUPERIOR -->
-<div class="top-menu">
-    <a href="/dashboard.html">Dashboard</a>
-    <a href="/cadastro_empreendimentos.html">Empreendimentos</a>
-    <a href="/cadastro_blocos.html">Blocos</a>
-    <a href="/index.html">Módulos</a>
-</div>
-
-<div class="container">
-
-    <h1>Cadastro de Unidades</h1>
-
-    <!-- INFORMAÇÃO DO EMP E BLOCO -->
-    <div style="background:#eef2f7; padding:15px; margin-bottom:20px; border-radius:8px;">
-        <h3 id="infoEmp"></h3>
-        <h4 id="infoBloco" style="margin-top:5px;"></h4>
+    <!-- NAV SUPERIOR -->
+    <div class="top-menu">
+        <a href="/dashboard.html">Dashboard</a>
+        <a href="/cadastro_empreendimentos.html">Empreendimentos</a>
+        <a href="/cadastro_blocos.html">Blocos</a>
+        <a href="/index.html">Módulos</a>
     </div>
 
-    <h2 id="formTitulo">Nova Unidade</h2>
+    <div class="container">
 
-    <form id="formUnidade">
-        <input type="hidden" id="idUnidade">
+        <h1 id="tituloPag">Empreendimento → Bloco → Unidades</h1>
+        <p id="subtituloPag"></p>
 
-        <label>Unidade</label>
-        <input type="text" id="nUnidade" required>
+        <!-- FORMULÁRIO -->
+        <h2 id="formTitulo">Nova Unidade</h2>
 
-        <div class="row">
-            <div>
-                <label>Situação</label>
-                <select id="selSituacao">
-                    <option value="Em obra">Em obra</option>
-                    <option value="Ajuste de cliente">Ajuste de cliente</option>
-                    <option value="Liberada">Liberada</option>
-                    <option value="Aprovada">Aprovada</option>
-                </select>
+        <form id="formUnidade">
+
+            <!-- IDs escondidos -->
+            <input type="hidden" id="idUnidade">
+            <input type="hidden" id="empId">
+            <input type="hidden" id="blocoId">
+
+            <label>Número da Unidade</label>
+            <input type="text" id="nUnidade" required>
+
+            <div class="row">
+                <div>
+                    <label>Situação</label>
+                    <select id="selSituacao">
+                        <option value="">Selecione</option>
+                        <option value="Em obra">Em Obra</option>
+                        <option value="Ajuste de cliente">Ajuste de Cliente</option>
+                        <option value="Liberada">Liberada</option>
+                        <option value="Aprovada">Aprovada</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label>Status Financeiro</label>
+                    <select id="selFinanceiro">
+                        <option value="">Selecione</option>
+                        <option value="Liberada">Liberada</option>
+                        <option value="Bloqueada">Bloqueada</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label>Habitável</label>
+                    <select id="selHabitavel">
+                        <option value="">Selecione</option>
+                        <option value="Sim">Sim</option>
+                        <option value="Não">Não</option>
+                    </select>
+                </div>
             </div>
 
-            <div>
-                <label>Status Financeiro</label>
-                <select id="selFinanceiro">
-                    <option value="Liberada">Liberada</option>
-                    <option value="Bloqueada">Bloqueada</option>
-                </select>
+            <div class="row">
+                <div>
+                    <label>CVCO</label>
+                    <select id="selCVCO">
+                        <option value="">Selecione</option>
+                        <option value="Liberado">Liberado</option>
+                        <option value="Não liberado">Não Liberado</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label>Chaves</label>
+                    <select id="selChaves">
+                        <option value="">Selecione</option>
+                        <option value="Entregue">Entregue</option>
+                        <option value="Não entregue">Não Entregue</option>
+                    </select>
+                </div>
             </div>
 
-            <div>
-                <label>Habitável</label>
-                <select id="selHabitavel">
-                    <option value="Sim">Sim</option>
-                    <option value="Não">Não</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="row">
-            <div>
-                <label>CVCO</label>
-                <select id="selCVCO">
-                    <option value="Liberado">Liberado</option>
-                    <option value="Pendente">Pendente</option>
-                </select>
+            <div class="row">
+                <div>
+                    <label>Data da Vistoria</label>
+                    <input type="date" id="dtVistoria">
+                </div>
+                <div>
+                    <label>Hora</label>
+                    <input type="time" id="hrVistoria">
+                </div>
+                <div>
+                    <label>Data de Liberação</label>
+                    <input type="date" id="dtLiberacao">
+                </div>
             </div>
 
-            <div>
-                <label>Chaves</label>
-                <select id="selChaves">
-                    <option value="Entregue">Entregue</option>
-                    <option value="Não entregue">Não entregue</option>
-                </select>
-            </div>
+            <label>Agendado Por</label>
+            <input type="text" id="agendadoPor">
 
-            <div>
-                <label>Agendado Por</label>
-                <input type="text" id="agendadoPor">
-            </div>
-        </div>
+            <label>Observação</label>
+            <textarea id="obsUnidade"></textarea>
 
-        <div class="row">
-            <div>
-                <label>Data Vistoria</label>
-                <input type="date" id="dtVistoria">
-            </div>
-            <div>
-                <label>Hora Vistoria</label>
-                <input type="time" id="hrVistoria">
-            </div>
-            <div>
-                <label>Data Liberação</label>
-                <input type="date" id="dtLiberacao">
-            </div>
-        </div>
+            <br>
+            <button type="submit" class="btn-primary" id="btnSalvar">Salvar</button>
+            <button type="button" class="btn-secondary" id="btnCancelar"
+                onclick="cancelarEdicao()" style="display:none;">Cancelar</button>
 
-        <label>Observações</label>
-        <textarea id="obsUnidade"></textarea>
+        </form>
 
-        <br>
-        <button class="btn-primary" type="submit" id="btnSalvar">Salvar</button>
-        <button class="btn-secondary" type="button" id="btnCancelar" style="display:none;" onclick="cancelarEdicao()">Cancelar</button>
-    </form>
+        <hr style="margin:40px 0;">
 
-    <hr style="margin:40px 0;">
+        <!-- LISTAGEM -->
+        <h2 id="tituloLista">Unidades Cadastradas</h2>
 
-    <h2>Unidades Cadastradas</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Unidade</th>
+                    <th>Situação</th>
+                    <th>Financeiro</th>
+                    <th>Habitável</th>
+                    <th>CVCO</th>
+                    <th>Chaves</th>
+                    <th>Vistoria</th>
+                    <th>Liberação</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="tabelaUnidades"></tbody>
+        </table>
 
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Unidade</th>
-                <th>Situação</th>
-                <th>Financeiro</th>
-                <th>Habitável</th>
-                <th>CVCO</th>
-                <th>Chaves</th>
-                <th>Vistoria</th>
-                <th>Liberação</th>
-                <th>Ações</th>
-            </tr>
-        </thead>
-        <tbody id="tabelaUnidades"></tbody>
-    </table>
-
-</div>
+    </div>
 
 <script>
-/**************************************
- * HELPERS
- **************************************/
-function get(id) { return document.getElementById(id); }
+// HELPERS
+function get(id){ return document.getElementById(id); }
 
-/**************************************
- * PARAMETROS DA URL
- **************************************/
-const url = new URLSearchParams(window.location.search);
-const empId = url.get("emp");
-const blocoId = url.get("bloco");
+// CAPTURAR PARÂMETROS
+const url = new URL(window.location.href);
+const empId = url.searchParams.get("emp");
+const blocoId = url.searchParams.get("bloco");
 
-let nomeEmp = "";
-let nomeBloco = "";
+get("empId").value = empId;
+get("blocoId").value = blocoId;
 
-/**************************************
- * CARREGAR EMPREENDIMENTO E BLOCO
- **************************************/
-async function carregarInfoTopo() {
-    const empRes = await fetch("/empreendimentos");
-    const empreendimentos = await empRes.json();
-    const emp = empreendimentos.find(e => e.id == empId);
-
-    if (emp) {
-        nomeEmp = emp.nome;
-        get("infoEmp").innerText = "Empreendimento: " + emp.nome;
-    }
-
-    const blocoRes = await fetch(`/blocos/${empId}`);
-    const blocos = await blocoRes.json();
-    const bloco = blocos.find(b => b.id == blocoId);
-
-    if (bloco) {
-        nomeBloco = bloco.nome;
-        get("infoBloco").innerText = "Bloco: " + bloco.nome;
-    }
+// VALIDAR
+if(!empId || !blocoId){
+    alert("Selecione Empreendimento e Bloco primeiro.");
+    window.location.href = "/cadastro_empreendimentos.html";
 }
 
-/**************************************
- * CARREGAR UNIDADES
- **************************************/
-async function carregarUnidades() {
-    const res = await fetch(`/unidades/${blocoId}`);
-    const lista = await res.json();
+// CARREGAR NOME DO EMPREENDIMENTO + BLOCO
+async function carregarCabecalho(){
+    const listaEmp = await (await fetch("/empreendimentos")).json();
+    const emp = listaEmp.find(e=>e.id == empId);
 
+    const listaBlocos = await (await fetch(`/blocos/${empId}`)).json();
+    const bloco = listaBlocos.find(b=>b.id == blocoId);
+
+    get("tituloPag").innerText = 
+        `${emp.nome} → ${bloco.nome} → Unidades`;
+
+    get("subtituloPag").innerText = `${emp.cidade} / ${emp.uf}`;
+}
+
+// LISTAR UNIDADES
+async function carregarUnidades(){
+    const res = await fetch(`/unidades/${blocoId}`);
+    return await res.json();
+}
+
+async function preencherTabela(){
+    const lista = await carregarUnidades();
     const tbody = get("tabelaUnidades");
     tbody.innerHTML = "";
 
-    lista.forEach(u => {
+    lista.forEach(u=>{
         const tr = document.createElement("tr");
-
-        let cor = "";
-        if (u.chaves === "Entregue") cor = "verde";
-        else if (["Liberada", "Aprovada"].includes(u.situacao) && u.chaves === "Não entregue") cor = "amarelo";
-        else if (["Em obra", "Ajuste de cliente"].includes(u.situacao)) cor = "vermelho";
-
-        tr.classList.add(cor);
+        tr.classList.add(corUnidade(u)); // verde, amarelo, vermelho
 
         tr.innerHTML = `
             <td>${u.id}</td>
@@ -209,17 +198,16 @@ async function carregarUnidades() {
             <td>${u.dataLiberacao || ""}</td>
             <td><button class="btn-small btn-editar" onclick="editar(${u.id})">Editar</button></td>
         `;
+
         tbody.appendChild(tr);
     });
 }
 
-/**************************************
- * SALVAR UNIDADE
- **************************************/
-get("formUnidade").addEventListener("submit", async (e) => {
+// SALVAR UNIDADE
+get("formUnidade").addEventListener("submit", async(e)=>{
     e.preventDefault();
 
-    const u = {
+    const dados = {
         bloco_id: blocoId,
         unidade: get("nUnidade").value,
         situacao: get("selSituacao").value,
@@ -236,33 +224,30 @@ get("formUnidade").addEventListener("submit", async (e) => {
 
     const id = get("idUnidade").value;
 
-    if (id === "") {
-        await fetch("/unidades", {
-            method: "POST",
-            headers: {"Content-Type":"application/json"},
-            body: JSON.stringify(u)
+    if(id === ""){
+        await fetch("/unidades",{
+            method:"POST",
+            headers:{ "Content-Type":"application/json" },
+            body:JSON.stringify(dados)
         });
-        alert("Unidade cadastrada!");
-    } else {
-        await fetch(`/unidades/${id}`, {
+        alert("Unidade criada!");
+    }else{
+        await fetch(`/unidades/${id}`,{
             method:"PUT",
             headers:{ "Content-Type":"application/json" },
-            body: JSON.stringify(u)
+            body:JSON.stringify(dados)
         });
         alert("Unidade atualizada!");
     }
 
     cancelarEdicao();
-    carregarUnidades();
+    preencherTabela();
 });
 
-/**************************************
- * EDITAR UNIDADE
- **************************************/
-async function editar(id) {
-    const res = await fetch(`/unidades/${blocoId}`);
-    const lista = await res.json();
-    const u = lista.find(x => x.id == id);
+// EDITAR
+async function editar(id){
+    const res = await fetch(`/unidade/${id}`);
+    const u = await res.json();
 
     get("idUnidade").value = u.id;
     get("nUnidade").value = u.unidade;
@@ -271,6 +256,7 @@ async function editar(id) {
     get("selHabitavel").value = u.habitavel;
     get("selCVCO").value = u.cvco;
     get("selChaves").value = u.chaves;
+
     get("dtVistoria").value = u.dataVistoria || "";
     get("hrVistoria").value = u.horaVistoria || "";
     get("dtLiberacao").value = u.dataLiberacao || "";
@@ -282,26 +268,29 @@ async function editar(id) {
     get("btnCancelar").style.display = "inline-block";
 }
 
-/**************************************
- * CANCELAR EDIÇÃO
- **************************************/
-function cancelarEdicao() {
+// CANCELAR
+function cancelarEdicao(){
     get("idUnidade").value = "";
+    get("nUnidade").value = "";
+    get("selSituacao").value = "";
+    get("selFinanceiro").value = "";
+    get("selHabitavel").value = "";
+    get("selCVCO").value = "";
+    get("selChaves").value = "";
+    get("dtVistoria").value = "";
+    get("hrVistoria").value = "";
+    get("dtLiberacao").value = "";
+    get("agendadoPor").value = "";
+    get("obsUnidade").value = "";
+
     get("formTitulo").innerText = "Nova Unidade";
     get("btnSalvar").innerText = "Salvar";
     get("btnCancelar").style.display = "none";
-
-    get("nUnidade").value = "";
-    get("obsUnidade").value = "";
 }
 
-/**************************************
- * INICIAR
- **************************************/
-(async () => {
-    await carregarInfoTopo();
-    await carregarUnidades();
-})();
+// INICIAR
+carregarCabecalho();
+preencherTabela();
 </script>
 
 </body>
