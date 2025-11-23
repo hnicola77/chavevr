@@ -1,3 +1,7 @@
+// =======================================================
+// ChaveVR - Servidor Node + Express + SQLite
+// =======================================================
+
 const express = require("express");
 const sqlite3 = require("sqlite3").verbose();
 const cors = require("cors");
@@ -7,33 +11,29 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-// ---------------------------
-// Arquivos estáticos
-// ---------------------------
+// -------------------------------------------------------
+// Servir arquivos estáticos (HTML/CSS/JS)
+// -------------------------------------------------------
 app.use(express.static(path.join(__dirname, "public")));
 
-// ---------------------------
-// Banco de dados
-// ---------------------------
+// -------------------------------------------------------
+// Banco de Dados (arquivo no Render: /data/chavesvr.db)
+// -------------------------------------------------------
 const dbPath = "/data/chavesvr.db";
 
 const db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
         console.error("Erro ao conectar ao banco:", err.message);
     } else {
-        console.log("Banco conectado com sucesso:", dbPath);
+        console.log("Banco conectado:", dbPath);
     }
 });
 
-// Criação das tabelas
+// -------------------------------------------------------
+// Criar Tabelas (com Blocos integrados)
+// -------------------------------------------------------
 db.serialize(() => {
-    // ⚠️ APAGA a tabela 'unidades' antiga para recriar com o novo formato
-    // (só as UNIDADES são perdidas; empreendimentos ficam)
-    db.run("DROP TABLE IF EXISTS unidades");
-
-    // Se em algum momento quiser zerar também empreendimentos, descomente:
-    // db.run("DROP TABLE IF EXISTS empreendimentos");
-
+    // EMPREENDIMENTOS
     db.run(`
         CREATE TABLE IF NOT EXISTS empreendimentos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -47,153 +47,160 @@ db.serialize(() => {
         )
     `);
 
+    // BLOCOS
+    db.run(`
+        CREATE TABLE IF NOT EXISTS blocos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            empreendimento_id INTEGER,
+            nome TEXT,
+            observacao TEXT,
+            FOREIGN KEY (empreendimento_id) REFERENCES empreendimentos(id)
+        )
+    `);
+
+    // UNIDADES
     db.run(`
         CREATE TABLE IF NOT EXISTS unidades (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            empreendimento TEXT,
-            bloco TEXT,
-            pavimento TEXT,
+            bloco_id INTEGER,
             unidade TEXT,
             situacao TEXT,
             statusFinanceiro TEXT,
-            habiteSe TEXT,
+            habitavel TEXT,
             cvco TEXT,
             chaves TEXT,
             dataVistoria TEXT,
             horaVistoria TEXT,
             dataLiberacao TEXT,
             agendadoPor TEXT,
-            observacao TEXT
+            observacao TEXT,
+            FOREIGN KEY (bloco_id) REFERENCES blocos(id)
         )
     `);
 });
 
-// ---------------------------
-// Rota raiz -> index.html
-// ---------------------------
-app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "public", "index.html"));
-});
-
-// ======================================================
-// EMPREENDIMENTOS
-// ======================================================
+// =======================================================
+// ROTAS - EMPREENDIMENTOS
+// =======================================================
 
 // Listar empreendimentos
 app.get("/empreendimentos", (req, res) => {
     db.all("SELECT * FROM empreendimentos ORDER BY nome ASC", [], (err, rows) => {
-        if (err) {
-            console.error("Erro ao listar empreendimentos:", err);
-            return res.status(500).json({ error: "Erro ao listar empreendimentos" });
-        }
+        if (err) return res.status(500).json({ error: "Erro ao listar empreendimentos" });
         res.json(rows);
     });
 });
 
-// Criar novo empreendimento
+// Criar empreendimento
 app.post("/empreendimentos", (req, res) => {
-    const {
-        nome,
-        cidade,
-        uf,
-        fase,
-        dataEntrega,
-        codigoInterno,
-        observacao
-    } = req.body;
+    const { nome, cidade, uf, fase, dataEntrega, codigoInterno, observacao } = req.body;
 
     const sql = `
-        INSERT INTO empreendimentos
-        (nome, cidade, uf, fase, dataEntrega, codigoInterno, observacao)
+        INSERT INTO empreendimentos (nome, cidade, uf, fase, dataEntrega, codigoInterno, observacao)
         VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
 
-    db.run(
-        sql,
-        [nome, cidade, uf, fase, dataEntrega, codigoInterno, observacao],
-        function (err) {
-            if (err) {
-                console.error("Erro ao inserir empreendimento:", err);
-                return res.status(500).json({ error: "Erro ao inserir empreendimento" });
-            }
-            res.json({ message: "Empreendimento cadastrado com sucesso!", id: this.lastID });
-        }
-    );
-});
+    db.run(sql, [nome, cidade, uf, fase, dataEntrega, codigoInterno, observacao], function (err) {
+        if (err) return res.status(500).json({ error: "Erro ao salvar empreendimento" });
 
-// Atualizar empreendimento
-app.put("/empreendimentos/:id", (req, res) => {
-    const { id } = req.params;
-    const {
-        nome,
-        cidade,
-        uf,
-        fase,
-        dataEntrega,
-        codigoInterno,
-        observacao
-    } = req.body;
-
-    const sql = `
-        UPDATE empreendimentos SET
-            nome = ?,
-            cidade = ?,
-            uf = ?,
-            fase = ?,
-            dataEntrega = ?,
-            codigoInterno = ?,
-            observacao = ?
-        WHERE id = ?
-    `;
-
-    db.run(
-        sql,
-        [nome, cidade, uf, fase, dataEntrega, codigoInterno, observacao, id],
-        function (err) {
-            if (err) {
-                console.error("Erro ao atualizar empreendimento:", err);
-                return res.status(500).json({ error: "Erro ao atualizar empreendimento" });
-            }
-            res.json({ message: "Empreendimento atualizado com sucesso!" });
-        }
-    );
-});
-
-// ======================================================
-// UNIDADES
-// ======================================================
-
-// Listar unidades (opcional: filtrar por empreendimento)
-app.get("/unidades", (req, res) => {
-    const empNome = req.query.empreendimento;
-
-    let sql = "SELECT * FROM unidades";
-    const params = [];
-
-    if (empNome) {
-        sql += " WHERE empreendimento = ?";
-        params.push(empNome);
-    }
-
-    db.all(sql, params, (err, rows) => {
-        if (err) {
-            console.error("Erro ao listar unidades:", err);
-            return res.status(500).json({ error: "Erro ao listar unidades" });
-        }
-        res.json(rows);
+        res.json({ message: "Empreendimento criado", id: this.lastID });
     });
 });
 
-// Criar nova unidade
+// Editar empreendimento
+app.put("/empreendimentos/:id", (req, res) => {
+    const { id } = req.params;
+    const { nome, cidade, uf, fase, dataEntrega, codigoInterno, observacao } = req.body;
+
+    const sql = `
+        UPDATE empreendimentos SET
+            nome=?, cidade=?, uf=?, fase=?, dataEntrega=?, codigoInterno=?, observacao=?
+        WHERE id=?
+    `;
+
+    db.run(sql, [nome, cidade, uf, fase, dataEntrega, codigoInterno, observacao, id], function (err) {
+        if (err) return res.status(500).json({ error: "Erro ao atualizar empreendimento" });
+
+        res.json({ message: "Empreendimento atualizado" });
+    });
+});
+
+// =======================================================
+// ROTAS - BLOCOS
+// =======================================================
+
+// Listar blocos por empreendimento
+app.get("/blocos/:empreendimento_id", (req, res) => {
+    const { empreendimento_id } = req.params;
+
+    db.all(
+        "SELECT * FROM blocos WHERE empreendimento_id = ? ORDER BY nome ASC",
+        [empreendimento_id],
+        (err, rows) => {
+            if (err) return res.status(500).json({ error: "Erro ao listar blocos" });
+            res.json(rows);
+        }
+    );
+});
+
+// Criar bloco
+app.post("/blocos", (req, res) => {
+    const { empreendimento_id, nome, observacao } = req.body;
+
+    const sql = `
+        INSERT INTO blocos (empreendimento_id, nome, observacao)
+        VALUES (?, ?, ?)
+    `;
+
+    db.run(sql, [empreendimento_id, nome, observacao], function (err) {
+        if (err) return res.status(500).json({ error: "Erro ao salvar bloco" });
+
+        res.json({ message: "Bloco criado", id: this.lastID });
+    });
+});
+
+// Editar bloco
+app.put("/blocos/:id", (req, res) => {
+    const { id } = req.params;
+    const { nome, observacao } = req.body;
+
+    const sql = `
+        UPDATE blocos SET nome=?, observacao=? WHERE id=?
+    `;
+
+    db.run(sql, [nome, observacao, id], function (err) {
+        if (err) return res.status(500).json({ error: "Erro ao atualizar bloco" });
+
+        res.json({ message: "Bloco atualizado" });
+    });
+});
+
+// =======================================================
+// ROTAS - UNIDADES
+// =======================================================
+
+// Listar unidades por bloco
+app.get("/unidades/:bloco_id", (req, res) => {
+    const { bloco_id } = req.params;
+
+    db.all(
+        "SELECT * FROM unidades WHERE bloco_id = ? ORDER BY unidade ASC",
+        [bloco_id],
+        (err, rows) => {
+            if (err) return res.status(500).json({ error: "Erro ao listar unidades" });
+            res.json(rows);
+        }
+    );
+});
+
+// Criar unidade
 app.post("/unidades", (req, res) => {
     const {
-        empreendimento,
-        bloco,
-        pavimento,
+        bloco_id,
         unidade,
         situacao,
         statusFinanceiro,
-        habiteSe,
+        habitavel,
         cvco,
         chaves,
         dataVistoria,
@@ -204,45 +211,49 @@ app.post("/unidades", (req, res) => {
     } = req.body;
 
     const sql = `
-        INSERT INTO unidades
-        (
-            empreendimento, bloco, pavimento, unidade,
-            situacao, statusFinanceiro, habiteSe, cvco,
-            chaves, dataVistoria, horaVistoria, dataLiberacao,
-            agendadoPor, observacao
+        INSERT INTO unidades (
+            bloco_id, unidade, situacao, statusFinanceiro, habitavel, cvco,
+            chaves, dataVistoria, horaVistoria, dataLiberacao, agendadoPor, observacao
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     db.run(
         sql,
         [
-            empreendimento, bloco, pavimento, unidade,
-            situacao, statusFinanceiro, habiteSe, cvco,
-            chaves, dataVistoria, horaVistoria, dataLiberacao,
-            agendadoPor, observacao
+            bloco_id,
+            unidade,
+            situacao,
+            statusFinanceiro,
+            habitavel,
+            cvco,
+            chaves,
+            dataVistoria,
+            horaVistoria,
+            dataLiberacao,
+            agendadoPor,
+            observacao
         ],
         function (err) {
             if (err) {
-                console.error("Erro ao inserir unidade:", err);
-                return res.status(500).json({ error: "Erro ao inserir unidade" });
+                console.log("Erro ao gravar:", err);
+                return res.status(500).json({ error: "Erro ao salvar unidade" });
             }
-            res.json({ message: "Unidade cadastrada com sucesso!", id: this.lastID });
+            res.json({ message: "Unidade criada", id: this.lastID });
         }
     );
 });
 
-// Atualizar unidade
+// Editar unidade
 app.put("/unidades/:id", (req, res) => {
     const { id } = req.params;
+
     const {
-        empreendimento,
-        bloco,
-        pavimento,
+        bloco_id,
         unidade,
         situacao,
         statusFinanceiro,
-        habiteSe,
+        habitavel,
         cvco,
         chaves,
         dataVistoria,
@@ -254,46 +265,41 @@ app.put("/unidades/:id", (req, res) => {
 
     const sql = `
         UPDATE unidades SET
-            empreendimento = ?,
-            bloco = ?,
-            pavimento = ?,
-            unidade = ?,
-            situacao = ?,
-            statusFinanceiro = ?,
-            habiteSe = ?,
-            cvco = ?,
-            chaves = ?,
-            dataVistoria = ?,
-            horaVistoria = ?,
-            dataLiberacao = ?,
-            agendadoPor = ?,
-            observacao = ?
-        WHERE id = ?
+            bloco_id=?, unidade=?, situacao=?, statusFinanceiro=?, habitavel=?,
+            cvco=?, chaves=?, dataVistoria=?, horaVistoria=?, dataLiberacao=?,
+            agendadoPor=?, observacao=?
+        WHERE id=?
     `;
 
     db.run(
         sql,
         [
-            empreendimento, bloco, pavimento, unidade,
-            situacao, statusFinanceiro, habiteSe, cvco,
-            chaves, dataVistoria, horaVistoria, dataLiberacao,
-            agendadoPor, observacao, id
+            bloco_id,
+            unidade,
+            situacao,
+            statusFinanceiro,
+            habitavel,
+            cvco,
+            chaves,
+            dataVistoria,
+            horaVistoria,
+            dataLiberacao,
+            agendadoPor,
+            observacao,
+            id
         ],
         function (err) {
-            if (err) {
-                console.error("Erro ao atualizar unidade:", err);
-                return res.status(500).json({ error: "Erro ao atualizar unidade" });
-            }
-            res.json({ message: "Unidade atualizada com sucesso!" });
+            if (err) return res.status(500).json({ error: "Erro ao atualizar unidade" });
+
+            res.json({ message: "Unidade atualizada" });
         }
     );
 });
 
-// ======================================================
+// =======================================================
 // Servidor
-// ======================================================
+// =======================================================
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
-    console.log("ChaveVR rodando na porta " + PORT);
+    console.log("Servidor rodando na porta", PORT);
 });
-
