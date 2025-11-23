@@ -10,49 +10,37 @@
 
 <body>
 
-    <!-- MENU -->
+    <!-- MENU SUPERIOR -->
     <div class="top-menu">
         <a href="/index.html">Módulos</a>
         <a href="/dashboard.html">Dashboard</a>
+        <a href="/cadastro_empreendimentos.html">Empreendimentos</a>
     </div>
 
     <div class="container">
-
         <h1>Cadastro de Empreendimentos</h1>
 
         <!-- FORM -->
-        <form id="formEmpreendimento" onsubmit="salvarEmpreendimento(event)">
+        <form id="formEmp" onsubmit="salvarEmp(event)">
             <input type="hidden" id="id" />
 
             <label>Nome do Empreendimento</label>
-            <input id="nome" required>
+            <input id="nome" required />
 
-            <div class="row">
-                <div>
-                    <label>Cidade</label>
-                    <input id="cidade">
-                </div>
+            <label>Cidade</label>
+            <input id="cidade" />
 
-                <div>
-                    <label>UF</label>
-                    <input id="uf" maxlength="2">
-                </div>
-            </div>
+            <label>UF</label>
+            <input id="uf" maxlength="2" />
 
-            <div class="row">
-                <div>
-                    <label>Fase</label>
-                    <input id="fase">
-                </div>
+            <label>Fase</label>
+            <input id="fase" />
 
-                <div>
-                    <label>Data de Entrega</label>
-                    <input type="date" id="dataEntrega">
-                </div>
-            </div>
+            <label>Data de Entrega</label>
+            <input type="date" id="dataEntrega" />
 
             <label>Código Interno</label>
-            <input id="codigoInterno">
+            <input id="codigoInterno" />
 
             <label>Observações</label>
             <textarea id="observacao"></textarea>
@@ -69,33 +57,31 @@
                 <tr>
                     <th>Nome</th>
                     <th>Cidade</th>
-                    <th>UF</th>
                     <th>Fase</th>
-                    <th>Entrega</th>
                     <th>Ações</th>
                 </tr>
             </thead>
-            <tbody id="tabelaEmpreendimentos"></tbody>
+
+            <tbody id="tabelaEmp"></tbody>
         </table>
 
     </div>
 
 <script>
-/**********************************************
- * CARREGAR LISTA
- **********************************************/
-document.addEventListener("DOMContentLoaded", async () => {
-    await listarEmpreendimentos();
-});
 
-/**********************************************
+/****************************************************
+ * INICIAR TELA
+ ****************************************************/
+document.addEventListener("DOMContentLoaded", listarEmpreendimentos);
+
+/****************************************************
  * LISTAR EMPREENDIMENTOS
- **********************************************/
+ ****************************************************/
 async function listarEmpreendimentos() {
     const res = await fetch("/empreendimentos");
     const lista = await res.json();
 
-    const tbody = get("tabelaEmpreendimentos");
+    const tbody = get("tabelaEmp");
     tbody.innerHTML = "";
 
     lista.forEach(emp => {
@@ -104,13 +90,17 @@ async function listarEmpreendimentos() {
         tr.innerHTML = `
             <td>${emp.nome}</td>
             <td>${emp.cidade || ""}</td>
-            <td>${emp.uf || ""}</td>
             <td>${emp.fase || ""}</td>
-            <td>${emp.dataEntrega || ""}</td>
 
             <td>
-                <button class="btn-small btn-editar" onclick='editar(${JSON.stringify(emp)})'>Editar</button>
-                <a class="btn-small btn-unidades" href="/cadastro_blocos.html?emp=${emp.id}">Blocos</a>
+                <button class="btn-small btn-editar" onclick='editar(${JSON.stringify(emp)})'>
+                    Editar
+                </button>
+
+                <a class="btn-small btn-unidades"
+                   href="/cadastro_blocos.html?emp=${emp.id}">
+                   Blocos
+                </a>
             </td>
         `;
 
@@ -118,9 +108,9 @@ async function listarEmpreendimentos() {
     });
 }
 
-/**********************************************
+/****************************************************
  * EDITAR EMPREENDIMENTO
- **********************************************/
+ ****************************************************/
 function editar(emp) {
     get("id").value = emp.id;
     get("nome").value = emp.nome;
@@ -132,10 +122,10 @@ function editar(emp) {
     get("observacao").value = emp.observacao || "";
 }
 
-/**********************************************
+/****************************************************
  * SALVAR EMPREENDIMENTO
- **********************************************/
-async function salvarEmpreendimento(e) {
+ ****************************************************/
+async function salvarEmp(e) {
     e.preventDefault();
 
     const id = get("id").value;
@@ -161,7 +151,7 @@ async function salvarEmpreendimento(e) {
 
     alert("Empreendimento salvo com sucesso!");
 
-    get("formEmpreendimento").reset();
+    get("formEmp").reset();
     get("id").value = "";
 
     listarEmpreendimentos();
