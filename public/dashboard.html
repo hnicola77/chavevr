@@ -1,298 +1,153 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
-    <meta charset="UTF-8">
-    <title>ChaveVR - Dashboard</title>
-    <link rel="stylesheet" href="/styles.css">
-
-    <style>
-        .verde { background: #d4ffd4 !important; }
-        .amarelo { background: #fff8b3 !important; }
-        .vermelho { background: #ffd1d1 !important; }
-
-        .cards { display:flex; gap:20px; margin:20px 0; }
-        .card {
-            background:#f4f4f4; padding:20px;
-            border-radius:12px; width:180px;
-            cursor:pointer; text-align:center;
-            box-shadow:0 2px 6px #ccc;
-            transition:0.2s;
-        }
-        .card:hover { transform:scale(1.04); }
-
-        select, input { width:180px; }
-    </style>
+    <meta charset="UTF-8" />
+    <title>ChaveVR – Dashboard</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="/chavesvr.js"></script>
 </head>
 
 <body>
 
-<!-- MENU SUPERIOR -->
-<div class="top-menu">
-    <a href="/cadastro_empreendimentos.html">Empreendimentos</a>
-    <a href="/cadastro_blocos.html">Blocos</a>
-    <a href="/cadastro_unidades.html">Unidades</a>
-    <a href="/index.html">Módulos</a>
-</div>
-
-<div class="container">
-
-    <h1>Dashboard – ChaveVR</h1>
-
-    <!-- CARDS -->
-    <div class="cards">
-        <div class="card" onclick="filtrarCard('todos')">
-            <h3>Total</h3>
-            <p id="cardTotal">0</p>
-        </div>
-
-        <div class="card" onclick="filtrarCard('pendentes')">
-            <h3>Pendentes</h3>
-            <p id="cardPendentes">0</p>
-        </div>
-
-        <div class="card" onclick="filtrarCard('liberadas')">
-            <h3>Liberadas</h3>
-            <p id="cardLiberadas">0</p>
-        </div>
-
-        <div class="card" onclick="filtrarCard('reprovadas')">
-            <h3>Reprovadas</h3>
-            <p id="cardReprovadas">0</p>
-        </div>
-
-        <div class="card" onclick="filtrarCard('entregues')">
-            <h3>Chaves Entregues</h3>
-            <p id="cardChaves">0</p>
-        </div>
-
-        <div class="card" onclick="filtrarCard('cvco')">
-            <h3>CVCO Liberado</h3>
-            <p id="cardCVCO">0</p>
-        </div>
+    <!-- MENU SUPERIOR -->
+    <div class="top-menu">
+        <a href="/index.html">Módulos</a>
+        <a href="/cadastro_empreendimentos.html">Empreendimentos</a>
+        <a href="/cadastro_blocos.html">Blocos</a>
+        <a href="/cadastro_unidades.html">Unidades</a>
     </div>
 
-    <!-- FILTROS -->
-    <h2>Filtros</h2>
-    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+    <div class="container">
 
-        <select id="filtroEmpreendimento"></select>
-        <select id="filtroBloco"></select>
+        <h1>Dashboard – ChaveVR</h1>
+        <p>Visão geral das unidades por empreendimento e bloco.</p>
 
-        <select id="filtroSituacao">
-            <option value="">Situação</option>
-            <option value="Em obra">Em obra</option>
-            <option value="Ajuste de cliente">Ajuste de cliente</option>
-            <option value="Liberada">Liberada</option>
-            <option value="Aprovada">Aprovada</option>
-        </select>
+        <!-- FILTROS -->
+        <div class="filtros">
+            <select id="filtroEmpreendimento">
+                <option value="">Selecione o Empreendimento</option>
+            </select>
 
-        <select id="filtroFinanceiro">
-            <option value="">Financeiro</option>
-            <option value="Liberada">Liberada</option>
-            <option value="Bloqueada">Bloqueada</option>
-        </select>
+            <select id="filtroBloco">
+                <option value="">Selecione o Bloco</option>
+            </select>
 
-        <select id="filtroHabitavel">
-            <option value="">Habitável</option>
-            <option value="Sim">Sim</option>
-            <option value="Não">Não</option>
-        </select>
+            <button class="btn-secondary" onclick="aplicarFiltros()">Aplicar Filtros</button>
+            <button class="btn-secondary" onclick="limparFiltros()">Limpar</button>
+        </div>
 
-        <select id="filtroCVCO">
-            <option value="">CVCO</option>
-            <option value="Liberado">Liberado</option>
-            <option value="Pendente">Pendente</option>
-        </select>
+        <!-- CARDS -->
+        <div class="cards">
+            <div class="card" onclick="cardFiltro('total')">
+                <h3>Total</h3>
+                <p id="cardTotal">0</p>
+            </div>
 
-        <select id="filtroChaves">
-            <option value="">Chaves</option>
-            <option value="Entregue">Entregue</option>
-            <option value="Não entregue">Não entregue</option>
-        </select>
+            <div class="card" onclick="cardFiltro('pendentes')">
+                <h3>Pendentes</h3>
+                <p id="cardPendentes">0</p>
+            </div>
 
-        <button class="btn-primary" onclick="carregarDashboard()">Filtrar</button>
+            <div class="card" onclick="cardFiltro('liberadas')">
+                <h3>Liberadas</h3>
+                <p id="cardLiberadas">0</p>
+            </div>
+
+            <div class="card" onclick="cardFiltro('reprovadas')">
+                <h3>Aprovadas</h3>
+                <p id="cardReprovadas">0</p>
+            </div>
+
+            <div class="card" onclick="cardFiltro('entregues')">
+                <h3>Chaves Entregues</h3>
+                <p id="cardChaves">0</p>
+            </div>
+
+            <div class="card" onclick="cardFiltro('cvco')">
+                <h3>CVCO Liberado</h3>
+                <p id="cardCVCO">0</p>
+            </div>
+        </div>
+
+        <!-- TABELA -->
+        <table>
+            <thead>
+                <tr>
+                    <th>Empreendimento</th>
+                    <th>Bloco</th>
+                    <th>Unidade</th>
+                    <th>Situação</th>
+                    <th>Financeiro</th>
+                    <th>Habitável</th>
+                    <th>CVCO</th>
+                    <th>Chaves</th>
+                    <th>Vistoria</th>
+                    <th>Liberação</th>
+                </tr>
+            </thead>
+            <tbody id="tabelaDash"></tbody>
+        </table>
+
     </div>
-
-    <hr style="margin:20px 0;">
-
-    <!-- LISTAGEM -->
-    <h2>Unidades</h2>
-
-    <table>
-        <thead>
-            <tr>
-                <th>Empreendimento</th>
-                <th>Bloco</th>
-                <th>Unidade</th>
-                <th>Situação</th>
-                <th>Financeiro</th>
-                <th>Habitável</th>
-                <th>CVCO</th>
-                <th>Chaves</th>
-                <th>Vistoria</th>
-                <th>Liberação</th>
-            </tr>
-        </thead>
-        <tbody id="tabelaDash"></tbody>
-    </table>
-
-</div>
 
 <script>
 let listaCompleta = [];
 
-/************************************************
- * CARREGAR EMPREENDIMENTOS NO FILTRO
- ************************************************/
-async function carregarEmpreendimentos() {
-    const res = await fetch("/empreendimentos");
-    const lista = await res.json();
+/***********************
+ * CARREGAR DASHBOARD
+************************/
+document.addEventListener("DOMContentLoaded", async () => {
 
-    const sel = document.getElementById("filtroEmpreendimento");
-    sel.innerHTML = "<option value=''>Empreendimento</option>";
+    // carregar empreendimentos no filtro
+    await ChaveVR.carregarEmpreendimentosSelect("filtroEmpreendimento");
 
-    lista.forEach(e => {
-        const opt = document.createElement("option");
-        opt.value = e.id;
-        opt.textContent = e.nome;
-        sel.appendChild(opt);
-    });
-}
+    // carregar toda a base de dados
+    listaCompleta = await ChaveVR.carregarDashboardCompleto();
 
-/************************************************
- * CARREGAR BLOCOS NO FILTRO
- ************************************************/
-async function carregarBlocos(empId) {
-    const res = await fetch(`/blocos/${empId}`);
-    const lista = await res.json();
+    // atualizar cards
+    ChaveVR.atualizarCardsDash(listaCompleta);
 
-    const sel = document.getElementById("filtroBloco");
-    sel.innerHTML = "<option value=''>Bloco</option>";
+    // preencher tabela
+    ChaveVR.preencherTabelaDash(listaCompleta);
+});
 
-    lista.forEach(b => {
-        const opt = document.createElement("option");
-        opt.value = b.id;
-        opt.textContent = b.nome;
-        sel.appendChild(opt);
-    });
-}
+/***********************
+ * FILTROS
+***********************/
+async function aplicarFiltros() {
 
-/************************************************
- * LISTAR TODAS AS UNIDADES DO SISTEMA
- ************************************************/
-async function carregarDashboard() {
-    listaCompleta = [];
+    const empId = get("filtroEmpreendimento").value;
+    const blocoId = get("filtroBloco").value;
 
-    const empreendimentos = await (await fetch("/empreendimentos")).json();
-
-    for (const emp of empreendimentos) {
-        const blocos = await (await fetch(`/blocos/${emp.id}`)).json();
-
-        for (const bloco of blocos) {
-            const unidades = await (await fetch(`/unidades/${bloco.id}`)).json();
-
-            unidades.forEach(u => {
-                listaCompleta.push({
-                    emp: emp.nome,
-                    bloco: bloco.nome,
-                    ...u
-                });
-            });
-        }
-    }
-
-    preencherTabela(listaCompleta);
-    atualizarCards();
-}
-
-/************************************************
- * COLORIR E PREENCHER TABELA
- ************************************************/
-function preencherTabela(lista) {
-    const tbody = document.getElementById("tabelaDash");
-    tbody.innerHTML = "";
-
-    lista.forEach(u => {
-        let cor = "";
-        if (u.chaves === "Entregue") cor = "verde";
-        else if (["Liberada", "Aprovada"].includes(u.situacao)) cor = "amarelo";
-        else cor = "vermelho";
-
-        const tr = document.createElement("tr");
-        tr.classList.add(cor);
-
-        tr.innerHTML = `
-            <td>${u.emp}</td>
-            <td>${u.bloco}</td>
-            <td>${u.unidade}</td>
-            <td>${u.situacao}</td>
-            <td>${u.statusFinanceiro}</td>
-            <td>${u.habitavel}</td>
-            <td>${u.cvco}</td>
-            <td>${u.chaves}</td>
-            <td>${u.dataVistoria || ""}</td>
-            <td>${u.dataLiberacao || ""}</td>
-        `;
-        tbody.appendChild(tr);
-    });
-}
-
-/************************************************
- * CONTADORES DOS CARDS
- ************************************************/
-function atualizarCards() {
-    document.getElementById("cardTotal").innerText = listaCompleta.length;
-
-    document.getElementById("cardPendentes").innerText =
-        listaCompleta.filter(u => u.situacao === "Em obra" || u.situacao === "Ajuste de cliente").length;
-
-    document.getElementById("cardLiberadas").innerText =
-        listaCompleta.filter(u => u.situacao === "Liberada").length;
-
-    document.getElementById("cardReprovadas").innerText =
-        listaCompleta.filter(u => u.situacao === "Aprovada").length;
-
-    document.getElementById("cardChaves").innerText =
-        listaCompleta.filter(u => u.chaves === "Entregue").length;
-
-    document.getElementById("cardCVCO").innerText =
-        listaCompleta.filter(u => u.cvco === "Liberado").length;
-}
-
-/************************************************
- * FILTRAR PELOS CARDS
- ************************************************/
-function filtrarCard(tipo) {
     let filtrado = listaCompleta;
 
-    if (tipo === "pendentes")
-        filtrado = filtrado.filter(u => u.situacao === "Em obra" || u.situacao === "Ajuste de cliente");
+    if (empId) {
+        filtrado = filtrado.filter(u => u.empId == empId || u.emp_id == empId || u.emp === get("filtroEmpreendimento").selectedOptions[0].text);
+    }
 
-    if (tipo === "liberadas")
-        filtrado = filtrado.filter(u => u.situacao === "Liberada");
+    if (blocoId) {
+        filtrado = filtrado.filter(u => u.bloco === get("filtroBloco").selectedOptions[0].text);
+    }
 
-    if (tipo === "reprovadas")
-        filtrado = filtrado.filter(u => u.situacao === "Aprovada");
-
-    if (tipo === "entregues")
-        filtrado = filtrado.filter(u => u.chaves === "Entregue");
-
-    if (tipo === "cvco")
-        filtrado = filtrado.filter(u => u.cvco === "Liberado");
-
-    preencherTabela(filtrado);
+    ChaveVR.atualizarCardsDash(filtrado);
+    ChaveVR.preencherTabelaDash(filtrado);
 }
 
-/************************************************
- * INÍCIO
- ************************************************/
-carregarEmpreendimentos();
-carregarDashboard();
+function limparFiltros() {
+    get("filtroEmpreendimento").value = "";
+    get("filtroBloco").innerHTML = `<option value="">Selecione o Bloco</option>`;
 
-document.getElementById("filtroEmpreendimento").addEventListener("change", (e) => {
-    if (e.target.value)
-        carregarBlocos(e.target.value);
-});
+    ChaveVR.atualizarCardsDash(listaCompleta);
+    ChaveVR.preencherTabelaDash(listaCompleta);
+}
+
+function cardFiltro(tipo) {
+    const filtrado = ChaveVR.filtrarPorCard(listaCompleta, tipo);
+    ChaveVR.atualizarCardsDash(filtrado);
+    ChaveVR.preencherTabelaDash(filtrado);
+}
+
 </script>
 
 </body>
