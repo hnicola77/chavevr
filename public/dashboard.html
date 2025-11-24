@@ -5,150 +5,235 @@
     <meta charset="UTF-8">
     <title>Dashboard – ChaveVR</title>
     <link rel="stylesheet" href="/styles.css" />
-    <script src="/chavesvr.js"></script>
+    <script src="/chavesvr.js" defer></script>
 </head>
 
 <body>
 
-    <!-- MENU SUPERIOR -->
-    <div class="top-menu">
-        <a href="/index.html">Módulos</a>
-        <a href="/cadastro_completo.html">Cadastro Completo</a>
-        <a href="/dashboard.html">Dashboard</a>
+<!-- MENU SUPERIOR -->
+<div class="top-menu">
+    <a href="/index.html">Módulos</a>
+    <a href="/cadastro_excel.html">Cadastro</a>
+    <a class="ativo" href="/dashboard.html">Dashboard</a>
+</div>
+
+<div class="container">
+
+    <h1>Dashboard – Unidades</h1>
+
+    <!-- ============================================
+         FILTROS
+    ================================================ -->
+    <div class="filtros">
+        <select id="fEmp" onchange="atualizarBlocosFiltro()">
+            <option value="">Empreendimento</option>
+        </select>
+
+        <select id="fBloco">
+            <option value="">Bloco</option>
+        </select>
+
+        <button class="btn-primary" onclick="filtrarDashboard()">Filtrar</button>
     </div>
 
-    <div class="container">
-
-        <h1>Dashboard – Controle de Unidades</h1>
-
-        <!-- FILTROS -->
-        <div class="filtros">
-            <select id="filtroEmp" onchange="carregarBlocosFiltro()">
-                <option value="">Empreendimento</option>
-            </select>
-
-            <select id="filtroBloco">
-                <option value="">Bloco</option>
-            </select>
-
-            <button class="btn-primary" onclick="aplicarFiltro()">Filtrar</button>
+    <!-- ============================================
+         CARDS
+    ================================================ -->
+    <div class="cards">
+        <div class="card" onclick="filtrarCard('todas')">
+            <h3>Total</h3>
+            <p id="cTotal">0</p>
         </div>
 
-        <!-- CARDS -->
-        <div class="cards">
-            <div class="card" onclick="filtrarCard('todas')">
-                <h3>Total</h3>
-                <p id="cardTotal">0</p>
-            </div>
-
-            <div class="card" onclick="filtrarCard('pendentes')">
-                <h3>Pendentes</h3>
-                <p id="cardPendentes">0</p>
-            </div>
-
-            <div class="card" onclick="filtrarCard('liberadas')">
-                <h3>Liberadas</h3>
-                <p id="cardLiberadas">0</p>
-            </div>
-
-            <div class="card" onclick="filtrarCard('aprovadas')">
-                <h3>Aprovadas</h3>
-                <p id="cardAprovadas">0</p>
-            </div>
-
-            <div class="card" onclick="filtrarCard('entregues')">
-                <h3>Chaves Entregues</h3>
-                <p id="cardChaves">0</p>
-            </div>
-
-            <div class="card" onclick="filtrarCard('cvco')">
-                <h3>CVCO Liberado</h3>
-                <p id="cardCVCO">0</p>
-            </div>
+        <div class="card" onclick="filtrarCard('pendentes')">
+            <h3>Pendentes</h3>
+            <p id="cPendentes">0</p>
         </div>
 
-        <!-- TABELA -->
-        <table>
-            <thead>
-                <tr>
-                    <th>Empreendimento</th>
-                    <th>Bloco</th>
-                    <th>Unidade</th>
-                    <th>Situação</th>
-                    <th>Financeiro</th>
-                    <th>Habitável</th>
-                    <th>CVCO</th>
-                    <th>Chaves</th>
-                    <th>Vistoria</th>
-                    <th>Liberação</th>
-                </tr>
-            </thead>
+        <div class="card" onclick="filtrarCard('liberadas')">
+            <h3>Liberadas</h3>
+            <p id="cLiberadas">0</p>
+        </div>
 
-            <tbody id="tabelaDash"></tbody>
-        </table>
+        <div class="card" onclick="filtrarCard('aprovadas')">
+            <h3>Aprovadas</h3>
+            <p id="cAprovadas">0</p>
+        </div>
 
+        <div class="card" onclick="filtrarCard('entregues')">
+            <h3>Entregues</h3>
+            <p id="cChaves">0</p>
+        </div>
+
+        <div class="card" onclick="filtrarCard('cvco')">
+            <h3>CVCO</h3>
+            <p id="cCVCO">0</p>
+        </div>
     </div>
+
+    <!-- ============================================
+         TABELA
+    ================================================ -->
+    <table>
+        <thead>
+            <tr>
+                <th>Empreendimento</th>
+                <th>Bloco</th>
+                <th>Unidade</th>
+                <th>Situação</th>
+                <th>Financeiro</th>
+                <th>Habitável</th>
+                <th>CVCO</th>
+                <th>Chaves</th>
+                <th>Vistoria</th>
+                <th>Liberação</th>
+            </tr>
+        </thead>
+        <tbody id="tDash"></tbody>
+    </table>
+
+</div>
 
 <script>
+/*******************************************************
+ * VARIÁVEL GLOBAL
+ *******************************************************/
+let unidadesFull = [];
 
-/****************************************************
- * CARREGAR EMPREENDIMENTOS PARA FILTRO
- ****************************************************/
+/*******************************************************
+ * LOAD INICIAL
+ *******************************************************/
 document.addEventListener("DOMContentLoaded", async () => {
-    await carregarEmpreendimentosSelect("filtroEmp");
-    listarDashboard();
+    await carregarEmpreendimentosSelect("fEmp");
+    await loadDashboard();
 });
 
-async function carregarBlocosFiltro() {
-    const empId = get("filtroEmp").value;
-    await carregarBlocosSelect("filtroBloco", empId);
+/*******************************************************
+ * CARREGAR DASHBOARD COMPLETO
+ *******************************************************/
+async function loadDashboard() {
+    const res = await fetch("/unidades");
+    unidadesFull = await res.json();
+
+    atualizarCardsDash(unidadesFull);
+    preencherTabelaDash(unidadesFull);
 }
 
-/****************************************************
- * BUSCAR TODAS UNIDADES COMPLETAS
- ****************************************************/
-let unidadesTodas = [];
+/*******************************************************
+ * ATUALIZAR SELECT DE BLOCOS
+ *******************************************************/
+async function atualizarBlocosFiltro() {
+    const emp = qs("#fEmp").value;
 
-async function listarDashboard() {
-    const res = await fetch("/unidades_completas");
-    unidadesTodas = await res.json();
+    const res = await fetch("/blocos");
+    const lista = await res.json();
 
-    atualizarCards(unidadesTodas);
-    preencherTabela(unidadesTodas);
+    const sel = qs("#fBloco");
+    sel.innerHTML = `<option value="">Bloco</option>`;
+
+    lista
+        .filter(b => b.empreendimento_id == emp)
+        .forEach(b => {
+            const opt = document.createElement("option");
+            opt.value = b.id;
+            opt.textContent = b.nome;
+            sel.appendChild(opt);
+        });
 }
 
-/****************************************************
+/*******************************************************
+ * FILTRO MANUAL
+ *******************************************************/
+function filtrarDashboard() {
+    const emp = qs("#fEmp").value;
+    const bl = qs("#fBloco").value;
+
+    let lista = [...unidadesFull];
+
+    if (emp) lista = lista.filter(u => u.empreendimento_id == emp);
+    if (bl)  lista = lista.filter(u => u.bloco_id == bl);
+
+    atualizarCardsDash(lista);
+    preencherTabelaDash(lista);
+}
+
+/*******************************************************
+ * FILTRO POR CARD
+ *******************************************************/
+function filtrarCard(tipo) {
+    let lista = [...unidadesFull];
+
+    switch (tipo) {
+        case "pendentes":
+            lista = lista.filter(u =>
+                u.situacao === "Em obra" ||
+                u.situacao === "Ajuste de cliente"
+            );
+            break;
+
+        case "liberadas":
+            lista = lista.filter(u => u.situacao === "Liberada");
+            break;
+
+        case "aprovadas":
+            lista = lista.filter(u => u.situacao === "Aprovada");
+            break;
+
+        case "entregues":
+            lista = lista.filter(u => u.chaves === "Entregue");
+            break;
+
+        case "cvco":
+            lista = lista.filter(u => u.cvco === "Liberado");
+            break;
+    }
+
+    atualizarCardsDash(lista);
+    preencherTabelaDash(lista);
+}
+
+/*******************************************************
  * ATUALIZAR CARDS
- ****************************************************/
-function atualizarCards(lista) {
-    get("cardTotal").innerText = lista.length;
+ *******************************************************/
+function atualizarCardsDash(lista) {
 
-    get("cardPendentes").innerText =
-        lista.filter(u => u.situacao === "Em obra" || u.situacao === "Ajuste de cliente").length;
+    qs("#cTotal").innerText = lista.length;
+    qs("#cPendentes").innerText = lista.filter(u =>
+        u.situacao === "Em obra" || u.situacao === "Ajuste de cliente"
+    ).length;
 
-    get("cardLiberadas").innerText =
-        lista.filter(u => u.situacao === "Liberada").length;
+    qs("#cLiberadas").innerText = lista.filter(u =>
+        u.situacao === "Liberada"
+    ).length;
 
-    get("cardAprovadas").innerText =
-        lista.filter(u => u.situacao === "Aprovada").length;
+    qs("#cAprovadas").innerText = lista.filter(u =>
+        u.situacao === "Aprovada"
+    ).length;
 
-    get("cardChaves").innerText =
-        lista.filter(u => u.chaves === "Entregue").length;
+    qs("#cChaves").innerText = lista.filter(u =>
+        u.chaves === "Entregue"
+    ).length;
 
-    get("cardCVCO").innerText =
-        lista.filter(u => u.cvco === "Liberado").length;
+    qs("#cCVCO").innerText = lista.filter(u =>
+        u.cvco === "Liberado"
+    ).length;
 }
 
-/****************************************************
+/*******************************************************
  * PREENCHER TABELA
- ****************************************************/
-function preencherTabela(lista) {
-    const tbody = get("tabelaDash");
+ *******************************************************/
+function preencherTabelaDash(lista) {
+    const tbody = qs("#tDash");
     tbody.innerHTML = "";
 
     lista.forEach(u => {
         const tr = document.createElement("tr");
-        tr.classList.add(definirCor(u));
+
+        if (u.chaves === "Entregue") tr.classList.add("verde");
+        else if ((u.situacao === "Aprovada" || u.situacao === "Liberada") && u.chaves === "Não entregue")
+            tr.classList.add("amarelo");
+        else
+            tr.classList.add("vermelho");
 
         tr.innerHTML = `
             <td>${u.emp_nome}</td>
@@ -165,56 +250,6 @@ function preencherTabela(lista) {
 
         tbody.appendChild(tr);
     });
-}
-
-/****************************************************
- * CORES DAS UNIDADES
- ****************************************************/
-function definirCor(u) {
-    if (u.chaves === "Entregue") return "verde";
-    if (["Liberada", "Aprovada"].includes(u.situacao) && u.chaves === "Não entregue") return "amarelo";
-    return "vermelho";
-}
-
-/****************************************************
- * FILTROS
- ****************************************************/
-function aplicarFiltro() {
-    const emp = get("filtroEmp").value;
-    const bloco = get("filtroBloco").value;
-
-    let lista = [...unidadesTodas];
-
-    if (emp) lista = lista.filter(u => u.emp_id == emp);
-    if (bloco) lista = lista.filter(u => u.bloco_id == bloco);
-
-    atualizarCards(lista);
-    preencherTabela(lista);
-}
-
-function filtrarCard(tipo) {
-    let lista = [...unidadesTodas];
-
-    switch (tipo) {
-        case "pendentes":
-            lista = lista.filter(u => u.situacao === "Em obra" || u.situacao === "Ajuste de cliente");
-            break;
-        case "liberadas":
-            lista = lista.filter(u => u.situacao === "Liberada");
-            break;
-        case "aprovadas":
-            lista = lista.filter(u => u.situacao === "Aprovada");
-            break;
-        case "entregues":
-            lista = lista.filter(u => u.chaves === "Entregue");
-            break;
-        case "cvco":
-            lista = lista.filter(u => u.cvco === "Liberado");
-            break;
-    }
-
-    atualizarCards(lista);
-    preencherTabela(lista);
 }
 
 </script>
