@@ -21,7 +21,7 @@ app.use(express.static(path.join(__dirname, "public")));
 // ----------------------------------------------------------
 // SQLite – banco principal
 // ----------------------------------------------------------
-const dbPath = "/data/chavesvr.db";
+const dbPath = "/data";
 
 const db = new sqlite3.Database(dbPath, (err) => {
     if (err) console.error("❌ Erro ao conectar:", err.message);
@@ -129,3 +129,4 @@ app.delete("/unidades/:id", (req, res) => {
 // ==========================================================
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => console.log("🚀 ChaveVR rodando na porta", PORT));
+
