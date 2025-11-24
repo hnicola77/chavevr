@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Cadastro Completo – ChaveVR</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="/chavesvr.js"></script>
+</head>
+
+<body>
+
+    <!-- MENU SUPERIOR -->
+    <div class="top-menu">
+        <a href="/index.html">Módulos</a>
+        <a href="/dashboard.html">Dashboard</a>
+        <a href="/cadastro_completo.html">Cadastro Completo</a>
+    </div>
+
+    <div class="container">
+
+        <h1>Cadastro Completo – Empreendimento / Blocos / Unidades</h1>
+
+        <!-- ABAS -->
+        <div class="abas">
+            <button id="abaEmpreendimento" class="aba ativa">1. Empreendimento</button>
+            <button id="abaBlocos" class="aba bloqueada">2. Blocos</button>
+            <button id="abaUnidades" class="aba bloqueada">3. Unidades</button>
+        </div>
+
+        <!-- ETAPAS -->
+        <!-- ================================================= -->
+        <!-- ETAPA 1 — EMPREENDIMENTO -->
+        <!-- ================================================= -->
+        <div id="etapaEmpreendimento" class="etapa visivel">
+
+            <h2>Empreendimento</h2>
+
+            <form id="formEmpreendimento" onsubmit="salvarEmpreendimento(event)">
+                <input type="hidden" id="emp_id" />
+
+                <label>Nome do Empreendimento</label>
+                <input id="emp_nome" required />
+
+                <label>Cidade</label>
+                <input id="emp_cidade" />
+
+                <label>UF</label>
+                <input id="emp_uf" maxlength="2" />
+
+                <label>Fase</label>
+                <input id="emp_fase" />
+
+                <label>Data de Entrega</label>
+                <input type="date" id="emp_dataEntrega" />
+
+                <label>Código Interno</label>
+                <input id="emp_codigoInterno" />
+
+                <label>Observação</label>
+                <textarea id="emp_observacao"></textarea>
+
+                <button class="btn-primary" style="margin-top:20px;">
+                    Salvar Empreendimento
+                </button>
+            </form>
+        </div>
+
+        <!-- ================================================= -->
+        <!-- ETAPA 2 — BLOCOS -->
+        <!-- ================================================= -->
+        <div id="etapaBlocos" class="etapa">
+
+            <h2>Blocos do Empreendimento</h2>
+
+            <p id="nomeEmp" style="font-weight:bold; margin-bottom:15px;"></p>
+
+            <form id="formBloco" onsubmit="salvarBloco(event)">
+                <input type="hidden" id="bloco_id" />
+
+                <label>Nome do Bloco</label>
+                <input id="bloco_nome" required />
+
+                <label>Observação</label>
+                <textarea id="bloco_observacao"></textarea>
+
+                <button class="btn-primary" style="margin-top:20px;">Salvar Bloco</button>
+            </form>
+
+            <hr style="margin:30px 0">
+
+            <h3>Blocos cadastrados</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Bloco</th>
+                        <th>Observação</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="listaBlocos"></tbody>
+            </table>
+
+            <button class="btn-primary" style="margin-top:25px;" onclick="irParaUnidades()">
+                Avançar para Unidades →
+            </button>
+        </div>
+
+        <!-- ================================================= -->
+        <!-- ETAPA 3 — UNIDADES -->
+        <!-- ================================================= -->
+        <div id="etapaUnidades" class="etapa">
+
+            <h2>Unidades por Bloco</h2>
+
+            <p id="contextoUnidade" style="font-weight:bold; margin-bottom:15px;"></p>
+
+            <label>Selecione o Bloco</label>
+            <select id="selBlocos" onchange="carregarUnidadesBloco()"></select>
+
+            <form id="formUnidade" onsubmit="salvarUnidade(event)" style="margin-top:20px;">
+
+                <input type="hidden" id="uni_id" />
+
+                <label>Unidade</label>
+                <input id="uni_nome" required />
+
+                <label>Situação</label>
+                <select id="uni_situacao">
+                    <option value="Em obra">Em obra</option>
+                    <option value="Ajuste de cliente">Ajuste de cliente</option>
+                    <option value="Liberada">Liberada</option>
+                    <option value="Aprovada">Aprovada</option>
+                </select>
+
+                <label>Status Financeiro</label>
+                <select id="uni_statusFinanceiro">
+                    <option value="Liberada">Liberada</option>
+                    <option value="Bloqueada">Bloqueada</option>
+                </select>
+
+                <label>Habitável</label>
+                <select id="uni_habitavel">
+                    <option value="Sim">Sim</option>
+                    <option value="Não">Não</option>
+                </select>
+
+                <label>CVCO</label>
+                <select id="uni_cvco">
+                    <option value="Liberado">Liberado</option>
+                    <option value="Não liberado">Não liberado</option>
+                </select>
+
+                <label>Chaves</label>
+                <select id="uni_chaves">
+                    <option value="Entregue">Entregue</option>
+                    <option value="Não entregue">Não entregue</option>
+                </select>
+
+                <div class="row">
+                    <div>
+                        <label>Data Vistoria</label>
+                        <input type="date" id="uni_dataVistoria" />
+                    </div>
+                    <div>
+                        <label>Hora</label>
+                        <input type="time" id="uni_horaVistoria" />
+                    </div>
+                </div>
+
+                <label>Data Liberação</label>
+                <input type="date" id="uni_dataLiberacao" />
+
+                <label>Agendado Por</label>
+                <input id="uni_agendadoPor" />
+
+                <label>Observação</label>
+                <textarea id="uni_observacao"></textarea>
+
+                <button class="btn-primary" style="margin-top:25px;">Salvar Unidade</button>
+            </form>
+
+            <hr style="margin:30px 0">
+
+            <h3>Unidades Cadastradas</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Unidade</th>
+                        <th>Situação</th>
+                        <th>Financeiro</th>
+                        <th>Habitável</th>
+                        <th>CVCO</th>
+                        <th>Chaves</th>
+                        <th>Vistoria</th>
+                        <th>Liberação</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+
+                <tbody id="listaUnidades"></tbody>
+            </table>
+
+        </div>
+
+    </div>
+
+</body>
+</html>
