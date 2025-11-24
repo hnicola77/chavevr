@@ -1,5 +1,5 @@
 /************************************************************
- * DASHBOARD – JAVASCRIPT PRINCIPAL
+ * DASHBOARD – JAVASCRIPT PRINCIPAL (public/dashboard.js)
  * Adaptado para Backend de Tabela Única (Strings)
  ************************************************************/
 
@@ -7,6 +7,7 @@ let todasUnidades = [];
 let unidadesFiltradas = [];
 
 // Dados fixos (Hardcoded) para preencher os selects. 
+// Devem ser os mesmos usados no chavesvr.js
 const EMPREENDIMENTOS_FIXOS = [
     "Residencial Horizonte",
     "New Jersey",
@@ -48,12 +49,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 function preencherSelectsIniciais() {
     // Preenche o fEmpreendimento com os dados fixos
     const selectEmp = document.getElementById("fEmpreendimento");
-    selectEmp.innerHTML = '<option value="">Empreendimento</option>';
-    EMPREENDIMENTOS_FIXOS.forEach(e => {
-        selectEmp.innerHTML += `<option value="${e}">${e}</option>`;
-    });
+    
+    // Nota: Se o HTML já tiver preenchido os options, esta parte é opcional
+    // selectEmp.innerHTML = '<option value="">Empreendimento</option>';
+    // EMPREENDIMENTOS_FIXOS.forEach(e => {
+    //     selectEmp.innerHTML += `<option value="${e}">${e}</option>`;
+    // });
 
-    // Chama a função para preencher o Bloco, que inicialmente mostrará todos os blocos fixos
+    // Chama a função para preencher o Bloco
     preencherFiltroBloco(); 
 }
 
@@ -146,6 +149,7 @@ function atualizarDashboard() {
     unidadesFiltradas.forEach(u => {
         const tr = document.createElement("tr");
 
+        // Exibe os campos da tabela: Note que empreendimento e bloco são strings diretas.
         tr.innerHTML = `
             <td>${u.empreendimento}</td>
             <td>${u.bloco}</td>
