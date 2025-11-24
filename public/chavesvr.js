@@ -1,5 +1,5 @@
 /************************************************************
- * CHAVEVR – JAVASCRIPT PRINCIPAL (FINAL)
+ * CHAVEVR – JAVASCRIPT PRINCIPAL (public/chavesvr.js)
  * Adaptado para Backend de Tabela Única (Strings)
  ************************************************************/
 
@@ -7,7 +7,6 @@ let listaUnidades = [];
 let idEditando = null;
 
 // Dados fixos (Hardcoded) para preencher os selects do modal
-// Use apenas os empreendimentos e blocos que você irá cadastrar
 const EMPREENDIMENTOS_FIXOS = [
     "Residencial Horizonte",
     "New Jersey",
@@ -30,13 +29,12 @@ const BLOCOS_FIXOS = [
  * LOAD INICIAL
  ************************************************************/
 document.addEventListener("DOMContentLoaded", () => {
+    // Não lê IDs da URL (lógica antiga removida)
     preencherSelectsFixos();
     carregarUnidades();
 });
 
-/************************************************************
- * SELECT FIXO – PREENCHER O MODAL COM STRINGS
- ************************************************************/
+// ... (Restante da função preencherSelectsFixos)
 function preencherSelectsFixos() {
     
     // 1. Empreendimentos
@@ -99,6 +97,7 @@ async function carregarUnidades() {
         });
     } catch (error) {
         console.error("Erro ao carregar unidades:", error);
+        // Não é necessário alerta aqui, pois o servidor pode estar reiniciando
     }
 }
 
@@ -200,16 +199,23 @@ async function salvarModal() {
         });
 
         if (!res.ok) {
-            const errorBody = await res.json();
-            throw new Error(errorBody.error || `Erro ${res.status} ao salvar.`);
+            // Tenta ler o erro do servidor para o console
+            let errorMsg = `Erro ${res.status} ao salvar.`;
+            try {
+                const errorBody = await res.json();
+                errorMsg = errorBody.error || errorMsg;
+            } catch (e) {
+                // Se a resposta não for JSON (ex: HTML de erro), usa a mensagem padrão
+            }
+            throw new Error(errorMsg);
         }
 
         fecharModal();
         carregarUnidades();
 
     } catch (error) {
-        console.error("Falha ao salvar:", error);
-        alert("Erro ao salvar. Verifique o console.");
+        console.error("Falha ao salvar. Detalhes:", error);
+        alert("Erro ao salvar. Verifique o console."); //
     }
 }
 
