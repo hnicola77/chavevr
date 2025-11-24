@@ -1,6 +1,6 @@
 /************************************************************
- * ChaveVR – Backend Simplificado (Versão Final e Estável)
- * ARQUIVO: server_chavesvr.js
+ * ChaveVR – Backend Simplificado (server_chavesvr.js)
+ * Tabela ÚNICA: unidades (salva nomes de Empreendimento/Bloco)
  ************************************************************/
 
 const express = require("express");
@@ -13,16 +13,14 @@ app.use(express.json());
 app.use(cors());
 
 // ----------------------------------------------------------
-// Servir arquivos estáticos
+// Servir arquivos estáticos (acessa a pasta public)
 // ----------------------------------------------------------
-// Acessa arquivos da pasta 'public'
 app.use(express.static(path.join(__dirname, "public")));
 
 // ----------------------------------------------------------
 // SQLite – banco principal
 // ----------------------------------------------------------
-// O caminho do Render para persistência é /data
-const dbPath = "/data/chavesvr.db"; 
+const dbPath = "/data/chavesvr.db"; // Caminho de persistência do Render
 
 const db = new sqlite3.Database(dbPath, (err) => {
     if (err) console.error("❌ Erro ao conectar:", err.message);
@@ -66,7 +64,6 @@ app.get("/unidades", (req, res) => {
 // Criar nova unidade
 app.post("/unidades", (req, res) => {
     const u = req.body;
-    console.log("Recebendo dados para salvar:", u); // Log para debug no console do Render
 
     const sql = `
         INSERT INTO unidades (
@@ -83,13 +80,13 @@ app.post("/unidades", (req, res) => {
         u.dataVistoria, u.horaVistoria, u.dataLiberacao,
         u.agendadoPor, u.observacao
     ], function (err) {
-        if (err) return res.status(500).json({ error: err.message }); // Se isso falhar, o frontend vê o "Erro ao salvar"
+        if (err) return res.status(500).json({ error: err.message });
 
         res.json({ message: "Unidade criada", id: this.lastID });
     });
 });
 
-// Editar unidade
+// Editar unidade (PUT)
 app.put("/unidades/:id", (req, res) => {
     const id = req.params.id;
     const u = req.body;
@@ -115,7 +112,7 @@ app.put("/unidades/:id", (req, res) => {
     });
 });
 
-// Excluir unidade
+// Excluir unidade (DELETE)
 app.delete("/unidades/:id", (req, res) => {
     const id = req.params.id;
 
