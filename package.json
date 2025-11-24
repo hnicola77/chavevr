@@ -1,17 +1,21 @@
 {
-  "name": "chavesvr",
+  "name": "chavevr-backend",
   "version": "1.0.0",
+  "description": "Backend para o portal de gerenciamento de chaves da Mapa Engenharia.",
   "main": "server_chavesvr.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server_chavesvr.js"
   },
-  "keywords": [],
+  "keywords": [
+    "node",
+    "express",
+    "sqlite"
+  ],
   "author": "",
   "license": "ISC",
-  "description": "",
   "dependencies": {
     "cors": "^2.8.5",
-    "express": "^5.1.0",
+    "express": "^4.18.2",
     "sqlite3": "^5.1.7"
   }
 }
