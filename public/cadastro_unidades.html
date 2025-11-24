@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Cadastro de Unidades – ChaveVR</title>
+    <link rel="stylesheet" href="/styles.css">
+    <script src="/chavesvr.js" defer></script>
+</head>
+
+<body>
+
+<!-- MENU SUPERIOR -->
+<div class="top-menu">
+    <a href="/index.html">Módulos</a>
+    <a class="ativo" href="/cadastro_unidades.html">Cadastro de Unidades</a>
+    <a href="/dashboard.html">Dashboard</a>
+</div>
+
+<div class="container">
+
+    <h1>Cadastro de Unidades</h1>
+
+    <button class="btn-primary" onclick="abrirModalNovo()">+ Nova Unidade</button>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Empreendimento</th>
+                <th>Bloco</th>
+                <th>Unidade</th>
+                <th>Situação</th>
+                <th>Financeiro</th>
+                <th>Chaves</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody id="tabelaUnidades"></tbody>
+    </table>
+
+</div>
+
+<!-- ==============================================
+     MODAL (PROFISSIONAL, 2 COLUNAS)
+================================================= -->
+<div id="modalFundo" class="modal-fundo" style="display:none;">
+    <div class="modal">
+
+        <h2 id="tituloModal">Nova Unidade</h2>
+
+        <div class="linha">
+            <div class="col">
+                <label>Empreendimento</label>
+                <select id="mEmpreendimento"></select>
+            </div>
+            <div class="col">
+                <label>Bloco</label>
+                <select id="mBloco"></select>
+            </div>
+        </div>
+
+        <div class="linha">
+            <div class="col">
+                <label>Unidade</label>
+                <input id="mUnidade" type="text">
+            </div>
+            <div class="col">
+                <label>Situação</label>
+                <select id="mSituacao">
+                    <option>Em obra</option>
+                    <option>Ajuste de cliente</option>
+                    <option>Liberada</option>
+                    <option>Aprovada</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="linha">
+            <div class="col">
+                <label>Status Financeiro</label>
+                <select id="mFinanceiro">
+                    <option>Liberada</option>
+                    <option>Bloqueada</option>
+                </select>
+            </div>
+            <div class="col">
+                <label>Habitável</label>
+                <select id="mHabitavel">
+                    <option>Sim</option>
+                    <option>Não</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="linha">
+            <div class="col">
+                <label>CVCO</label>
+                <select id="mCVCO">
+                    <option>Liberado</option>
+                    <option>Não Liberado</option>
+                </select>
+            </div>
+
+            <div class="col">
+                <label>Chaves</label>
+                <select id="mChaves">
+                    <option>Entregue</option>
+                    <option>Não entregue</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="linha">
+            <div class="col">
+                <label>Data da Vistoria</label>
+                <input id="mDataVistoria" type="date">
+            </div>
+            <div class="col">
+                <label>Hora da Vistoria</label>
+                <input id="mHoraVistoria" type="time">
+            </div>
+        </div>
+
+        <div class="linha">
+            <div class="col">
+                <label>Data Liberação</label>
+                <input id="mDataLiberacao" type="date">
+            </div>
+            <div class="col">
+                <label>Agendado Por</label>
+                <input id="mAgendadoPor" type="text">
+            </div>
+        </div>
+
+        <div class="linha">
+            <div class="col" style="width:100%;">
+                <label>Observação</label>
+                <textarea id="mObservacao"></textarea>
+            </div>
+        </div>
+
+        <div class="modal-botoes">
+            <button class="btn-primary" onclick="salvarModal()">Salvar</button>
+            <button class="btn-secondary" onclick="fecharModal()">Cancelar</button>
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>
