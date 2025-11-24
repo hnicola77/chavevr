@@ -1,7 +1,6 @@
 /************************************************************
- * ChaveVR – Backend Simplificado (Versão Final)
- * Tabela ÚNICA: unidades
- * Empreendimentos e blocos são FIXOS no frontend
+ * ChaveVR – Backend Simplificado (Versão Final e Estável)
+ * ARQUIVO: server_chavesvr.js
  ************************************************************/
 
 const express = require("express");
@@ -16,12 +15,14 @@ app.use(cors());
 // ----------------------------------------------------------
 // Servir arquivos estáticos
 // ----------------------------------------------------------
+// Acessa arquivos da pasta 'public'
 app.use(express.static(path.join(__dirname, "public")));
 
 // ----------------------------------------------------------
 // SQLite – banco principal
 // ----------------------------------------------------------
-const dbPath = "/data/chavesvr.db";
+// O caminho do Render para persistência é /data
+const dbPath = "/data/chavesvr.db"; 
 
 const db = new sqlite3.Database(dbPath, (err) => {
     if (err) console.error("❌ Erro ao conectar:", err.message);
@@ -51,7 +52,7 @@ db.run(`
 `);
 
 // ==========================================================
-// ROTAS – UNIDADES
+// ROTAS – UNIDADES (CRUD COMPLETO)
 // ==========================================================
 
 // Listar todas unidades
@@ -65,6 +66,7 @@ app.get("/unidades", (req, res) => {
 // Criar nova unidade
 app.post("/unidades", (req, res) => {
     const u = req.body;
+    console.log("Recebendo dados para salvar:", u); // Log para debug no console do Render
 
     const sql = `
         INSERT INTO unidades (
@@ -81,7 +83,7 @@ app.post("/unidades", (req, res) => {
         u.dataVistoria, u.horaVistoria, u.dataLiberacao,
         u.agendadoPor, u.observacao
     ], function (err) {
-        if (err) return res.status(500).json({ error: err.message });
+        if (err) return res.status(500).json({ error: err.message }); // Se isso falhar, o frontend vê o "Erro ao salvar"
 
         res.json({ message: "Unidade criada", id: this.lastID });
     });
@@ -129,5 +131,3 @@ app.delete("/unidades/:id", (req, res) => {
 // ==========================================================
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => console.log("🚀 ChaveVR rodando na porta", PORT));
-
-
