@@ -1,60 +1,189 @@
-/*****************************************************
- * ChaveVR – JS central (Dashboard + Carregamentos)
- * Versão FINAL compatível com /unidades_completas
- *****************************************************/
+/*********************************************************
+ * ChaveVR – JS completo do novo sistema em 3 etapas
+ * Modelo B + Abas + Avançar (Opção A escolhida)
+ *********************************************************/
 
-/************ HELPERS ************/
 function get(id) { return document.getElementById(id); }
 function qs(sel) { return document.querySelector(sel); }
 function qsa(sel) { return document.querySelectorAll(sel); }
 
-/************ API ************/
+/****************************************************
+ * API
+ ****************************************************/
 const API = {
     empreendimentos: "/empreendimentos",
-    blocos: (idEmp) => `/blocos/${idEmp}`,
-    unidadesPorBloco: (blocoId) => `/unidades/${blocoId}`,
-    unidadesCompletas: "/unidades_completas"
+    blocos: (empId) => `/blocos/${empId}`,
+    unidades: (blocoId) => `/unidades/${blocoId}`
 };
 
-/*****************************************************
- * CARREGAR EMPREENDIMENTOS EM SELECTS
- *****************************************************/
-async function carregarEmpreendimentosSelect(selectId) {
-    const sel = get(selectId);
-    if (!sel) return;
+/****************************************************
+ * CONTROLE DE ABAS / ETAPAS
+ ****************************************************/
+function ativarAba(aba) {
+    // Remove "ativa"
+    qsa(".aba").forEach(x => x.classList.remove("ativa"));
 
-    sel.innerHTML = `<option value="">Carregando...</option>`;
+    // Esconde todas etapas
+    qsa(".etapa").forEach(x => x.classList.remove("visivel"));
 
-    const res = await fetch(API.empreendimentos);
-    const lista = await res.json();
-
-    sel.innerHTML = `<option value="">Selecione</option>`;
-
-    lista.forEach(emp => {
-        const opt = document.createElement("option");
-        opt.value = emp.id;
-        opt.textContent = emp.nome;
-        sel.appendChild(opt);
-    });
+    // Ativa a aba clicada
+    get(`aba${aba}`).classList.add("ativa");
+    get(`etapa${aba}`).classList.add("visivel");
 }
 
-/*****************************************************
- * CARREGAR BLOCOS EM SELECTS
- *****************************************************/
-async function carregarBlocosSelect(selectId, empId) {
-    const sel = get(selectId);
-    if (!sel) return;
+// Bloqueia abas próximas até cadastro anterior ser concluído
+function bloquearAba(nome) {
+    get(`aba${nome}`).classList.add("bloqueada");
+}
+function desbloquearAba(nome) {
+    get(`aba${nome}`).classList.remove("bloqueada");
+}
 
-    if (!empId) {
-        sel.innerHTML = `<option value="">Selecione o bloco</option>`;
-        return;
-    }
+/****************************************************
+ * INICIAR TELA
+ ****************************************************/
+document.addEventListener("DOMContentLoaded", () => {
 
-    sel.innerHTML = `<option value="">Carregando...</option>`;
+    // Aba inicial (Empreendimento)
+    ativarAba("Empreendimento");
 
+    // Garantir blocos e unidades bloqueados
+    bloquearAba("Blocos");
+    bloquearAba("Unidades");
+
+});
+
+/****************************************************
+ * 1️⃣ EMPREENDIMENTO
+ ****************************************************/
+async function salvarEmpreendimento(e) {
+    e.preventDefault();
+
+    const id = get("emp_id").value;
+
+    const dados = {
+        nome: get("emp_nome").value,
+        cidade: get("emp_cidade").value,
+        uf: get("emp_uf").value,
+        fase: get("emp_fase").value,
+        dataEntrega: get("emp_dataEntrega").value,
+        codigoInterno: get("emp_codigoInterno").value,
+        observacao: get("emp_observacao").value
+    };
+
+    const metodo = id ? "PUT" : "POST";
+    const url = id ? `/empreendimentos/${id}` : `/empreendimentos`;
+
+    const res = await fetch(url, {
+        method: metodo,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(dados)
+    });
+
+    const ret = await res.json();
+
+    if (!id) get("emp_id").value = ret.id;
+
+    alert("Empreendimento salvo com sucesso!");
+
+    // Libera aba de blocos
+    desbloquearAba("Blocos");
+    ativarAba("Blocos");
+
+    carregarBlocos();
+}
+
+/****************************************************
+ * 2️⃣ BLOCOS
+ ****************************************************/
+async function carregarBlocos() {
+
+    const empId = get("emp_id").value;
+    if (!empId) return;
+
+    // Carrega nome do empreendimento
+    const resEmp = await fetch(API.empreendimentos);
+    const empreendimentos = await resEmp.json();
+    const emp = empreendimentos.find(e => e.id == empId);
+    get("nomeEmp").innerText = `Empreendimento: ${emp.nome}`;
+
+    // Carrega blocos
     const res = await fetch(API.blocos(empId));
     const lista = await res.json();
 
+    const tbody = get("listaBlocos");
+    tbody.innerHTML = "";
+
+    lista.forEach(b => {
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+            <td>${b.nome}</td>
+            <td>${b.observacao || ""}</td>
+            <td>
+                <button class="btn-small btn-editar" onclick='editarBloco(${JSON.stringify(b)})'>
+                    Editar
+                </button>
+            </td>
+        `;
+
+        tbody.appendChild(tr);
+    });
+
+    carregarBlocosNaEtapaUnidades(lista);
+}
+
+function editarBloco(b) {
+    get("bloco_id").value = b.id;
+    get("bloco_nome").value = b.nome;
+    get("bloco_observacao").value = b.observacao || "";
+}
+
+async function salvarBloco(e) {
+    e.preventDefault();
+
+    const id = get("bloco_id").value;
+    const empId = get("emp_id").value;
+
+    const dados = {
+        empreendimento_id: empId,
+        nome: get("bloco_nome").value,
+        observacao: get("bloco_observacao").value
+    };
+
+    const metodo = id ? "PUT" : "POST";
+    const url = id ? `/blocos/${id}` : `/blocos`;
+
+    await fetch(url, {
+        method: metodo,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(dados)
+    });
+
+    alert("Bloco salvo com sucesso!");
+
+    get("formBloco").reset();
+    get("bloco_id").value = "";
+
+    carregarBlocos();
+
+    // Libera aba de unidades
+    desbloquearAba("Unidades");
+}
+
+/****************************************************
+ * Avançar para Unidades
+ ****************************************************/
+function irParaUnidades() {
+    desbloquearAba("Unidades");
+    ativarAba("Unidades");
+}
+
+/****************************************************
+ * 3️⃣ UNIDADES
+ ****************************************************/
+function carregarBlocosNaEtapaUnidades(lista) {
+    const sel = get("selBlocos");
     sel.innerHTML = `<option value="">Selecione</option>`;
 
     lista.forEach(b => {
@@ -65,71 +194,20 @@ async function carregarBlocosSelect(selectId, empId) {
     });
 }
 
-/*****************************************************
- * COR DA UNIDADE NA TABELA
- *****************************************************/
-function corUnidade(u) {
-    if (u.chaves === "Entregue") return "verde";
+async function carregarUnidadesBloco() {
+    const blocoId = get("selBlocos").value;
+    if (!blocoId) return;
 
-    if (
-        (u.situacao === "Liberada" || u.situacao === "Aprovada") &&
-        u.chaves === "Não entregue"
-    ) return "amarelo";
-
-    return "vermelho";
-}
-
-/*****************************************************
- * DASHBOARD – CARREGAR TODAS AS UNIDADES
- *****************************************************/
-async function carregarDashboardCompleto() {
-    const res = await fetch(API.unidadesCompletas);
+    const res = await fetch(API.unidades(blocoId));
     const lista = await res.json();
-    return lista;
-}
 
-/*****************************************************
- * DASHBOARD – Atualizar Cards
- *****************************************************/
-function atualizarCardsDash(lista) {
-    if (get("cardTotal")) get("cardTotal").innerText = lista.length;
-
-    if (get("cardPendentes"))
-        get("cardPendentes").innerText =
-            lista.filter(u => u.situacao === "Em obra" || u.situacao === "Ajuste de cliente").length;
-
-    if (get("cardLiberadas"))
-        get("cardLiberadas").innerText =
-            lista.filter(u => u.situacao === "Liberada").length;
-
-    if (get("cardReprovadas"))
-        get("cardReprovadas").innerText =
-            lista.filter(u => u.situacao === "Aprovada").length;
-
-    if (get("cardChaves"))
-        get("cardChaves").innerText =
-            lista.filter(u => u.chaves === "Entregue").length;
-
-    if (get("cardCVCO"))
-        get("cardCVCO").innerText =
-            lista.filter(u => u.cvco === "Liberado").length;
-}
-
-/*****************************************************
- * DASHBOARD – Preencher Tabela
- *****************************************************/
-function preencherTabelaDash(lista) {
-    const tbody = get("tabelaDash");
-    if (!tbody) return;
+    const tbody = get("listaUnidades");
     tbody.innerHTML = "";
 
     lista.forEach(u => {
         const tr = document.createElement("tr");
-        tr.classList.add(corUnidade(u));
 
         tr.innerHTML = `
-            <td>${u.emp_nome}</td>
-            <td>${u.bloco_nome}</td>
             <td>${u.unidade}</td>
             <td>${u.situacao}</td>
             <td>${u.statusFinanceiro}</td>
@@ -138,60 +216,71 @@ function preencherTabelaDash(lista) {
             <td>${u.chaves}</td>
             <td>${u.dataVistoria || ""}</td>
             <td>${u.dataLiberacao || ""}</td>
+            <td>
+                <button class="btn-small btn-editar" onclick='editarUnidade(${JSON.stringify(u)})'>
+                    Editar
+                </button>
+            </td>
         `;
 
         tbody.appendChild(tr);
     });
 }
 
-/*****************************************************
- * DASHBOARD – FILTRAR POR CARDS
- *****************************************************/
-function filtrarPorCard(lista, tipo) {
-    if (tipo === "pendentes")
-        return lista.filter(u => u.situacao === "Em obra" || u.situacao === "Ajuste de cliente");
-
-    if (tipo === "liberadas")
-        return lista.filter(u => u.situacao === "Liberada");
-
-    if (tipo === "reprovadas")
-        return lista.filter(u => u.situacao === "Aprovada");
-
-    if (tipo === "entregues")
-        return lista.filter(u => u.chaves === "Entregue");
-
-    if (tipo === "cvco")
-        return lista.filter(u => u.cvco === "Liberado");
-
-    return lista;
+function editarUnidade(u) {
+    get("uni_id").value = u.id;
+    get("uni_nome").value = u.unidade;
+    get("uni_situacao").value = u.situacao;
+    get("uni_statusFinanceiro").value = u.statusFinanceiro;
+    get("uni_habitavel").value = u.habitavel;
+    get("uni_cvco").value = u.cvco;
+    get("uni_chaves").value = u.chaves;
+    get("uni_dataVistoria").value = u.dataVistoria || "";
+    get("uni_horaVistoria").value = u.horaVistoria || "";
+    get("uni_dataLiberacao").value = u.dataLiberacao || "";
+    get("uni_agendadoPor").value = u.agendadoPor || "";
+    get("uni_observacao").value = u.observacao || "";
 }
 
-/*****************************************************
- * INICIALIZAR DASHBOARD
- *****************************************************/
-async function initDashboard() {
-    const lista = await carregarDashboardCompleto();
+async function salvarUnidade(e) {
+    e.preventDefault();
 
-    atualizarCardsDash(lista);
-    preencherTabelaDash(lista);
+    const id = get("uni_id").value;
+    const blocoId = get("selBlocos").value;
 
-    // Atualizar blocos quando muda o empreendimento no filtro
-    get("filtroEmpreendimento")?.addEventListener("change", async (e) => {
-        await carregarBlocosSelect("filtroBloco", e.target.value);
+    if (!blocoId) {
+        alert("Selecione um bloco!");
+        return;
+    }
+
+    const dados = {
+        bloco_id: blocoId,
+        unidade: get("uni_nome").value,
+        situacao: get("uni_situacao").value,
+        statusFinanceiro: get("uni_statusFinanceiro").value,
+        habitavel: get("uni_habitavel").value,
+        cvco: get("uni_cvco").value,
+        chaves: get("uni_chaves").value,
+        dataVistoria: get("uni_dataVistoria").value,
+        horaVistoria: get("uni_horaVistoria").value,
+        dataLiberacao: get("uni_dataLiberacao").value,
+        agendadoPor: get("uni_agendadoPor").value,
+        observacao: get("uni_observacao").value
+    };
+
+    const metodo = id ? "PUT" : "POST";
+    const url = id ? `/unidades/${id}` : `/unidades`;
+
+    await fetch(url, {
+        method: metodo,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(dados)
     });
 
-    return lista;
-}
+    alert("Unidade salva com sucesso!");
 
-/*****************************************************
- * EXPORTAR FUNÇÕES PARA AS TELAS
- *****************************************************/
-window.ChaveVR = {
-    carregarEmpreendimentosSelect,
-    carregarBlocosSelect,
-    carregarDashboardCompleto,
-    atualizarCardsDash,
-    preencherTabelaDash,
-    filtrarPorCard,
-    initDashboard
-};
+    get("formUnidade").reset();
+    get("uni_id").value = "";
+
+    carregarUnidadesBloco();
+}
