@@ -158,7 +158,7 @@ async function salvarBlocos() {
 }
 
 /************************************************************
- * 3) UNIDADES
+ * 3) UNIDADES (CORRIGIDO)
  ************************************************************/
 async function carregarUnidades() {
     const resEmp = await fetch("/empreendimentos");
@@ -176,7 +176,20 @@ async function carregarUnidades() {
     lista.forEach(u => addLinhaUnidade(u, empreendimentos, blocos));
 }
 
-function addLinhaUnidade(obj = {}, empreendimentos = null, blocos = null) {
+/*** 🔥 CORREÇÃO DEFINITIVA — addLinhaUnidade ***/
+async function addLinhaUnidade(obj = {}, empreendimentos = null, blocos = null) {
+
+    // SE NÃO RECEBEU LISTAS, CARREGA AUTOMATICAMENTE
+    if (!empreendimentos) {
+        const resEmp = await fetch("/empreendimentos");
+        empreendimentos = await resEmp.json();
+    }
+
+    if (!blocos) {
+        const resBl = await fetch("/blocos");
+        blocos = await resBl.json();
+    }
+
     const tbody = qs("#tabelaUnidades tbody");
     const tr = ce("tr");
 
@@ -241,6 +254,9 @@ function addLinhaUnidade(obj = {}, empreendimentos = null, blocos = null) {
     preencherSelectBlocoUnidade(tr, obj.bloco_id, blocos);
 }
 
+/************************************************************
+ * Preencher selects de unidades
+ ************************************************************/
 function preencherSelectEmpUnidade(tr, empId, lista) {
     const sel = tr.querySelector(".selEmpUni");
     sel.innerHTML = "";
@@ -266,6 +282,9 @@ function preencherSelectBlocoUnidade(tr, blocoId, blocos) {
     });
 }
 
+/************************************************************
+ * Salvar unidades
+ ************************************************************/
 async function salvarUnidades() {
     const linhas = qsa("#tabelaUnidades tbody tr");
     const lista = [];
