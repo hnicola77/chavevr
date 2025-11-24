@@ -1,286 +1,310 @@
-/*********************************************************
- * ChaveVR – JS completo do novo sistema em 3 etapas
- * Modelo B + Abas + Avançar (Opção A escolhida)
- *********************************************************/
+/************************************************************
+ * ChaveVR – Controle Geral (Modelo Excel VR)
+ * Manipula 3 tabelas: Empreendimentos, Blocos e Unidades
+ ************************************************************/
 
-function get(id) { return document.getElementById(id); }
+/************************************************************
+ * HELPERS
+ ************************************************************/
 function qs(sel) { return document.querySelector(sel); }
 function qsa(sel) { return document.querySelectorAll(sel); }
+function ce(tag) { return document.createElement(tag); }
 
-/****************************************************
- * API
- ****************************************************/
-const API = {
-    empreendimentos: "/empreendimentos",
-    blocos: (empId) => `/blocos/${empId}`,
-    unidades: (blocoId) => `/unidades/${blocoId}`
-};
-
-/****************************************************
- * CONTROLE DE ABAS / ETAPAS
- ****************************************************/
-function ativarAba(aba) {
-    // Remove "ativa"
-    qsa(".aba").forEach(x => x.classList.remove("ativa"));
-
-    // Esconde todas etapas
-    qsa(".etapa").forEach(x => x.classList.remove("visivel"));
-
-    // Ativa a aba clicada
-    get(`aba${aba}`).classList.add("ativa");
-    get(`etapa${aba}`).classList.add("visivel");
-}
-
-// Bloqueia abas próximas até cadastro anterior ser concluído
-function bloquearAba(nome) {
-    get(`aba${nome}`).classList.add("bloqueada");
-}
-function desbloquearAba(nome) {
-    get(`aba${nome}`).classList.remove("bloqueada");
-}
-
-/****************************************************
- * INICIAR TELA
- ****************************************************/
+/************************************************************
+ * LOAD INICIAL
+ ************************************************************/
 document.addEventListener("DOMContentLoaded", () => {
-
-    // Aba inicial (Empreendimento)
-    ativarAba("Empreendimento");
-
-    // Garantir blocos e unidades bloqueados
-    bloquearAba("Blocos");
-    bloquearAba("Unidades");
-
+    carregarEmp();
+    carregarBlocos();
+    carregarUnidades();
 });
 
-/****************************************************
- * 1️⃣ EMPREENDIMENTO
- ****************************************************/
-async function salvarEmpreendimento(e) {
-    e.preventDefault();
-
-    const id = get("emp_id").value;
-
-    const dados = {
-        nome: get("emp_nome").value,
-        cidade: get("emp_cidade").value,
-        uf: get("emp_uf").value,
-        fase: get("emp_fase").value,
-        dataEntrega: get("emp_dataEntrega").value,
-        codigoInterno: get("emp_codigoInterno").value,
-        observacao: get("emp_observacao").value
-    };
-
-    const metodo = id ? "PUT" : "POST";
-    const url = id ? `/empreendimentos/${id}` : `/empreendimentos`;
-
-    const res = await fetch(url, {
-        method: metodo,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(dados)
-    });
-
-    const ret = await res.json();
-
-    if (!id) get("emp_id").value = ret.id;
-
-    alert("Empreendimento salvo com sucesso!");
-
-    // Libera aba de blocos
-    desbloquearAba("Blocos");
-    ativarAba("Blocos");
-
-    carregarBlocos();
-}
-
-/****************************************************
- * 2️⃣ BLOCOS
- ****************************************************/
-async function carregarBlocos() {
-
-    const empId = get("emp_id").value;
-    if (!empId) return;
-
-    // Carrega nome do empreendimento
-    const resEmp = await fetch(API.empreendimentos);
-    const empreendimentos = await resEmp.json();
-    const emp = empreendimentos.find(e => e.id == empId);
-    get("nomeEmp").innerText = `Empreendimento: ${emp.nome}`;
-
-    // Carrega blocos
-    const res = await fetch(API.blocos(empId));
+/************************************************************
+ * 1) EMPREENDIMENTOS
+ ************************************************************/
+async function carregarEmp() {
+    const res = await fetch("/empreendimentos");
     const lista = await res.json();
 
-    const tbody = get("listaBlocos");
+    const tbody = qs("#tabelaEmp tbody");
     tbody.innerHTML = "";
 
-    lista.forEach(b => {
-        const tr = document.createElement("tr");
-
-        tr.innerHTML = `
-            <td>${b.nome}</td>
-            <td>${b.observacao || ""}</td>
-            <td>
-                <button class="btn-small btn-editar" onclick='editarBloco(${JSON.stringify(b)})'>
-                    Editar
-                </button>
-            </td>
-        `;
-
-        tbody.appendChild(tr);
-    });
-
-    carregarBlocosNaEtapaUnidades(lista);
+    lista.forEach(e => addLinhaEmp(e));
 }
 
-function editarBloco(b) {
-    get("bloco_id").value = b.id;
-    get("bloco_nome").value = b.nome;
-    get("bloco_observacao").value = b.observacao || "";
+function addLinhaEmp(obj = {}) {
+    const tbody = qs("#tabelaEmp tbody");
+
+    const tr = ce("tr");
+
+    tr.innerHTML = `
+        <td><input type="number" value="${obj.id || ""}" disabled /></td>
+        <td><input value="${obj.nome || ""}"></td>
+        <td><input value="${obj.cidade || ""}"></td>
+        <td><input value="${obj.uf || ""}"></td>
+        <td><input value="${obj.fase || ""}"></td>
+        <td><input type="date" value="${obj.dataEntrega || ""}"></td>
+        <td><input value="${obj.codigoInterno || ""}"></td>
+        <td><input value="${obj.observacao || ""}"></td>
+        <td><button class="btn-small btn-editar" onclick="removerLinha(this)">X</button></td>
+    `;
+
+    tbody.appendChild(tr);
 }
 
-async function salvarBloco(e) {
-    e.preventDefault();
+async function salvarEmp() {
+    const linhas = qsa("#tabelaEmp tbody tr");
+    const lista = [];
 
-    const id = get("bloco_id").value;
-    const empId = get("emp_id").value;
-
-    const dados = {
-        empreendimento_id: empId,
-        nome: get("bloco_nome").value,
-        observacao: get("bloco_observacao").value
-    };
-
-    const metodo = id ? "PUT" : "POST";
-    const url = id ? `/blocos/${id}` : `/blocos`;
-
-    await fetch(url, {
-        method: metodo,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(dados)
+    linhas.forEach(tr => {
+        const c = tr.querySelectorAll("input");
+        lista.push({
+            id: c[0].value || null,
+            nome: c[1].value,
+            cidade: c[2].value,
+            uf: c[3].value,
+            fase: c[4].value,
+            dataEntrega: c[5].value,
+            codigoInterno: c[6].value,
+            observacao: c[7].value
+        });
     });
 
-    alert("Bloco salvo com sucesso!");
+    await fetch("/empreendimentos/salvar", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(lista)
+    });
 
-    get("formBloco").reset();
-    get("bloco_id").value = "";
-
+    alert("Empreendimentos salvos!");
+    carregarEmp();
     carregarBlocos();
-
-    // Libera aba de unidades
-    desbloquearAba("Unidades");
+    carregarUnidades();
 }
 
-/****************************************************
- * Avançar para Unidades
- ****************************************************/
-function irParaUnidades() {
-    desbloquearAba("Unidades");
-    ativarAba("Unidades");
+/************************************************************
+ * 2) BLOCOS
+ ************************************************************/
+async function carregarBlocos() {
+    const resEmp = await fetch("/empreendimentos");
+    const empreendimentos = await resEmp.json();
+
+    const res = await fetch("/blocos");
+    const lista = await res.json();
+
+    const tbody = qs("#tabelaBlocos tbody");
+    tbody.innerHTML = "";
+
+    lista.forEach(b => addLinhaBloco(b, empreendimentos));
 }
 
-/****************************************************
- * 3️⃣ UNIDADES
- ****************************************************/
-function carregarBlocosNaEtapaUnidades(lista) {
-    const sel = get("selBlocos");
-    sel.innerHTML = `<option value="">Selecione</option>`;
+function addLinhaBloco(obj = {}, empreendimentos = null) {
+    const tbody = qs("#tabelaBlocos tbody");
+    const tr = ce("tr");
 
-    lista.forEach(b => {
-        const opt = document.createElement("option");
-        opt.value = b.id;
-        opt.textContent = b.nome;
+    tr.innerHTML = `
+        <td><input type="number" value="${obj.id || ""}" disabled></td>
+        <td>
+            <select class="selEmpBloco"></select>
+        </td>
+        <td><input value="${obj.nome || ""}"></td>
+        <td><input value="${obj.observacao || ""}"></td>
+        <td><button class="btn-small btn-editar" onclick="removerLinha(this)">X</button></td>
+    `;
+
+    tbody.appendChild(tr);
+
+    preencherSelectEmpBloco(tr, obj.empreendimento_id, empreendimentos);
+}
+
+function preencherSelectEmpBloco(tr, empId, lista) {
+    const sel = tr.querySelector(".selEmpBloco");
+    sel.innerHTML = "";
+
+    lista.forEach(e => {
+        const opt = ce("option");
+        opt.value = e.id;
+        opt.textContent = e.nome;
+        if (empId == e.id) opt.selected = true;
         sel.appendChild(opt);
     });
 }
 
-async function carregarUnidadesBloco() {
-    const blocoId = get("selBlocos").value;
-    if (!blocoId) return;
+async function salvarBlocos() {
+    const linhas = qsa("#tabelaBlocos tbody tr");
+    const lista = [];
 
-    const res = await fetch(API.unidades(blocoId));
+    linhas.forEach(tr => {
+        const inputs = tr.querySelectorAll("input");
+        const empSel = tr.querySelector("select");
+
+        lista.push({
+            id: inputs[0].value || null,
+            empreendimento_id: empSel.value,
+            nome: inputs[1].value,
+            observacao: inputs[2].value
+        });
+    });
+
+    await fetch("/blocos/salvar", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(lista)
+    });
+
+    alert("Blocos salvos!");
+    carregarBlocos();
+    carregarUnidades();
+}
+
+/************************************************************
+ * 3) UNIDADES
+ ************************************************************/
+async function carregarUnidades() {
+    const resEmp = await fetch("/empreendimentos");
+    const empreendimentos = await resEmp.json();
+
+    const resBl = await fetch("/blocos");
+    const blocos = await resBl.json();
+
+    const res = await fetch("/unidades");
     const lista = await res.json();
 
-    const tbody = get("listaUnidades");
+    const tbody = qs("#tabelaUnidades tbody");
     tbody.innerHTML = "";
 
-    lista.forEach(u => {
-        const tr = document.createElement("tr");
+    lista.forEach(u => addLinhaUnidade(u, empreendimentos, blocos));
+}
 
-        tr.innerHTML = `
-            <td>${u.unidade}</td>
-            <td>${u.situacao}</td>
-            <td>${u.statusFinanceiro}</td>
-            <td>${u.habitavel}</td>
-            <td>${u.cvco}</td>
-            <td>${u.chaves}</td>
-            <td>${u.dataVistoria || ""}</td>
-            <td>${u.dataLiberacao || ""}</td>
-            <td>
-                <button class="btn-small btn-editar" onclick='editarUnidade(${JSON.stringify(u)})'>
-                    Editar
-                </button>
-            </td>
-        `;
+function addLinhaUnidade(obj = {}, empreendimentos = null, blocos = null) {
+    const tbody = qs("#tabelaUnidades tbody");
+    const tr = ce("tr");
 
-        tbody.appendChild(tr);
+    tr.innerHTML = `
+        <td><input type="number" value="${obj.id || ""}" disabled></td>
+
+        <td><select class="selEmpUni"></select></td>
+        <td><select class="selBlocoUni"></select></td>
+
+        <td><input value="${obj.unidade || ""}"></td>
+
+        <td>
+            <select>
+                <option>Em obra</option>
+                <option>Ajuste de cliente</option>
+                <option>Liberada</option>
+                <option>Aprovada</option>
+            </select>
+        </td>
+
+        <td>
+            <select>
+                <option>Liberada</option>
+                <option>Bloqueada</option>
+            </select>
+        </td>
+
+        <td>
+            <select>
+                <option>Sim</option>
+                <option>Não</option>
+            </select>
+        </td>
+
+        <td>
+            <select>
+                <option>Liberado</option>
+                <option>Não liberado</option>
+            </select>
+        </td>
+
+        <td>
+            <select>
+                <option>Entregue</option>
+                <option>Não entregue</option>
+            </select>
+        </td>
+
+        <td><input type="date" value="${obj.dataVistoria || ""}"></td>
+        <td><input type="time" value="${obj.horaVistoria || ""}"></td>
+        <td><input type="date" value="${obj.dataLiberacao || ""}"></td>
+
+        <td><input value="${obj.agendadoPor || ""}"></td>
+        <td><input value="${obj.observacao || ""}"></td>
+
+        <td><button class="btn-small btn-editar" onclick="removerLinha(this)">X</button></td>
+    `;
+
+    tbody.appendChild(tr);
+
+    preencherSelectEmpUnidade(tr, obj.empreendimento_id, empreendimentos);
+    preencherSelectBlocoUnidade(tr, obj.bloco_id, blocos);
+}
+
+function preencherSelectEmpUnidade(tr, empId, lista) {
+    const sel = tr.querySelector(".selEmpUni");
+    sel.innerHTML = "";
+    lista.forEach(e => {
+        const opt = ce("option");
+        opt.value = e.id;
+        opt.textContent = e.nome;
+        if (empId == e.id) opt.selected = true;
+        sel.appendChild(opt);
     });
 }
 
-function editarUnidade(u) {
-    get("uni_id").value = u.id;
-    get("uni_nome").value = u.unidade;
-    get("uni_situacao").value = u.situacao;
-    get("uni_statusFinanceiro").value = u.statusFinanceiro;
-    get("uni_habitavel").value = u.habitavel;
-    get("uni_cvco").value = u.cvco;
-    get("uni_chaves").value = u.chaves;
-    get("uni_dataVistoria").value = u.dataVistoria || "";
-    get("uni_horaVistoria").value = u.horaVistoria || "";
-    get("uni_dataLiberacao").value = u.dataLiberacao || "";
-    get("uni_agendadoPor").value = u.agendadoPor || "";
-    get("uni_observacao").value = u.observacao || "";
+function preencherSelectBlocoUnidade(tr, blocoId, blocos) {
+    const sel = tr.querySelector(".selBlocoUni");
+    sel.innerHTML = "";
+
+    blocos.forEach(b => {
+        const opt = ce("option");
+        opt.value = b.id;
+        opt.textContent = `${b.emp_nome} - ${b.nome}`;
+        if (blocoId == b.id) opt.selected = true;
+        sel.appendChild(opt);
+    });
 }
 
-async function salvarUnidade(e) {
-    e.preventDefault();
+async function salvarUnidades() {
+    const linhas = qsa("#tabelaUnidades tbody tr");
+    const lista = [];
 
-    const id = get("uni_id").value;
-    const blocoId = get("selBlocos").value;
+    linhas.forEach(tr => {
+        const inputs = tr.querySelectorAll("input");
+        const selects = tr.querySelectorAll("select");
 
-    if (!blocoId) {
-        alert("Selecione um bloco!");
-        return;
-    }
-
-    const dados = {
-        bloco_id: blocoId,
-        unidade: get("uni_nome").value,
-        situacao: get("uni_situacao").value,
-        statusFinanceiro: get("uni_statusFinanceiro").value,
-        habitavel: get("uni_habitavel").value,
-        cvco: get("uni_cvco").value,
-        chaves: get("uni_chaves").value,
-        dataVistoria: get("uni_dataVistoria").value,
-        horaVistoria: get("uni_horaVistoria").value,
-        dataLiberacao: get("uni_dataLiberacao").value,
-        agendadoPor: get("uni_agendadoPor").value,
-        observacao: get("uni_observacao").value
-    };
-
-    const metodo = id ? "PUT" : "POST";
-    const url = id ? `/unidades/${id}` : `/unidades`;
-
-    await fetch(url, {
-        method: metodo,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(dados)
+        lista.push({
+            id: inputs[0].value || null,
+            empreendimento_id: selects[0].value,
+            bloco_id: selects[1].value,
+            unidade: inputs[1].value,
+            situacao: selects[2].value,
+            statusFinanceiro: selects[3].value,
+            habitavel: selects[4].value,
+            cvco: selects[5].value,
+            chaves: selects[6].value,
+            dataVistoria: inputs[2].value,
+            horaVistoria: inputs[3].value,
+            dataLiberacao: inputs[4].value,
+            agendadoPor: inputs[5].value,
+            observacao: inputs[6].value
+        });
     });
 
-    alert("Unidade salva com sucesso!");
+    await fetch("/unidades/salvar", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(lista)
+    });
 
-    get("formUnidade").reset();
-    get("uni_id").value = "";
+    alert("Unidades salvas!");
+    carregarUnidades();
+}
 
-    carregarUnidadesBloco();
+/************************************************************
+ * Remover Linha
+ ************************************************************/
+function removerLinha(btn) {
+    btn.closest("tr").remove();
 }
