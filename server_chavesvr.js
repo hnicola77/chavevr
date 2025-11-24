@@ -1,7 +1,6 @@
-/***************************************************************
- * ChaveVR - Servidor Node + Express + SQLite
- * Versão FINAL corrigida e compatível com todo o sistema
- ***************************************************************/
+// ==========================================================
+// ChaveVR - Backend Novo (Modelo B com Abas por Etapa)
+// ==========================================================
 
 const express = require("express");
 const sqlite3 = require("sqlite3").verbose();
@@ -12,22 +11,27 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-// Servir arquivos estáticos (HTML/CSS/JS)
+// ----------------------------------------------------------
+// Servindo arquivos estáticos
+// ----------------------------------------------------------
 app.use(express.static(path.join(__dirname, "public")));
 
-// Caminho do banco (Render)
+// ----------------------------------------------------------
+// Banco de dados
+// ----------------------------------------------------------
 const dbPath = "/data/chavesvr.db";
 
 const db = new sqlite3.Database(dbPath, (err) => {
     if (err) console.error("Erro ao conectar ao banco:", err.message);
-    else console.log("Banco conectado:", dbPath);
+    else console.log("🔌 Banco conectado:", dbPath);
 });
 
-/***************************************************************
- * CRIAÇÃO DAS TABELAS
- ***************************************************************/
+// ----------------------------------------------------------
+// Criar tabelas (NOVO MODELO)
+// ----------------------------------------------------------
 db.serialize(() => {
 
+    // EMPREENDIMENTOS
     db.run(`
         CREATE TABLE IF NOT EXISTS empreendimentos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -41,6 +45,7 @@ db.serialize(() => {
         )
     `);
 
+    // BLOCOS
     db.run(`
         CREATE TABLE IF NOT EXISTS blocos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -51,6 +56,7 @@ db.serialize(() => {
         )
     `);
 
+    // UNIDADES
     db.run(`
         CREATE TABLE IF NOT EXISTS unidades (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -71,191 +77,192 @@ db.serialize(() => {
     `);
 });
 
-/***************************************************************
- * ROTAS DE EMPREENDIMENTOS
- ***************************************************************/
+// ==========================================================
+// ROTAS — EMPREENDIMENTOS
+// ==========================================================
+
+// Listar
 app.get("/empreendimentos", (req, res) => {
     db.all("SELECT * FROM empreendimentos ORDER BY nome ASC", [], (err, rows) => {
-        if (err) return res.status(500).json({ error: "Erro ao listar empreendimentos" });
-        res.json(rows);
+        if (err) res.status(500).json({ error: "Erro ao listar empreendimentos" });
+        else res.json(rows);
     });
 });
 
+// Criar
 app.post("/empreendimentos", (req, res) => {
     const { nome, cidade, uf, fase, dataEntrega, codigoInterno, observacao } = req.body;
 
-    const sql = `
-        INSERT INTO empreendimentos (nome, cidade, uf, fase, dataEntrega, codigoInterno, observacao)
+    db.run(`
+        INSERT INTO empreendimentos 
+        (nome, cidade, uf, fase, dataEntrega, codigoInterno, observacao)
         VALUES (?, ?, ?, ?, ?, ?, ?)
-    `;
-
-    db.run(sql, [nome, cidade, uf, fase, dataEntrega, codigoInterno, observacao], function (err) {
-        if (err) return res.status(500).json({ error: "Erro ao salvar empreendimento" });
-        res.json({ message: "Empreendimento criado", id: this.lastID });
-    });
+    `,
+        [nome, cidade, uf, fase, dataEntrega, codigoInterno, observacao],
+        function (err) {
+            if (err) res.status(500).json({ error: "Erro ao salvar empreendimento" });
+            else res.json({ message: "Empreendimento criado", id: this.lastID });
+        }
+    );
 });
 
+// Atualizar
 app.put("/empreendimentos/:id", (req, res) => {
     const { id } = req.params;
     const { nome, cidade, uf, fase, dataEntrega, codigoInterno, observacao } = req.body;
 
-    const sql = `
-        UPDATE empreendimentos SET
-            nome=?, cidade=?, uf=?, fase=?, dataEntrega=?, codigoInterno=?, observacao=?
+    db.run(`
+        UPDATE empreendimentos SET 
+        nome=?, cidade=?, uf=?, fase=?, dataEntrega=?, codigoInterno=?, observacao=?
         WHERE id=?
-    `;
-
-    db.run(sql, [nome, cidade, uf, fase, dataEntrega, codigoInterno, observacao, id], function (err) {
-        if (err) return res.status(500).json({ error: "Erro ao atualizar" });
-        res.json({ message: "Empreendimento atualizado" });
-    });
-});
-
-/***************************************************************
- * ROTAS DE BLOCOS
- ***************************************************************/
-app.get("/blocos/:empId", (req, res) => {
-    db.all(
-        "SELECT * FROM blocos WHERE empreendimento_id = ? ORDER BY nome ASC",
-        [req.params.empId],
-        (err, rows) => {
-            if (err) return res.status(500).json({ error: "Erro ao listar blocos" });
-            res.json(rows);
+    `,
+        [nome, cidade, uf, fase, dataEntrega, codigoInterno, observacao, id],
+        function (err) {
+            if (err) res.status(500).json({ error: "Erro ao atualizar empreendimento" });
+            else res.json({ message: "Atualizado" });
         }
     );
 });
 
+// ==========================================================
+// ROTAS — BLOCOS
+// ==========================================================
+
+// Listar blocos de um empreendimento
+app.get("/blocos/:empId", (req, res) => {
+    db.all(
+        "SELECT * FROM blocos WHERE empreendimento_id=? ORDER BY nome ASC",
+        [req.params.empId],
+        (err, rows) => {
+            if (err) res.status(500).json({ error: "Erro ao listar blocos" });
+            else res.json(rows);
+        }
+    );
+});
+
+// Criar bloco
 app.post("/blocos", (req, res) => {
     const { empreendimento_id, nome, observacao } = req.body;
 
-    db.run(
-        `INSERT INTO blocos (empreendimento_id, nome, observacao) VALUES (?, ?, ?)`,
+    db.run(`
+        INSERT INTO blocos (empreendimento_id, nome, observacao)
+        VALUES (?, ?, ?)
+    `,
         [empreendimento_id, nome, observacao],
         function (err) {
-            if (err) return res.status(500).json({ error: "Erro ao salvar bloco" });
-            res.json({ message: "Bloco criado", id: this.lastID });
+            if (err) res.status(500).json({ error: "Erro ao salvar bloco" });
+            else res.json({ message: "Bloco criado", id: this.lastID });
         }
     );
 });
 
+// Atualizar bloco
 app.put("/blocos/:id", (req, res) => {
     const { id } = req.params;
     const { nome, observacao } = req.body;
 
-    db.run(
-        `UPDATE blocos SET nome=?, observacao=? WHERE id=?`,
+    db.run(`
+        UPDATE blocos SET nome=?, observacao=? WHERE id=?
+    `,
         [nome, observacao, id],
-        (err) => {
-            if (err) return res.status(500).json({ error: "Erro ao atualizar bloco" });
-            res.json({ message: "Bloco atualizado" });
+        function (err) {
+            if (err) res.status(500).json({ error: "Erro ao atualizar bloco" });
+            else res.json({ message: "Atualizado" });
         }
     );
 });
 
-/***************************************************************
- * ROTAS DE UNIDADES
- ***************************************************************/
+// ==========================================================
+// ROTAS — UNIDADES
+// ==========================================================
+
+// Listar unidades de um bloco
 app.get("/unidades/:blocoId", (req, res) => {
     db.all(
-        "SELECT * FROM unidades WHERE bloco_id = ? ORDER BY unidade ASC",
+        "SELECT * FROM unidades WHERE bloco_id=? ORDER BY unidade ASC",
         [req.params.blocoId],
         (err, rows) => {
-            if (err) return res.status(500).json({ error: "Erro ao listar unidades" });
-            res.json(rows);
+            if (err) res.status(500).json({ error: "Erro ao listar unidades" });
+            else res.json(rows);
         }
     );
 });
 
+// Criar unidade
 app.post("/unidades", (req, res) => {
     const {
-        bloco_id, unidade, situacao, statusFinanceiro, habitavel,
-        cvco, chaves, dataVistoria, horaVistoria, dataLiberacao,
-        agendadoPor, observacao
+        bloco_id,
+        unidade,
+        situacao,
+        statusFinanceiro,
+        habitavel,
+        cvco,
+        chaves,
+        dataVistoria,
+        horaVistoria,
+        dataLiberacao,
+        agendadoPor,
+        observacao
     } = req.body;
 
-    const sql = `
+    db.run(`
         INSERT INTO unidades (
-            bloco_id, unidade, situacao, statusFinanceiro, habitavel,
-            cvco, chaves, dataVistoria, horaVistoria, dataLiberacao,
-            agendadoPor, observacao
+            bloco_id, unidade, situacao, statusFinanceiro, habitavel, cvco,
+            chaves, dataVistoria, horaVistoria, dataLiberacao, agendadoPor, observacao
         )
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
-
-    db.run(
-        sql,
+    `,
         [
-            bloco_id, unidade, situacao, statusFinanceiro, habitavel,
-            cvco, chaves, dataVistoria, horaVistoria, dataLiberacao,
-            agendadoPor, observacao
+            bloco_id, unidade, situacao, statusFinanceiro, habitavel, cvco,
+            chaves, dataVistoria, horaVistoria, dataLiberacao, agendadoPor, observacao
         ],
         function (err) {
-            if (err) return res.status(500).json({ error: "Erro ao salvar unidade" });
-            res.json({ message: "Unidade criada", id: this.lastID });
+            if (err) res.status(500).json({ error: "Erro ao salvar unidade" });
+            else res.json({ message: "Unidade criada", id: this.lastID });
         }
     );
 });
 
+// Atualizar unidade
 app.put("/unidades/:id", (req, res) => {
     const { id } = req.params;
 
     const {
-        bloco_id, unidade, situacao, statusFinanceiro, habitavel,
-        cvco, chaves, dataVistoria, horaVistoria, dataLiberacao,
-        agendadoPor, observacao
+        bloco_id,
+        unidade,
+        situacao,
+        statusFinanceiro,
+        habitavel,
+        cvco,
+        chaves,
+        dataVistoria,
+        horaVistoria,
+        dataLiberacao,
+        agendadoPor,
+        observacao
     } = req.body;
 
-    const sql = `
+    db.run(`
         UPDATE unidades SET
-            bloco_id=?, unidade=?, situacao=?, statusFinanceiro=?, habitavel=?,
-            cvco=?, chaves=?, dataVistoria=?, horaVistoria=?, dataLiberacao=?,
-            agendadoPor=?, observacao=?
+        bloco_id=?, unidade=?, situacao=?, statusFinanceiro=?, habitavel=?, cvco=?,
+        chaves=?, dataVistoria=?, horaVistoria=?, dataLiberacao=?, agendadoPor=?, observacao=?
         WHERE id=?
-    `;
-
-    db.run(
-        sql,
+    `,
         [
-            bloco_id, unidade, situacao, statusFinanceiro, habitavel,
-            cvco, chaves, dataVistoria, horaVistoria, dataLiberacao,
-            agendadoPor, observacao, id
+            bloco_id, unidade, situacao, statusFinanceiro, habitavel, cvco,
+            chaves, dataVistoria, horaVistoria, dataLiberacao, agendadoPor, observacao, id
         ],
-        (err) => {
-            if (err) return res.status(500).json({ error: "Erro ao atualizar unidade" });
-            res.json({ message: "Unidade atualizada" });
+        function (err) {
+            if (err) res.status(500).json({ error: "Erro ao atualizar unidade" });
+            else res.json({ message: "Unidade atualizada" });
         }
     );
 });
 
-/***************************************************************
- * ROTA PRINCIPAL — LISTAR UNIDADES COMPLETAS (JOIN)
- ***************************************************************/
-app.get("/unidades_completas", (req, res) => {
-    const sql = `
-        SELECT 
-            u.*,
-            b.nome AS bloco_nome,
-            b.empreendimento_id AS emp_id,
-            e.nome AS emp_nome
-        FROM unidades u
-        JOIN blocos b ON b.id = u.bloco_id
-        JOIN empreendimentos e ON e.id = b.empreendimento_id
-        ORDER BY e.nome ASC, b.nome ASC, u.unidade ASC
-    `;
-
-    db.all(sql, [], (err, rows) => {
-        if (err) {
-            console.log("Erro /unidades_completas:", err);
-            return res.status(500).json({ error: "Erro ao carregar unidades completas" });
-        }
-        res.json(rows);
-    });
-});
-
-/***************************************************************
- * INICIAR SERVIDOR
- ***************************************************************/
+// ==========================================================
+// Servidor
+// ==========================================================
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
-    console.log("ChaveVR rodando na porta", PORT);
+    console.log("🚀 Servidor ChaveVR rodando na porta", PORT);
 });
