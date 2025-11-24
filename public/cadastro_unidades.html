@@ -10,142 +10,138 @@
 
 <body>
 
-<!-- MENU SUPERIOR -->
-<div class="top-menu">
-    <a href="/index.html">Módulos</a>
-    <a class="ativo" href="/cadastro_unidades.html">Cadastro de Unidades</a>
-    <a href="/dashboard.html">Dashboard</a>
-</div>
+    <div class="top-menu">
+        <a href="/index.html">Módulos</a>
+        <a class="ativo" href="/cadastro_unidades.html">Cadastro de Unidades</a>
+        <a href="/dashboard.html">Dashboard</a>
+    </div>
 
-<div class="container">
+    <div class="container">
 
-    <h1>Cadastro de Unidades</h1>
+        <h1>Gerenciamento de Unidades</h1>
+        <p>Utilize o botão abaixo para adicionar ou gerenciar o status das unidades.</p>
 
-    <button class="btn-primary" onclick="abrirModalNovo()">+ Nova Unidade</button>
-
-    <table>
-        <thead>
-            <tr>
-                <th>Empreendimento</th>
-                <th>Bloco</th>
-                <th>Unidade</th>
-                <th>Situação</th>
-                <th>Financeiro</th>
-                <th>Chaves</th>
-                <th>Ações</th>
-            </tr>
-        </thead>
-        <tbody id="tabelaUnidades"></tbody>
-    </table>
-
-</div>
-
-<!-- ==============================================
-     MODAL (PROFISSIONAL, 2 COLUNAS)
-================================================= -->
-<div id="modalFundo" class="modal-fundo" style="display:none;">
-    <div class="modal">
-
-        <h2 id="tituloModal">Nova Unidade</h2>
-
-        <div class="linha">
-            <div class="col">
-                <label>Empreendimento</label>
-                <select id="mEmpreendimento"></select>
-            </div>
-            <div class="col">
-                <label>Bloco</label>
-                <select id="mBloco"></select>
-            </div>
+        <div style="margin-bottom: 20px;">
+            <button class="btn-primary" onclick="abrirModalNovo()">+ Nova Unidade</button>
         </div>
 
-        <div class="linha">
-            <div class="col">
-                <label>Unidade</label>
-                <input id="mUnidade" type="text">
-            </div>
-            <div class="col">
-                <label>Situação</label>
-                <select id="mSituacao">
-                    <option>Em obra</option>
-                    <option>Ajuste de cliente</option>
-                    <option>Liberada</option>
-                    <option>Aprovada</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="linha">
-            <div class="col">
-                <label>Status Financeiro</label>
-                <select id="mFinanceiro">
-                    <option>Liberada</option>
-                    <option>Bloqueada</option>
-                </select>
-            </div>
-            <div class="col">
-                <label>Habitável</label>
-                <select id="mHabitavel">
-                    <option>Sim</option>
-                    <option>Não</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="linha">
-            <div class="col">
-                <label>CVCO</label>
-                <select id="mCVCO">
-                    <option>Liberado</option>
-                    <option>Não Liberado</option>
-                </select>
-            </div>
-
-            <div class="col">
-                <label>Chaves</label>
-                <select id="mChaves">
-                    <option>Entregue</option>
-                    <option>Não entregue</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="linha">
-            <div class="col">
-                <label>Data da Vistoria</label>
-                <input id="mDataVistoria" type="date">
-            </div>
-            <div class="col">
-                <label>Hora da Vistoria</label>
-                <input id="mHoraVistoria" type="time">
-            </div>
-        </div>
-
-        <div class="linha">
-            <div class="col">
-                <label>Data Liberação</label>
-                <input id="mDataLiberacao" type="date">
-            </div>
-            <div class="col">
-                <label>Agendado Por</label>
-                <input id="mAgendadoPor" type="text">
-            </div>
-        </div>
-
-        <div class="linha">
-            <div class="col" style="width:100%;">
-                <label>Observação</label>
-                <textarea id="mObservacao"></textarea>
-            </div>
-        </div>
-
-        <div class="modal-botoes">
-            <button class="btn-primary" onclick="salvarModal()">Salvar</button>
-            <button class="btn-secondary" onclick="fecharModal()">Cancelar</button>
-        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Empreendimento</th>
+                    <th>Bloco</th>
+                    <th>Unidade</th>
+                    <th>Situação</th>
+                    <th>Financeiro</th>
+                    <th>Chaves</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="tabelaUnidades">
+                </tbody>
+        </table>
 
     </div>
-</div>
+
+    <div id="modalFundo" class="modal-fundo" style="display: none;">
+        <div class="modal">
+
+            <div class="modal-header">
+                <h2 id="tituloModal">Nova Unidade</h2>
+                <span class="fechar" onclick="fecharModal()">&times;</span>
+            </div>
+
+            <div class="modal-body">
+
+                <div class="form-group-triple">
+                    <label for="mEmpreendimento">Empreendimento:</label>
+                    <select id="mEmpreendimento" required>
+                        </select>
+                </div>
+                <div class="form-group-triple">
+                    <label for="mBloco">Bloco:</label>
+                    <select id="mBloco" required>
+                        </select>
+                </div>
+                <div class="form-group-triple">
+                    <label for="mUnidade">Nº da Unidade:</label>
+                    <input type="text" id="mUnidade" required>
+                </div>
+                
+                <hr>
+
+                <div class="form-group-quad">
+                    <label for="mSituacao">Situação:</label>
+                    <select id="mSituacao">
+                        <option>Em obra</option>
+                        <option>Ajuste de cliente</option>
+                        <option>Liberada</option>
+                        <option>Aprovada</option>
+                    </select>
+                </div>
+                <div class="form-group-quad">
+                    <label for="mFinanceiro">Status Financeiro:</label>
+                    <select id="mFinanceiro">
+                        <option>Liberada</option>
+                        <option>Pendente</option>
+                    </select>
+                </div>
+                <div class="form-group-quad">
+                    <label for="mHabitavel">Habitável:</label>
+                    <select id="mHabitavel">
+                        <option>Sim</option>
+                        <option>Não</option>
+                    </select>
+                </div>
+                <div class="form-group-quad">
+                    <label for="mCVCO">Status CVCO:</label>
+                    <select id="mCVCO">
+                        <option>Liberado</option>
+                        <option>Pendente</option>
+                    </select>
+                </div>
+
+                <hr>
+
+                <div class="form-group-quad">
+                    <label for="mChaves">Status Chaves:</label>
+                    <select id="mChaves">
+                        <option>Não entregue</option>
+                        <option>Entregue</option>
+                    </select>
+                </div>
+                <div class="form-group-quad">
+                    <label for="mDataVistoria">Data Vistoria:</label>
+                    <input type="date" id="mDataVistoria">
+                </div>
+                <div class="form-group-quad">
+                    <label for="mHoraVistoria">Hora Vistoria:</label>
+                    <input type="time" id="mHoraVistoria">
+                </div>
+                <div class="form-group-quad">
+                    <label for="mAgendadoPor">Agendado Por:</label>
+                    <input type="text" id="mAgendadoPor">
+                </div>
+                
+                <div class="form-group-full">
+                    <label for="mDataLiberacao">Data Liberação (Geral):</label>
+                    <input type="date" id="mDataLiberacao">
+                </div>
+                
+                <div class="form-group-full">
+                    <label for="mObservacao">Observações:</label>
+                    <textarea id="mObservacao" rows="3"></textarea>
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="fecharModal()">Cancelar</button>
+                <button class="btn-primary" onclick="salvarModal()">Salvar</button>
+            </div>
+
+        </div>
+    </div>
 
 </body>
 </html>
