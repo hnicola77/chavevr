@@ -3,9 +3,13 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Cadastro de Unidades – ChaveVR</title>
+    <title>Cadastro de Unidades — ChaveVR</title>
     <link rel="stylesheet" href="/styles.css">
-    <script src="/chavesvr.js" defer></script>
+    
+    <!-- SheetJS para exportar Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <script src="/cadastro_improved.js" defer></script>
 </head>
 
 <body>
@@ -14,42 +18,126 @@
         <a href="/index.html">Módulos</a>
         <a class="ativo" href="/cadastro_unidades.html">Cadastro de Unidades</a>
         <a href="/dashboard.html">Dashboard</a>
+        
+        <!-- Toggle Modo Escuro -->
+        <div style="margin-left: auto;">
+            <button id="toggleDarkMode" class="btn-icon" title="Alternar modo escuro/claro">
+                🌙
+            </button>
+        </div>
     </div>
 
     <div class="container">
 
-        <h1>Gerenciamento de Unidades</h1>
-        <p>Utilize os botões abaixo para adicionar ou gerenciar o status das unidades.</p>
-
-        <div style="margin-bottom: 20px;">
-            <button class="btn-primary" onclick="abrirModalNovo()">+ Nova Unidade (Individual)</button>
-            <button class="btn-secondary" onclick="abrirModalLote()">+ Nova Unidade em Lote</button>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div>
+                <h1 style="margin: 0;">Gerenciamento de Unidades</h1>
+                <p style="margin: 5px 0 0 0; color: #6c757d;">Cadastre e gerencie as unidades dos empreendimentos</p>
+            </div>
+            <button class="btn-primary" onclick="exportarParaExcel()">
+                📥 Exportar Excel
+            </button>
         </div>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>Empreendimento</th>
-                    <th>Bloco</th>
-                    <th>Unidade</th>
-                    <th>Situação</th>
-                    <th>Financeiro</th>
-                    <th>Habitável</th>
-                    <th>CVCO</th>
-                    <th>Chaves</th>
-                    <th>Data Vistoria</th>
-                    <th>Data Liberação</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody id="tabelaUnidades">
+        <!-- Cards de Resumo Rápido -->
+        <div class="cards">
+            <div class="card card-animated" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <div class="card-icon">📊</div>
+                <h2>Total Cadastradas</h2>
+                <p class="card-number" id="totalUnidades">0</p>
+            </div>
+            <div class="card card-animated" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                <div class="card-icon">✅</div>
+                <h2>Liberadas</h2>
+                <p class="card-number" id="totalLiberadas">0</p>
+            </div>
+            <div class="card card-animated" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                <div class="card-icon">🔑</div>
+                <h2>Chaves Entregues</h2>
+                <p class="card-number" id="totalEntregues">0</p>
+            </div>
+        </div>
+
+        <!-- Botões de Ação -->
+        <div style="display: flex; gap: 15px; margin: 30px 0 20px 0;">
+            <button class="btn-primary btn-large" onclick="abrirModalNovo()">
+                ➕ Nova Unidade Individual
+            </button>
+            <button class="btn-secondary btn-large" onclick="abrirModalLote()">
+                📦 Cadastro em Lote
+            </button>
+        </div>
+
+        <!-- Filtros e Busca -->
+        <div class="filtros-modernos">
+            <div class="filtro-item">
+                <label>🔍 Busca Rápida</label>
+                <input type="text" id="buscaRapida" placeholder="Digite bloco, unidade ou empreendimento..." onkeyup="filtrarTabela()">
+            </div>
+            
+            <div class="filtro-item">
+                <label>🏢 Empreendimento</label>
+                <select id="filtroEmpreendimento" onchange="filtrarTabela()">
+                    <option value="">Todos</option>
+                </select>
+            </div>
+            
+            <div class="filtro-item">
+                <label>🏗️ Bloco</label>
+                <select id="filtroBloco" onchange="filtrarTabela()">
+                    <option value="">Todos</option>
+                </select>
+            </div>
+
+            <div class="filtro-item">
+                <label>📋 Situação</label>
+                <select id="filtroSituacao" onchange="filtrarTabela()">
+                    <option value="">Todas</option>
+                    <option value="Em obra">Em obra</option>
+                    <option value="Ajuste de cliente">Ajuste de cliente</option>
+                    <option value="Liberada">Liberada</option>
+                    <option value="Aprovada">Aprovada</option>
+                </select>
+            </div>
+
+            <div class="filtro-buttons">
+                <button class="btn-secondary" onclick="limparFiltros()">🗑️ Limpar Filtros</button>
+            </div>
+        </div>
+
+        <!-- Tabela -->
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Empreendimento</th>
+                        <th>Bloco</th>
+                        <th>Unidade</th>
+                        <th>Situação</th>
+                        <th>Financeiro</th>
+                        <th>Habitável</th>
+                        <th>CVCO</th>
+                        <th>Chaves</th>
+                        <th>Data Vistoria</th>
+                        <th>Data Liberação</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelaUnidades">
                 </tbody>
-        </table>
+            </table>
+        </div>
+
+        <!-- Rodapé com estatísticas -->
+        <div class="footer-stats">
+            <p>📊 <span id="totalExibindo">0</span> unidades exibidas de <span id="totalGeral">0</span> no total</p>
+        </div>
 
     </div>
 
+    <!-- MODAL INDIVIDUAL -->
     <div id="modalFundo" class="modal-fundo" style="display: none;">
-        <div class="modal">
+        <div class="modal modal-improved">
             <div class="modal-header">
                 <h2 id="tituloModal">Nova Unidade</h2>
                 <span class="fechar" onclick="fecharModal()">&times;</span>
@@ -57,98 +145,121 @@
 
             <div class="modal-body">
 
-                <div class="form-group-triple">
-                    <label for="mEmpreendimento">Empreendimento:</label>
-                    <select id="mEmpreendimento" required>
-                        </select>
-                </div>
-                <div class="form-group-triple">
-                    <label for="mBloco">Bloco:</label>
-                    <select id="mBloco" required>
-                        </select>
-                </div>
-                <div class="form-group-triple">
-                    <label for="mUnidade">Nº da Unidade:</label>
-                    <input type="text" id="mUnidade" required>
-                </div>
-                
-                <hr>
-
-                <div class="form-group-quad">
-                    <label for="mSituacao">Situação:</label>
-                    <select id="mSituacao">
-                        <option>Em obra</option>
-                        <option>Ajuste de cliente</option>
-                        <option>Liberada</option>
-                        <option>Aprovada</option>
-                    </select>
-                </div>
-                <div class="form-group-quad">
-                    <label for="mFinanceiro">Status Financeiro:</label>
-                    <select id="mFinanceiro">
-                        <option>Liberada</option>
-                        <option>Pendente</option>
-                    </select>
-                </div>
-                <div class="form-group-quad">
-                    <label for="mHabitavel">Habitável:</label>
-                    <select id="mHabitavel">
-                        <option>Sim</option>
-                        <option>Não</option>
-                    </select>
-                </div>
-                <div class="form-group-quad">
-                    <label for="mCVCO">Status CVCO:</label>
-                    <select id="mCVCO">
-                        <option>Liberado</option>
-                        <option>Pendente</option>
-                    </select>
+                <div class="form-section">
+                    <h3 class="form-section-title">📍 Localização</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="mEmpreendimento">Empreendimento *</label>
+                            <select id="mEmpreendimento" required>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="mBloco">Bloco *</label>
+                            <select id="mBloco" required>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="mUnidade">Nº da Unidade *</label>
+                            <input type="text" id="mUnidade" required placeholder="Ex: 101">
+                        </div>
+                    </div>
                 </div>
 
-                <hr>
+                <div class="form-section">
+                    <h3 class="form-section-title">📋 Status da Unidade</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="mSituacao">Situação</label>
+                            <select id="mSituacao">
+                                <option>Em obra</option>
+                                <option>Ajuste de cliente</option>
+                                <option>Liberada</option>
+                                <option>Aprovada</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="mFinanceiro">Status Financeiro</label>
+                            <select id="mFinanceiro">
+                                <option>Liberada</option>
+                                <option>Pendente</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="mHabitavel">Habitável</label>
+                            <select id="mHabitavel">
+                                <option>Sim</option>
+                                <option>Não</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="mCVCO">Status CVCO</label>
+                            <select id="mCVCO">
+                                <option>Liberado</option>
+                                <option>Pendente</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
 
-                <div class="form-group-quad">
-                    <label for="mChaves">Status Chaves:</label>
-                    <select id="mChaves">
-                        <option>Não entregue</option>
-                        <option>Entregue</option>
-                    </select>
+                <div class="form-section">
+                    <h3 class="form-section-title">🔑 Chaves e Vistoria</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="mChaves">Status Chaves</label>
+                            <select id="mChaves">
+                                <option>Não entregue</option>
+                                <option>Entregue</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="mDataVistoria">Data Vistoria</label>
+                            <input type="date" id="mDataVistoria">
+                        </div>
+                        <div class="form-group">
+                            <label for="mHoraVistoria">Hora Vistoria</label>
+                            <input type="time" id="mHoraVistoria">
+                        </div>
+                        <div class="form-group">
+                            <label for="mAgendadoPor">Agendado Por</label>
+                            <input type="text" id="mAgendadoPor" placeholder="Nome do responsável">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group form-group-full">
+                            <label for="mDataLiberacao">Data Liberação (Geral)</label>
+                            <input type="date" id="mDataLiberacao">
+                        </div>
+                    </div>
                 </div>
-                <div class="form-group-quad">
-                    <label for="mDataVistoria">Data Vistoria:</label>
-                    <input type="date" id="mDataVistoria">
-                </div>
-                <div class="form-group-quad">
-                    <label for="mHoraVistoria">Hora Vistoria:</label>
-                    <input type="time" id="mHoraVistoria">
-                </div>
-                <div class="form-group-quad">
-                    <label for="mAgendadoPor">Agendado Por:</label>
-                    <input type="text" id="mAgendadoPor">
-                </div>
-                
-                <div class="form-group-full">
-                    <label for="mDataLiberacao">Data Liberação (Geral):</label>
-                    <input type="date" id="mDataLiberacao">
-                </div>
-                
-                <div class="form-group-full">
-                    <label for="mObservacao">Observações:</label>
-                    <textarea id="mObservacao" rows="3"></textarea>
+
+                <div class="form-section">
+                    <h3 class="form-section-title">📝 Observações</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group form-group-full">
+                            <label for="mObservacao">Observações</label>
+                            <textarea id="mObservacao" rows="3" placeholder="Informações adicionais sobre a unidade..."></textarea>
+                        </div>
+                    </div>
                 </div>
 
             </div>
 
             <div class="modal-footer">
                 <button class="btn-secondary" onclick="fecharModal()">Cancelar</button>
-                <button class="btn-primary" onclick="salvarModal()">Salvar</button>
+                <button class="btn-primary" onclick="salvarModal()">💾 Salvar Unidade</button>
             </div>
 
         </div>
     </div>
 
+    <!-- MODAL LOTE -->
     <div id="modalLoteFundo" class="modal-fundo" style="display: none;">
-        <div class="modal">
+        <div class="modal modal-improved">
 
             <div class="modal-header">
                 <h2 id="tituloModalLote">Cadastro de Unidades em Lote</h2>
@@ -157,35 +268,52 @@
 
             <div class="modal-body">
 
-                <p>Preencha o empreendimento, o bloco e a faixa numérica de unidades para cadastrar.</p>
+                <div class="alert alert-info">
+                    <strong>ℹ️ Como funciona:</strong> Preencha o empreendimento, bloco e a faixa numérica de unidades. 
+                    O sistema criará automaticamente todas as unidades nesse intervalo com valores padrão.
+                </div>
 
-                <div class="form-group-triple">
-                    <label for="lEmpreendimento">Empreendimento:</label>
-                    <select id="lEmpreendimento" required>
-                        </select>
+                <div class="form-section">
+                    <h3 class="form-section-title">📍 Dados do Lote</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="lEmpreendimento">Empreendimento *</label>
+                            <select id="lEmpreendimento" required>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="lBloco">Bloco *</label>
+                            <select id="lBloco" required>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="lUnidadeInicio">Unidade Início *</label>
+                            <input type="number" id="lUnidadeInicio" required placeholder="Ex: 101" min="1">
+                        </div>
+                        <div class="form-group">
+                            <label for="lUnidadeFim">Unidade Fim *</label>
+                            <input type="number" id="lUnidadeFim" required placeholder="Ex: 110" min="1">
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning" id="alertaQuantidade" style="display: none;">
+                        <strong>⚠️ Atenção:</strong> Serão cadastradas <strong id="quantidadeLote">0</strong> unidades.
+                    </div>
                 </div>
-                <div class="form-group-triple">
-                    <label for="lBloco">Bloco:</label>
-                    <select id="lBloco" required>
-                        </select>
-                </div>
-                <div class="form-group-triple">
-                    <label for="lUnidadeInicio">Faixa Início (Ex: 101):</label>
-                    <input type="number" id="lUnidadeInicio" required>
-                </div>
-                <div class="form-group-triple">
-                    <label for="lUnidadeFim">Faixa Fim (Ex: 110):</label>
-                    <input type="number" id="lUnidadeFim" required>
-                </div>
-                
+
             </div>
 
             <div class="modal-footer">
                 <button class="btn-secondary" onclick="fecharModalLote()">Cancelar</button>
-                <button class="btn-primary" onclick="salvarModalLote()">Cadastrar Lote</button>
+                <button class="btn-primary" onclick="salvarModalLote()">📦 Cadastrar Lote</button>
             </div>
 
         </div>
     </div>
-    </body>
+
+</body>
 </html>
