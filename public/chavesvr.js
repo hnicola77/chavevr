@@ -3,7 +3,6 @@
 // Dados fixos (Hardcoded) para preencher os selects
 const EMPREENDIMENTOS_FIXOS = [
     // ... (Seus empreendimentos fixos)
-    "Residencial Horizonte",
     "New Jersey",
     "Honolulu",
     "Plaza de Espanha",
@@ -291,4 +290,5 @@ async function salvarModalLote() {
         alert("Erro na comunicação com o servidor.");
     }
 }
+
 
