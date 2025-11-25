@@ -7,15 +7,17 @@
     
     <link rel="stylesheet" href="/styles.css"> 
     
+    <!-- Este script contém a lógica do dashboard, incluindo a nova funcionalidade de filtro por card -->
     <script src="/dashboard.js" defer></script>
 </head>
 
 <body>
 
     <div class="top-menu">
-        <a href="/index.html">Módulos</a>
+        <!-- Ajuste dos links para o novo portal/estrutura -->
+        <a href="/">Módulos</a>
         <a href="/cadastro_unidades.html">Cadastro de Unidades</a>
-        <a class="ativo" href="/dashboard.html">Dashboard</a>
+        <a class="ativo" href="/chavevr/dashboard.html">Dashboard</a>
     </div>
 
     <div class="container">
@@ -23,29 +25,31 @@
         <h1>Dashboard - ChaveVR</h1>
 
         <div class="cards">
-            <div id="cardTotal" class="card" style="background-color:#ffe0b2;">
+            <!-- Adicionando a classe 'card-clickable' e a função 'filtrarPorCard' para filtro automático -->
+            <div id="cardTotal" class="card card-clickable" style="background-color:#ffe0b2;" onclick="filtrarPorCard('total')">
                 <h2>Total Unidades</h2>
                 <p>0</p>
             </div>
-            <div id="cardEntregues" class="card" style="background-color:#ff7070; color:white;">
+            <div id="cardEntregues" class="card card-clickable" style="background-color:#ff7070; color:white;" onclick="filtrarPorCard('entregues')">
                 <h2>Chaves Entregues</h2>
                 <p>0</p>
             </div>
-            <div id="cardPendentes" class="card" style="background-color:#9fa8da;">
+            <div id="cardPendentes" class="card card-clickable" style="background-color:#9fa8da;" onclick="filtrarPorCard('pendentes')">
                 <h2>Unidades Pendentes</h2>
                 <p>0</p>
             </div>
-            <div id="cardLiberadas" class="card" style="background-color:#81c784;">
+            <div id="cardLiberadas" class="card card-clickable" style="background-color:#81c784;" onclick="filtrarPorCard('liberadas')">
                 <h2>Liberadas (Obra)</h2>
                 <p>0</p>
             </div>
-            <div id="cardAprovadas" class="card" style="background-color:#4db6ac;">
+            <div id="cardAprovadas" class="card card-clickable" style="background-color:#4db6ac;" onclick="filtrarPorCard('aprovadas')">
                 <h2>Vistorias Aprovadas</h2>
                 <p>0</p>
             </div>
             </div>
 
         <div class="filtros">
+            <!-- Manter onchange para filtro imediato -->
             <select id="fEmpreendimento" onchange="aplicarFiltro()">
                 </select>
             
@@ -58,9 +62,12 @@
                 <option value="Ajuste de cliente">Ajuste de cliente</option>
                 <option value="Liberada">Liberada</option>
                 <option value="Aprovada">Aprovada</option>
+                <option value="Cancelada">Cancelada</option>
             </select>
-
-            <button class="btn-primary" onclick="aplicarFiltro()">Filtrar</button>
+            
+            <!-- Botões para limpar os filtros -->
+            <button class="btn-secondary" onclick="limparFiltroCards()">Limpar Filtro Card</button>
+            <button class="btn-primary" onclick="limparFiltrosGerais()">Limpar Filtros Gerais</button>
         </div>
 
         <table>
