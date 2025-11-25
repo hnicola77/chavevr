@@ -323,6 +323,11 @@ tbody tr:hover {
     .filtros select {
         flex-basis: 45%;
     }
+
+    th, td {
+        /* Reduz o padding em telas menores para caber mais colunas */
+        padding: 8px 10px;
+    }
 }
 
 @media (max-width: 600px) {
@@ -347,5 +352,40 @@ tbody tr:hover {
     .top-menu {
         flex-direction: column;
         gap: 5px;
+    }
+
+    table, thead, tbody, th, td, tr {
+        display: block; /* Força a tabela a quebrar */
+    }
+
+    thead tr {
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
+    }
+
+    tr {
+        border: 1px solid #ccc;
+        margin-bottom: 10px;
+    }
+
+    td {
+        border: none;
+        border-bottom: 1px solid #eee;
+        position: relative;
+        padding-left: 50%;
+        text-align: right;
+    }
+
+    td:before {
+        content: attr(data-label);
+        position: absolute;
+        left: 6px;
+        width: 45%;
+        padding-right: 10px;
+        white-space: nowrap;
+        font-weight: bold;
+        text-align: left;
+        color: #007bff;
     }
 }
