@@ -1,8 +1,5 @@
-// ... (Mantenha todo o código existente, como listarUnidades, preencherSelects, etc.)
-
 // Dados fixos (Hardcoded) para preencher os selects
 const EMPREENDIMENTOS_FIXOS = [
-    // ... (Seus empreendimentos fixos)
     "New Jersey",
     "Honolulu",
     "Plaza de Espanha",
@@ -12,16 +9,13 @@ const EMPREENDIMENTOS_FIXOS = [
 ];
 
 const BLOCOS_FIXOS = [
-    // ... (Seus blocos fixos)
     "Bloco 01",
     "Bloco 02",
     "Bloco 03",
 ];
 
 let idEdicao = null;
-
-// Garante que o ID da unidade que está sendo editada seja mantido.
-let idAtual = null; 
+let idAtual = null;
 
 // Executa ao carregar a página
 document.addEventListener("DOMContentLoaded", () => {
@@ -33,25 +27,24 @@ document.addEventListener("DOMContentLoaded", () => {
  * FUNÇÕES DE LISTAGEM E PREENCHIMENTO
  ************************************************************/
 
-// Função para preencher os selects de Empreendimento e Bloco nos modais
 function preencherSelects() {
     // Selects do Modal Individual (mEmpreendimento, mBloco)
     preencherSelect(document.getElementById("mEmpreendimento"), EMPREENDIMENTOS_FIXOS, "Selecione o Empreendimento");
     preencherSelect(document.getElementById("mBloco"), BLOCOS_FIXOS, "Selecione o Bloco");
 
-    // NOVOS Selects do Modal em Lote (lEmpreendimento, lBloco)
+    // Selects do Modal em Lote (lEmpreendimento, lBloco)
     preencherSelect(document.getElementById("lEmpreendimento"), EMPREENDIMENTOS_FIXOS, "Selecione o Empreendimento");
     preencherSelect(document.getElementById("lBloco"), BLOCOS_FIXOS, "Selecione o Bloco");
 }
 
 function preencherSelect(selectElement, options, defaultText) {
+    if (!selectElement) return;
     selectElement.innerHTML = `<option value="">${defaultText}</option>`;
     options.forEach(option => {
         selectElement.innerHTML += `<option value="${option}">${option}</option>`;
     });
 }
 
-// ... (Mantenha a função listarUnidades completa que lista todas as colunas)
 async function listarUnidades() {
     try {
         const res = await fetch("/unidades");
@@ -88,17 +81,18 @@ async function listarUnidades() {
         });
     } catch (error) {
         console.error("Erro ao listar unidades:", error);
+        alert("Erro ao carregar unidades. Verifique o console.");
     }
 }
 
-
 /************************************************************
- * FUNÇÕES MODAL INDIVIDUAL (Sem alteração na lógica de salvar)
+ * FUNÇÕES MODAL INDIVIDUAL
  ************************************************************/
 function abrirModalNovo() {
-    // ... (Lógica de abertura e reset do modal individual)
+    console.log("abrirModalNovo chamado"); // DEBUG
+    
     document.getElementById("tituloModal").textContent = "Nova Unidade";
-    idAtual = null; // Reseta o ID para garantir que seja um novo cadastro
+    idAtual = null;
     document.getElementById("modalFundo").style.display = "flex";
     document.getElementById("mUnidade").readOnly = false;
     document.getElementById("mEmpreendimento").value = "";
@@ -116,14 +110,14 @@ function abrirModalNovo() {
     document.getElementById("mObservacao").value = "";
 }
 
-// ... (abrirModalEdicao, fecharModal, salvarModal - Mantenha as funções existentes)
 async function salvarModal() {
-    // Coleta dados e salva individualmente (POST ou PUT)
-    // ... (Mantenha sua função salvarModal completa e funcional)
+    console.log("salvarModal chamado"); // DEBUG
 
     const empreendimento = document.getElementById("mEmpreendimento").value;
     const bloco = document.getElementById("mBloco").value;
     const unidade = document.getElementById("mUnidade").value;
+
+    console.log("Valores:", { empreendimento, bloco, unidade }); // DEBUG
 
     if (!empreendimento || !bloco || !unidade) {
         alert("Empreendimento, Bloco e Unidade são obrigatórios.");
@@ -139,15 +133,17 @@ async function salvarModal() {
         habitavel: document.getElementById("mHabitavel").value,
         cvco: document.getElementById("mCVCO").value,
         chaves: document.getElementById("mChaves").value,
-        dataVistoria: document.getElementById("mDataVistoria").value,
-        horaVistoria: document.getElementById("mHoraVistoria").value,
-        agendadoPor: document.getElementById("mAgendadoPor").value,
-        dataLiberacao: document.getElementById("mDataLiberacao").value,
-        observacao: document.getElementById("mObservacao").value
+        dataVistoria: document.getElementById("mDataVistoria").value || null,
+        horaVistoria: document.getElementById("mHoraVistoria").value || null,
+        agendadoPor: document.getElementById("mAgendadoPor").value || null,
+        dataLiberacao: document.getElementById("mDataLiberacao").value || null,
+        observacao: document.getElementById("mObservacao").value || null
     };
 
     const metodo = idAtual ? 'PUT' : 'POST';
     const url = idAtual ? `/unidades/${idAtual}` : '/unidades';
+
+    console.log("Enviando:", { metodo, url, dados }); // DEBUG
 
     try {
         const res = await fetch(url, {
@@ -156,24 +152,31 @@ async function salvarModal() {
             body: JSON.stringify(dados)
         });
 
+        console.log("Status resposta:", res.status); // DEBUG
+
         if (res.ok) {
             fecharModal();
             listarUnidades();
             alert("Unidade salva com sucesso!");
         } else {
+            const textoErro = await res.text();
+            console.error("Erro do servidor:", textoErro); // DEBUG
             alert("Erro ao salvar. Verifique o console.");
         }
     } catch (error) {
         console.error("Erro na comunicação com o servidor:", error);
-        alert("Erro na comunicação com o servidor.");
+        alert("Erro na comunicação com o servidor. Verifique o console.");
     }
 }
+
 function fecharModal() {
     document.getElementById("modalFundo").style.display = "none";
     idAtual = null;
 }
-// ... (excluirUnidade - Mantenha a função existente)
+
 async function abrirModalEdicao(id) {
+    console.log("abrirModalEdicao chamado para ID:", id); // DEBUG
+    
     try {
         const res = await fetch(`/unidades/${id}`);
         const u = await res.json();
@@ -182,11 +185,10 @@ async function abrirModalEdicao(id) {
             document.getElementById("tituloModal").textContent = "Editar Unidade";
             idAtual = id;
 
-            // Preenche os campos
             document.getElementById("mEmpreendimento").value = u.empreendimento;
             document.getElementById("mBloco").value = u.bloco;
             document.getElementById("mUnidade").value = u.unidade;
-            document.getElementById("mUnidade").readOnly = true; // Não permite mudar o número da unidade
+            document.getElementById("mUnidade").readOnly = true;
 
             document.getElementById("mSituacao").value = u.situacao;
             document.getElementById("mFinanceiro").value = u.statusFinanceiro;
@@ -204,10 +206,13 @@ async function abrirModalEdicao(id) {
         }
     } catch (error) {
         console.error("Erro ao carregar dados para edição:", error);
+        alert("Erro ao carregar dados da unidade.");
     }
 }
 
 async function excluirUnidade(id) {
+    console.log("excluirUnidade chamado para ID:", id); // DEBUG
+    
     if (!confirm("Tem certeza que deseja excluir esta unidade?")) {
         return;
     }
@@ -223,16 +228,17 @@ async function excluirUnidade(id) {
         }
     } catch (error) {
         console.error("Erro na comunicação com o servidor ao excluir:", error);
+        alert("Erro ao excluir unidade.");
     }
 }
 
-
 /************************************************************
- * NOVAS FUNÇÕES MODAL EM LOTE
+ * FUNÇÕES MODAL EM LOTE
  ************************************************************/
 
 function abrirModalLote() {
-    // Reseta campos do lote
+    console.log("abrirModalLote chamado"); // DEBUG
+    
     document.getElementById("lEmpreendimento").value = "";
     document.getElementById("lBloco").value = "";
     document.getElementById("lUnidadeInicio").value = "";
@@ -246,17 +252,20 @@ function fecharModalLote() {
 }
 
 async function salvarModalLote() {
+    console.log("salvarModalLote chamado"); // DEBUG
+    
     const empreendimento = document.getElementById("lEmpreendimento").value;
     const bloco = document.getElementById("lBloco").value;
     const inicio = parseInt(document.getElementById("lUnidadeInicio").value);
     const fim = parseInt(document.getElementById("lUnidadeFim").value);
+
+    console.log("Valores lote:", { empreendimento, bloco, inicio, fim }); // DEBUG
 
     if (!empreendimento || !bloco || isNaN(inicio) || isNaN(fim) || inicio > fim) {
         alert("Preencha o Empreendimento, Bloco e uma faixa numérica válida (Início deve ser menor ou igual a Fim).");
         return;
     }
     
-    // Confirmação para evitar cadastros acidentais muito grandes
     if (fim - inicio > 100) {
         if (!confirm(`Você está prestes a cadastrar ${fim - inicio + 1} unidades. Tem certeza?`)) {
             return;
@@ -270,12 +279,16 @@ async function salvarModalLote() {
         fim: fim
     };
 
+    console.log("Enviando lote:", dadosLote); // DEBUG
+
     try {
-        const res = await fetch('/unidades/lote', { // NOVA ROTA
+        const res = await fetch('/unidades/lote', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(dadosLote)
         });
+
+        console.log("Status resposta lote:", res.status); // DEBUG
 
         if (res.ok) {
             fecharModalLote();
@@ -283,6 +296,7 @@ async function salvarModalLote() {
             alert(`Lote de ${fim - inicio + 1} unidades cadastrado com sucesso!`);
         } else {
             const erro = await res.json();
+            console.error("Erro do servidor:", erro); // DEBUG
             alert(`Erro ao cadastrar lote: ${erro.message || 'Verifique o console.'}`);
         }
     } catch (error) {
@@ -290,5 +304,3 @@ async function salvarModalLote() {
         alert("Erro na comunicação com o servidor.");
     }
 }
-
-
