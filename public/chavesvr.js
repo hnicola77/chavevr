@@ -14,8 +14,6 @@ const EMPREENDIMENTOS_FIXOS = [
 
 const BLOCOS_FIXOS = [
     // ... (Seus blocos fixos)
-    "Torre A",
-    "Torre B",
     "Bloco 01",
     "Bloco 02",
     "Bloco 03",
@@ -293,3 +291,4 @@ async function salvarModalLote() {
         alert("Erro na comunicação com o servidor.");
     }
 }
+
