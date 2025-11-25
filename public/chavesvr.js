@@ -8,7 +8,6 @@ let idEditando = null;
 
 // Dados fixos (Hardcoded) para preencher os selects do modal
 const EMPREENDIMENTOS_FIXOS = [
-    "Residencial Horizonte",
     "New Jersey",
     "Honolulu",
     "Plaza de Espanha",
@@ -18,8 +17,6 @@ const EMPREENDIMENTOS_FIXOS = [
 ];
 
 const BLOCOS_FIXOS = [
-    "Torre A",
-    "Torre B",
     "Bloco 01",
     "Bloco 02",
     "Bloco 03",
@@ -240,4 +237,5 @@ async function excluirUnidade(id) {
         alert("Falha ao excluir. Verifique o console.");
     }
 }
+
 
