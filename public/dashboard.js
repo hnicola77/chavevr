@@ -1,10 +1,11 @@
 /************************************************************
  * DASHBOARD – JAVASCRIPT PRINCIPAL (public/dashboard.js)
- * VERSÃO FINAL COM CORREÇÕES DE FILTRO E SEM CVCO
+ * VERSÃO FINAL COM CORREÇÕES DE FILTRO, SEM CVCO E COM FILTRO POR CARD
  ************************************************************/
 
 let todasUnidades = [];
 let unidadesFiltradas = [];
+let currentCardFilter = 'total'; // Novo estado para o filtro ativo do card. 'total' é o padrão (sem filtro).
 
 // Dados fixos (Hardcoded) para preencher os selects. 
 // Estes devem ser os mesmos usados no chavesvr.js
@@ -44,98 +45,178 @@ document.addEventListener("DOMContentLoaded", async () => {
  * PREENCHER FILTROS
  * (Garante que o value inicial seja "" para não filtrar o array)
  ************************************************************/
-function preencherSelectsIniciais() {
-    
-    // 1. Preenche o fEmpreendimento
-    const selectEmp = document.getElementById("fEmpreendimento");
-    // CRÍTICO: value="" para o filtro funcionar na inicialização
-    selectEmp.innerHTML = '<option value="">Empreendimento</option>'; 
-    
-    EMPREENDIMENTOS_FIXOS.forEach(e => {
-        selectEmp.innerHTML += `<option value="${e}">${e}</option>`;
-    });
+function preencherSelect(selectElement, options, defaultText) {
+    selectElement.innerHTML = '';
+    const defaultOption = document.createElement('option');
+    defaultOption.value = '';
+    defaultOption.textContent = defaultText;
+    selectElement.appendChild(defaultOption);
 
-    // 2. Chama a função para preencher o Bloco
-    preencherFiltroBloco(); 
+    options.forEach(option => {
+        const opt = document.createElement('option');
+        opt.value = option;
+        opt.textContent = option;
+        selectElement.appendChild(opt);
+    });
 }
 
-function preencherFiltroBloco() {
-    const selectBloco = document.getElementById("fBloco");
-    
-    // CRÍTICO: value="" para o filtro funcionar na inicialização
-    selectBloco.innerHTML = '<option value="">Bloco</option>'; 
+function preencherSelectsIniciais() {
+    preencherSelect(document.getElementById('fEmpreendimento'), EMPREENDIMENTOS_FIXOS, 'Empreendimento');
+    // Para o bloco, a lista inicial é vazia, mas com o texto padrão
+    const fBloco = document.getElementById('fBloco');
+    fBloco.innerHTML = '<option value="">Bloco</option>'; 
+}
 
-    BLOCOS_FIXOS.forEach(b => {
-        selectBloco.innerHTML += `<option value="${b}">${b}</option>`;
-    });
+// Preenche o filtro de Bloco com base no Empreendimento selecionado (ou todos)
+function preencherFiltroBloco() {
+    const empreendimentoSelecionado = document.getElementById("fEmpreendimento").value;
+    const fBloco = document.getElementById('fBloco');
+    
+    // Resetar o filtro de Bloco antes de preencher
+    preencherSelect(fBloco, [], 'Bloco');
+    
+    if (empreendimentoSelecionado) {
+        // Em um sistema real, você filtraria os blocos por empreendimento.
+        // Aqui, para o propósito do teste, apenas preenchemos com a lista fixa.
+        preencherSelect(fBloco, BLOCOS_FIXOS, 'Bloco');
+    }
+    
+    // Dispara a aplicação do filtro após a mudança
+    aplicarFiltro();
 }
 
 
 /************************************************************
- * CARREGAR DADOS DO SERVIDOR
+ * FUNÇÕES DE CARREGAMENTO DE DADOS
  ************************************************************/
 async function carregarDados() {
     try {
-        const res = await fetch("/unidades");
-        // 'todasUnidades' recebe a lista completa de unidades cadastradas
-        todasUnidades = await res.json();
+        const response = await fetch('/unidades');
+        if (!response.ok) throw new Error('Falha ao carregar unidades.');
+        todasUnidades = await response.json();
     } catch (error) {
-        console.error("Erro ao carregar dados para o Dashboard:", error); 
+        console.error('Erro ao carregar dados:', error);
+        alert('Erro ao carregar dados do servidor.');
+        todasUnidades = [];
     }
 }
 
 /************************************************************
- * LÓGICA DE FILTRO E ATUALIZAÇÃO
+ * FUNÇÕES DE FILTRO POR CARD
  ************************************************************/
-function aplicarFiltro() {
-    const fEmp = document.getElementById("fEmpreendimento").value;
-    const fBloco = document.getElementById("fBloco").value;
-    const fSit = document.getElementById("fSituacao").value;
 
-    unidadesFiltradas = todasUnidades.filter(u => {
-        // A lógica !fEmp verifica se o filtro está vazio (""). Se estiver, retorna true.
-        const matchEmp = !fEmp || u.empreendimento === fEmp;
-        const matchBloco = !fBloco || u.bloco === fBloco;
-        const matchSit = !fSit || u.situacao === fSit;
-
-        return matchEmp && matchBloco && matchSit;
-    });
-
-    atualizarDashboard();
+// 1. Função chamada ao clicar em um card
+function filtrarPorCard(filterKey) {
+    if (currentCardFilter === filterKey) {
+        // Se clicar no card ativo, limpa o filtro do card (volta para 'total')
+        currentCardFilter = 'total';
+    } else {
+        currentCardFilter = filterKey;
+    }
+    aplicarFiltro();
 }
 
+// 2. Limpa apenas os filtros dos selects
+function limparFiltrosGerais() {
+    document.getElementById("fEmpreendimento").value = '';
+    document.getElementById("fBloco").value = '';
+    document.getElementById("fSituacao").value = '';
+    preencherFiltroBloco(); // Repreencher o Bloco (que chama aplicarFiltro)
+}
+
+// 3. Limpa o filtro do card
+function limparFiltroCards() {
+    currentCardFilter = 'total';
+    aplicarFiltro();
+}
+
+// 4. Função para marcar o card ativo
+function marcarCardAtivo() {
+    document.querySelectorAll('.card-clickable').forEach(card => {
+        card.classList.remove('active-filter');
+    });
+
+    // Marca o card ativo, exceto 'total' (que é o padrão sem filtro)
+    if (currentCardFilter !== 'total') {
+        // Converte 'entregues' para 'cardEntregues' para encontrar o elemento
+        const cardId = 'card' + currentCardFilter.charAt(0).toUpperCase() + currentCardFilter.slice(1);
+        const activeCard = document.getElementById(cardId);
+        if (activeCard) {
+            activeCard.classList.add('active-filter');
+        }
+    }
+}
+
+
 /************************************************************
- * ATUALIZAR CARDS E TABELA (CVCO REMOVIDO)
+ * APLICAÇÃO DE FILTROS E RENDERIZAÇÃO
  ************************************************************/
-function atualizarDashboard() {
+function aplicarFiltro() {
+    // 1. Coleta os valores de filtro dos selects
+    const empreendimento = document.getElementById("fEmpreendimento").value;
+    const bloco = document.getElementById("fBloco").value;
+    const situacao = document.getElementById("fSituacao").value;
+
+    // 2. Marca o card ativo visualmente
+    marcarCardAtivo();
+
+    // 3. Filtra o array principal com base nos FILTROS GERAIS (selects)
+    let unidadesGerais = todasUnidades.filter(u => {
+        // Filtro de Empreendimento
+        if (empreendimento && u.empreendimento !== empreendimento) return false;
+
+        // Filtro de Bloco
+        if (bloco && u.bloco !== bloco) return false;
+
+        // Filtro de Situação
+        if (situacao && u.situacao !== situacao) return false;
+
+        return true;
+    });
     
-    // --- 1. CALCULAR TOTAIS ---
-    const total = unidadesFiltradas.length;
-    
-    const entregues = unidadesFiltradas.filter(u => u.chaves === "Entregue").length;
-    
-    const pendentes = unidadesFiltradas.filter(u => 
-        u.situacao !== "Liberada" && u.situacao !== "Aprovada"
+    // 4. Recalcula os cards (sempre baseado no array filtrado pelos selects)
+    // Os contadores dos cards refletem o universo filtrado pelos selects
+
+    const totalGeral = unidadesGerais.length;
+    const entreguesGeral = unidadesGerais.filter(u => u.chaves === "Entregue").length;
+    const pendentesGeral = unidadesGerais.filter(u => 
+        u.situacao !== 'Liberada' && u.situacao !== 'Aprovada' && u.chaves !== 'Entregue'
     ).length;
-    
-    const liberadas = unidadesFiltradas.filter(u => u.situacao === "Liberada").length;
-    
-    const aprovadas = unidadesFiltradas.filter(u => u.situacao === "Aprovada").length;
+    const liberadasGeral = unidadesGerais.filter(u => u.situacao === "Liberada").length;
+    const aprovadasGeral = unidadesGerais.filter(u => u.situacao === "Aprovada").length;
 
-    // --- 2. ATUALIZAR CARDS ---
-    document.querySelector("#cardTotal p").textContent = total;
-    document.querySelector("#cardEntregues p").textContent = entregues;
-    document.querySelector("#cardPendentes p").textContent = pendentes;
-    document.querySelector("#cardLiberadas p").textContent = liberadas;
-    document.querySelector("#cardAprovadas p").textContent = aprovadas;
-    // O Card CVCO foi removido do HTML.
+    // --- 5. ATUALIZAR CARDS (com base em unidadesGerais) ---
+    document.querySelector("#cardTotal p").textContent = totalGeral;
+    document.querySelector("#cardEntregues p").textContent = entreguesGeral;
+    document.querySelector("#cardPendentes p").textContent = pendentesGeral;
+    document.querySelector("#cardLiberadas p").textContent = liberadasGeral;
+    document.querySelector("#cardAprovadas p").textContent = aprovadasGeral;
 
-    // --- 3. ATUALIZAR TABELA (Todos os campos listados) ---
+    // 6. Aplica o FILTRO DO CARD sobre o array já filtrado pelos selects
+    unidadesFiltradas = unidadesGerais.filter(u => {
+        switch (currentCardFilter) {
+            case 'total':
+                return true; // Sem filtro adicional
+            case 'entregues':
+                return u.chaves === "Entregue";
+            case 'pendentes':
+                // A unidade é pendente se não for Liberada, Aprovada, nem Chaves Entregues
+                return u.situacao !== 'Liberada' && u.situacao !== 'Aprovada' && u.chaves !== 'Entregue';
+            case 'liberadas':
+                return u.situacao === "Liberada";
+            case 'aprovadas':
+                return u.situacao === "Aprovada";
+            default:
+                return true;
+        }
+    });
+
+    // 7. Renderiza a tabela com o resultado final (unidadesFiltradas)
     const tbody = document.getElementById("tabelaDash");
     tbody.innerHTML = "";
 
-    if (total === 0) {
-        // Colspan é 9 porque removemos o CVCO, mas mantemos o restante
+    if (unidadesFiltradas.length === 0) {
+        // Colspan é 9 (verificado no HTML)
         tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;">Nenhuma unidade encontrada com estes filtros.</td></tr>';
         return;
     }
@@ -155,7 +236,6 @@ function atualizarDashboard() {
             <td>${u.dataVistoria || '-'}</td>
             <td>${u.dataLiberacao || '-'}</td>
         `;
-
         tbody.appendChild(tr);
     });
 }
