@@ -1,5 +1,3 @@
-// ... (Mantenha o código de importação do express, sqlite3, cors e setup do banco de dados)
-
 const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const cors = require('cors');
@@ -8,46 +6,21 @@ const path = require('path');
 const app = express();
 const PORT = 3000;
 
-// Configuração do banco de dados (Deve ser a mesma configuração com persistência no Render)
-const DB_PATH = path.join('/mnt/data', 'chavesvr.db');
-// Se o disco de persistência falhar, ele usa o local
+// O Render usa o caminho de montagem do disco de persistência para salvar dados.
+// Seu Mount path está configurado como /data.
+const DB_PATH = path.join('/data', 'chavesvr.db'); 
+console.log(`Tentando conectar ao banco de dados persistente em: ${DB_PATH}`);
+
+// Configuração do banco de dados (Sem fallback para local)
 const db = new sqlite3.Database(DB_PATH, (err) => {
     if (err) {
-        console.error("Erro ao abrir ou criar o banco de dados em /mnt/data:", err.message);
-        // Tenta usar o diretório local como fallback (não persistente no Render)
-        const LOCAL_DB_PATH = path.join(__dirname, 'chavesvr.db');
-        const localDb = new sqlite3.Database(LOCAL_DB_PATH, (localErr) => {
-            if (localErr) {
-                return console.error("Erro FATAL ao abrir banco de dados local:", localErr.message);
-            }
-            console.log('Usando banco de dados local (não persistente).');
-            global.db = localDb;
-            // Cria a tabela
-            global.db.serialize(() => {
-                global.db.run(`
-                    CREATE TABLE IF NOT EXISTS unidades (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        empreendimento TEXT,
-                        bloco TEXT,
-                        unidade TEXT,
-                        situacao TEXT,
-                        statusFinanceiro TEXT,
-                        habitavel TEXT,
-                        cvco TEXT,
-                        chaves TEXT,
-                        dataVistoria TEXT,
-                        horaVistoria TEXT,
-                        agendadoPor TEXT,
-                        dataLiberacao TEXT,
-                        observacao TEXT
-                    )
-                `);
-            });
-        });
-        return;
+        // Se houver erro aqui, o problema é no disco do Render.
+        // O log FATAL é essencial para debugar.
+        return console.error("Erro FATAL ao abrir o banco de dados persistente:", err.message);
     }
-    console.log('Conectado ao banco de dados SQLite persistente em /mnt/data.');
+    console.log('Conectado ao banco de dados SQLite persistente.');
     global.db = db;
+    
     // Cria a tabela
     global.db.serialize(() => {
         global.db.run(`
@@ -68,6 +41,7 @@ const db = new sqlite3.Database(DB_PATH, (err) => {
                 observacao TEXT
             )
         `);
+        console.log('Tabela "unidades" verificada ou criada.');
     });
 });
 
@@ -76,10 +50,11 @@ app.use(express.json());
 // Serve arquivos estáticos da pasta public (HTML, CSS, JS)
 app.use(express.static(path.join(__dirname, "public")));
 
-
 /************************************************************
- * NOVA ROTA: CADASTRO EM LOTE
+ * ROTAS DE UNIDADES (EXISTENTES E LOTE)
  ************************************************************/
+
+// Rota POST para Cadastro em Lote
 app.post('/unidades/lote', (req, res) => {
     const { empreendimento, bloco, inicio, fim } = req.body;
 
@@ -90,14 +65,13 @@ app.post('/unidades/lote', (req, res) => {
     const count = fim - inicio + 1;
     let successfulInserts = 0;
     
-    // Inicia uma transação para garantir que todas as inserções sejam rápidas
     global.db.serialize(() => {
         global.db.run("BEGIN TRANSACTION;");
 
         for (let i = inicio; i <= fim; i++) {
-            const unidade = i.toString().padStart(3, '0'); // Garante formato 101, 102, 001, etc.
+            const unidade = i.toString().padStart(3, '0');
             
-            // Valores padrão para o cadastro em lote
+            // Valores padrão
             const defaults = {
                 situacao: 'Em obra',
                 statusFinanceiro: 'Pendente',
@@ -137,7 +111,6 @@ app.post('/unidades/lote', (req, res) => {
                 console.error("Erro durante o COMMIT da transação:", err.message);
                 return res.status(500).json({ message: "Erro interno ao finalizar o cadastro em lote." });
             }
-            // Verifica se todas as inserções foram bem-sucedidas antes de enviar 200
             if (successfulInserts === count) {
                 res.status(201).json({ message: `${successfulInserts} unidades cadastradas com sucesso.` });
             } else {
@@ -147,8 +120,7 @@ app.post('/unidades/lote', (req, res) => {
     });
 });
 
-
-// ... (Mantenha as rotas GET, POST /unidades, PUT, DELETE existentes)
+// Rota GET para listar todas as unidades
 app.get('/unidades', (req, res) => {
     global.db.all("SELECT * FROM unidades", [], (err, rows) => {
         if (err) {
@@ -158,6 +130,7 @@ app.get('/unidades', (req, res) => {
     });
 });
 
+// Rota GET para buscar unidade por ID
 app.get('/unidades/:id', (req, res) => {
     const { id } = req.params;
     global.db.get("SELECT * FROM unidades WHERE id = ?", [id], (err, row) => {
@@ -168,6 +141,7 @@ app.get('/unidades/:id', (req, res) => {
     });
 });
 
+// Rota POST para cadastro individual
 app.post('/unidades', (req, res) => {
     const { 
         empreendimento, bloco, unidade, situacao, statusFinanceiro, habitavel, cvco, chaves, 
@@ -194,6 +168,7 @@ app.post('/unidades', (req, res) => {
     stmt.finalize();
 });
 
+// Rota PUT para atualização
 app.put('/unidades/:id', (req, res) => {
     const { id } = req.params;
     const { 
@@ -223,6 +198,7 @@ app.put('/unidades/:id', (req, res) => {
     stmt.finalize();
 });
 
+// Rota DELETE
 app.delete('/unidades/:id', (req, res) => {
     const { id } = req.params;
     global.db.run("DELETE FROM unidades WHERE id = ?", id, function(err) {
@@ -233,8 +209,9 @@ app.delete('/unidades/:id', (req, res) => {
     });
 });
 
-
-// ... (Mantenha o listen do servidor)
+/************************************************************
+ * INICIALIZAÇÃO DO SERVIDOR
+ ************************************************************/
 app.listen(PORT, () => {
     console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
