@@ -9,7 +9,6 @@ let unidadesFiltradas = [];
 // Dados fixos (Hardcoded) para preencher os selects. 
 // Estes devem ser os mesmos usados no chavesvr.js
 const EMPREENDIMENTOS_FIXOS = [
-    "Residencial Horizonte",
     "New Jersey",
     "Honolulu",
     "Plaza de Espanha",
