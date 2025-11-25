@@ -3,90 +3,161 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard – ChaveVR</title>
+    <title>Dashboard — ChaveVR</title>
     
-    <link rel="stylesheet" href="/styles.css"> 
+    <link rel="stylesheet" href="/styles.css">
     
-    <!-- Este script contém a lógica do dashboard, incluindo a nova funcionalidade de filtro por card -->
-    <script src="/dashboard.js" defer></script>
+    <!-- Chart.js para gráficos -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    
+    <!-- SheetJS para exportar Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <!-- Lucide Icons (via CDN) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <script src="/dashboard_improved.js" defer></script>
 </head>
 
 <body>
 
     <div class="top-menu">
-        <!-- Ajuste dos links para o novo portal/estrutura -->
-        <a href="/">Módulos</a>
+        <a href="/index.html">Módulos</a>
         <a href="/cadastro_unidades.html">Cadastro de Unidades</a>
-        <a class="ativo" href="/chavevr/dashboard.html">Dashboard</a>
+        <a class="ativo" href="/dashboard.html">Dashboard</a>
+        
+        <!-- Toggle Modo Escuro -->
+        <div style="margin-left: auto;">
+            <button id="toggleDarkMode" class="btn-icon" title="Alternar modo escuro/claro">
+                🌙
+            </button>
+        </div>
     </div>
 
     <div class="container">
 
-        <h1>Dashboard - ChaveVR</h1>
-
-        <div class="cards">
-            <!-- Adicionando a classe 'card-clickable' e a função 'filtrarPorCard' para filtro automático -->
-            <div id="cardTotal" class="card card-clickable" style="background-color:#ffe0b2;" onclick="filtrarPorCard('total')">
-                <h2>Total Unidades</h2>
-                <p>0</p>
-            </div>
-            <div id="cardEntregues" class="card card-clickable" style="background-color:#ff7070; color:white;" onclick="filtrarPorCard('entregues')">
-                <h2>Chaves Entregues</h2>
-                <p>0</p>
-            </div>
-            <div id="cardPendentes" class="card card-clickable" style="background-color:#9fa8da;" onclick="filtrarPorCard('pendentes')">
-                <h2>Unidades Pendentes</h2>
-                <p>0</p>
-            </div>
-            <div id="cardLiberadas" class="card card-clickable" style="background-color:#81c784;" onclick="filtrarPorCard('liberadas')">
-                <h2>Liberadas (Obra)</h2>
-                <p>0</p>
-            </div>
-            <div id="cardAprovadas" class="card card-clickable" style="background-color:#4db6ac;" onclick="filtrarPorCard('aprovadas')">
-                <h2>Vistorias Aprovadas</h2>
-                <p>0</p>
-            </div>
-            </div>
-
-        <div class="filtros">
-            <!-- Manter onchange para filtro imediato -->
-            <select id="fEmpreendimento" onchange="aplicarFiltro()">
-                </select>
-            
-            <select id="fBloco" onchange="aplicarFiltro()">
-                </select>
-
-            <select id="fSituacao" onchange="aplicarFiltro()">
-                <option value="">Situação</option> 
-                <option value="Em obra">Em obra</option>
-                <option value="Ajuste de cliente">Ajuste de cliente</option>
-                <option value="Liberada">Liberada</option>
-                <option value="Aprovada">Aprovada</option>
-                <option value="Cancelada">Cancelada</option>
-            </select>
-            
-            <!-- Botões para limpar os filtros -->
-            <button class="btn-secondary" onclick="limparFiltroCards()">Limpar Filtro Card</button>
-            <button class="btn-primary" onclick="limparFiltrosGerais()">Limpar Filtros Gerais</button>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h1 style="margin: 0;">Dashboard - ChaveVR</h1>
+            <button class="btn-primary" onclick="exportarParaExcel()">
+                📥 Exportar Excel
+            </button>
         </div>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>Empreendimento</th>
-                    <th>Bloco</th>
-                    <th>Unidade</th>
-                    <th>Situação</th>
-                    <th>Financeiro</th>
-                    <th>Habitável</th>
-                    <th>Chaves</th>
-                    <th>Vistoria</th>
-                    <th>Liberação</th>
-                </tr>
-            </thead>
-            <tbody id="tabelaDash">
+        <!-- Cards de Resumo -->
+        <div class="cards">
+            <div id="cardTotal" class="card card-clickable card-animated" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;" onclick="filtrarPorCard('total')">
+                <div class="card-icon">📊</div>
+                <h2>Total Unidades</h2>
+                <p class="card-number">0</p>
+            </div>
+            <div id="cardEntregues" class="card card-clickable card-animated" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color:white;" onclick="filtrarPorCard('entregues')">
+                <div class="card-icon">🔑</div>
+                <h2>Chaves Entregues</h2>
+                <p class="card-number">0</p>
+                <p class="card-percent">0%</p>
+            </div>
+            <div id="cardPendentes" class="card card-clickable card-animated" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);" onclick="filtrarPorCard('pendentes')">
+                <div class="card-icon">⏳</div>
+                <h2>Pendentes</h2>
+                <p class="card-number">0</p>
+                <p class="card-percent">0%</p>
+            </div>
+            <div id="cardLiberadas" class="card card-clickable card-animated" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);" onclick="filtrarPorCard('liberadas')">
+                <div class="card-icon">✅</div>
+                <h2>Liberadas</h2>
+                <p class="card-number">0</p>
+                <p class="card-percent">0%</p>
+            </div>
+            <div id="cardAprovadas" class="card card-clickable card-animated" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);" onclick="filtrarPorCard('aprovadas')">
+                <div class="card-icon">🎉</div>
+                <h2>Aprovadas</h2>
+                <p class="card-number">0</p>
+                <p class="card-percent">0%</p>
+            </div>
+        </div>
+
+        <!-- Gráficos -->
+        <div class="charts-container">
+            <div class="chart-box">
+                <h3>Distribuição por Situação</h3>
+                <canvas id="chartSituacao"></canvas>
+            </div>
+            <div class="chart-box">
+                <h3>Status de Entrega</h3>
+                <canvas id="chartEntrega"></canvas>
+            </div>
+        </div>
+
+        <!-- Filtros Melhorados -->
+        <div class="filtros-modernos">
+            <div class="filtro-item">
+                <label>🔍 Busca Rápida</label>
+                <input type="text" id="buscaRapida" placeholder="Digite bloco ou unidade..." onkeyup="aplicarFiltro()">
+            </div>
+            
+            <div class="filtro-item">
+                <label>🏢 Empreendimento</label>
+                <select id="fEmpreendimento" onchange="aplicarFiltro()">
+                </select>
+            </div>
+            
+            <div class="filtro-item">
+                <label>🏗️ Bloco</label>
+                <select id="fBloco" onchange="aplicarFiltro()">
+                </select>
+            </div>
+
+            <div class="filtro-item">
+                <label>📋 Situação</label>
+                <select id="fSituacao" onchange="aplicarFiltro()">
+                    <option value="">Todas</option>
+                    <option value="Em obra">Em obra</option>
+                    <option value="Ajuste de cliente">Ajuste de cliente</option>
+                    <option value="Liberada">Liberada</option>
+                    <option value="Aprovada">Aprovada</option>
+                    <option value="Cancelada">Cancelada</option>
+                </select>
+            </div>
+            
+            <div class="filtro-item">
+                <label>🔑 Chaves</label>
+                <select id="fChaves" onchange="aplicarFiltro()">
+                    <option value="">Todas</option>
+                    <option value="Entregue">Entregue</option>
+                    <option value="Não entregue">Não entregue</option>
+                </select>
+            </div>
+
+            <div class="filtro-buttons">
+                <button class="btn-secondary" onclick="limparTodosFiltros()">🗑️ Limpar Tudo</button>
+            </div>
+        </div>
+
+        <!-- Tabela Melhorada -->
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Empreendimento</th>
+                        <th>Bloco</th>
+                        <th>Unidade</th>
+                        <th>Situação</th>
+                        <th>Financeiro</th>
+                        <th>Habitável</th>
+                        <th>Chaves</th>
+                        <th>Vistoria</th>
+                        <th>Liberação</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelaDash">
                 </tbody>
-        </table>
+            </table>
+        </div>
+
+        <!-- Rodapé com estatísticas -->
+        <div class="footer-stats">
+            <p>📊 <span id="totalExibindo">0</span> unidades exibidas de <span id="totalGeral">0</span> no total</p>
+        </div>
 
     </div>
 
