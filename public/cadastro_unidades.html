@@ -19,10 +19,11 @@
     <div class="container">
 
         <h1>Gerenciamento de Unidades</h1>
-        <p>Utilize o botão abaixo para adicionar ou gerenciar o status das unidades.</p>
+        <p>Utilize os botões abaixo para adicionar ou gerenciar o status das unidades.</p>
 
         <div style="margin-bottom: 20px;">
-            <button class="btn-primary" onclick="abrirModalNovo()">+ Nova Unidade</button>
+            <button class="btn-primary" onclick="abrirModalNovo()">+ Nova Unidade (Individual)</button>
+            <button class="btn-secondary" onclick="abrirModalLote()">+ Nova Unidade em Lote</button>
         </div>
 
         <table>
@@ -49,7 +50,6 @@
 
     <div id="modalFundo" class="modal-fundo" style="display: none;">
         <div class="modal">
-
             <div class="modal-header">
                 <h2 id="tituloModal">Nova Unidade</h2>
                 <span class="fechar" onclick="fecharModal()">&times;</span>
@@ -147,5 +147,45 @@
         </div>
     </div>
 
-</body>
+    <div id="modalLoteFundo" class="modal-fundo" style="display: none;">
+        <div class="modal">
+
+            <div class="modal-header">
+                <h2 id="tituloModalLote">Cadastro de Unidades em Lote</h2>
+                <span class="fechar" onclick="fecharModalLote()">&times;</span>
+            </div>
+
+            <div class="modal-body">
+
+                <p>Preencha o empreendimento, o bloco e a faixa numérica de unidades para cadastrar.</p>
+
+                <div class="form-group-triple">
+                    <label for="lEmpreendimento">Empreendimento:</label>
+                    <select id="lEmpreendimento" required>
+                        </select>
+                </div>
+                <div class="form-group-triple">
+                    <label for="lBloco">Bloco:</label>
+                    <select id="lBloco" required>
+                        </select>
+                </div>
+                <div class="form-group-triple">
+                    <label for="lUnidadeInicio">Faixa Início (Ex: 101):</label>
+                    <input type="number" id="lUnidadeInicio" required>
+                </div>
+                <div class="form-group-triple">
+                    <label for="lUnidadeFim">Faixa Fim (Ex: 110):</label>
+                    <input type="number" id="lUnidadeFim" required>
+                </div>
+                
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="fecharModalLote()">Cancelar</button>
+                <button class="btn-primary" onclick="salvarModalLote()">Cadastrar Lote</button>
+            </div>
+
+        </div>
+    </div>
+    </body>
 </html>
