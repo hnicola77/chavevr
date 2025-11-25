@@ -1,5 +1,5 @@
 /************************************************************
- * CADASTRO DE UNIDADES MELHORADO — ChaveVR
+ * CADASTRO DE UNIDADES MELHORADO — ChaveVR (CORRIGIDO)
  * Versão com busca, filtros, exportação e modo escuro
  ************************************************************/
 
@@ -38,6 +38,8 @@ document.addEventListener("DOMContentLoaded", () => {
  ************************************************************/
 function configurarModoEscuro() {
     const toggleBtn = document.getElementById('toggleDarkMode');
+    if (!toggleBtn) return;
+    
     const isDark = localStorage.getItem('darkMode') === 'true';
     
     if (isDark) {
@@ -57,6 +59,7 @@ function configurarModoEscuro() {
  * PREENCHER SELECTS
  ************************************************************/
 function preencherSelect(selectElement, options, defaultText) {
+    if (!selectElement) return;
     selectElement.innerHTML = `<option value="">${defaultText}</option>`;
     options.forEach(option => {
         selectElement.innerHTML += `<option value="${option}">${option}</option>`;
@@ -84,6 +87,8 @@ function preencherFiltros() {
 async function listarUnidades() {
     try {
         const res = await fetch("/unidades");
+        if (!res.ok) throw new Error('Erro ao carregar unidades');
+        
         todasUnidades = await res.json();
         unidadesFiltradas = [...todasUnidades];
         
@@ -97,10 +102,10 @@ async function listarUnidades() {
 }
 
 function filtrarTabela() {
-    const busca = document.getElementById("buscaRapida").value.toLowerCase();
-    const empreendimento = document.getElementById("filtroEmpreendimento").value;
-    const bloco = document.getElementById("filtroBloco").value;
-    const situacao = document.getElementById("filtroSituacao").value;
+    const busca = document.getElementById("buscaRapida")?.value.toLowerCase() || '';
+    const empreendimento = document.getElementById("filtroEmpreendimento")?.value || '';
+    const bloco = document.getElementById("filtroBloco")?.value || '';
+    const situacao = document.getElementById("filtroSituacao")?.value || '';
 
     unidadesFiltradas = todasUnidades.filter(u => {
         const matchBusca = !busca || 
@@ -120,15 +125,23 @@ function filtrarTabela() {
 }
 
 function limparFiltros() {
-    document.getElementById("buscaRapida").value = "";
-    document.getElementById("filtroEmpreendimento").value = "";
-    document.getElementById("filtroBloco").value = "";
-    document.getElementById("filtroSituacao").value = "";
+    const busca = document.getElementById("buscaRapida");
+    const emp = document.getElementById("filtroEmpreendimento");
+    const bloco = document.getElementById("filtroBloco");
+    const sit = document.getElementById("filtroSituacao");
+    
+    if (busca) busca.value = "";
+    if (emp) emp.value = "";
+    if (bloco) bloco.value = "";
+    if (sit) sit.value = "";
+    
     filtrarTabela();
 }
 
 function renderizarTabela() {
     const tbody = document.getElementById("tabelaUnidades");
+    if (!tbody) return;
+    
     tbody.innerHTML = "";
 
     if (unidadesFiltradas.length === 0) {
@@ -180,70 +193,99 @@ function atualizarCards() {
     const liberadas = todasUnidades.filter(u => u.situacao === 'Liberada').length;
     const entregues = todasUnidades.filter(u => u.chaves === 'Entregue').length;
 
-    document.getElementById('totalUnidades').textContent = total;
-    document.getElementById('totalLiberadas').textContent = liberadas;
-    document.getElementById('totalEntregues').textContent = entregues;
+    const totalEl = document.getElementById('totalUnidades');
+    const libEl = document.getElementById('totalLiberadas');
+    const entEl = document.getElementById('totalEntregues');
+    
+    if (totalEl) totalEl.textContent = total;
+    if (libEl) libEl.textContent = liberadas;
+    if (entEl) entEl.textContent = entregues;
 }
 
 function atualizarFooterStats() {
-    document.getElementById('totalExibindo').textContent = unidadesFiltradas.length;
-    document.getElementById('totalGeral').textContent = todasUnidades.length;
+    const exibindo = document.getElementById('totalExibindo');
+    const geral = document.getElementById('totalGeral');
+    
+    if (exibindo) exibindo.textContent = unidadesFiltradas.length;
+    if (geral) geral.textContent = todasUnidades.length;
 }
 
 /************************************************************
  * MODAL INDIVIDUAL
  ************************************************************/
 function abrirModalNovo() {
-    document.getElementById("tituloModal").textContent = "Nova Unidade";
+    const titulo = document.getElementById("tituloModal");
+    const modal = document.getElementById("modalFundo");
+    const unidadeInput = document.getElementById("mUnidade");
+    
+    if (titulo) titulo.textContent = "Nova Unidade";
     idAtual = null;
     limparFormularioModal();
-    document.getElementById("mUnidade").readOnly = false;
-    document.getElementById("modalFundo").style.display = "flex";
+    if (unidadeInput) unidadeInput.readOnly = false;
+    if (modal) modal.style.display = "flex";
 }
 
 function limparFormularioModal() {
-    document.getElementById("mEmpreendimento").value = "";
-    document.getElementById("mBloco").value = "";
-    document.getElementById("mUnidade").value = "";
-    document.getElementById("mSituacao").value = "Em obra";
-    document.getElementById("mFinanceiro").value = "Pendente";
-    document.getElementById("mHabitavel").value = "Não";
-    document.getElementById("mCVCO").value = "Pendente";
-    document.getElementById("mChaves").value = "Não entregue";
-    document.getElementById("mDataVistoria").value = "";
-    document.getElementById("mHoraVistoria").value = "";
-    document.getElementById("mAgendadoPor").value = "";
-    document.getElementById("mDataLiberacao").value = "";
-    document.getElementById("mObservacao").value = "";
+    const campos = {
+        mEmpreendimento: "",
+        mBloco: "",
+        mUnidade: "",
+        mSituacao: "Em obra",
+        mFinanceiro: "Pendente",
+        mHabitavel: "Não",
+        mCVCO: "Pendente",
+        mChaves: "Não entregue",
+        mDataVistoria: "",
+        mHoraVistoria: "",
+        mAgendadoPor: "",
+        mDataLiberacao: "",
+        mObservacao: ""
+    };
+    
+    Object.keys(campos).forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = campos[id];
+    });
 }
 
 async function abrirModalEdicao(id) {
     try {
         const res = await fetch(`/unidades/${id}`);
+        if (!res.ok) throw new Error('Erro ao carregar unidade');
+        
         const u = await res.json();
 
         if (u) {
-            document.getElementById("tituloModal").textContent = "Editar Unidade";
+            const titulo = document.getElementById("tituloModal");
+            const modal = document.getElementById("modalFundo");
+            const unidadeInput = document.getElementById("mUnidade");
+            
+            if (titulo) titulo.textContent = "Editar Unidade";
             idAtual = id;
 
-            document.getElementById("mEmpreendimento").value = u.empreendimento;
-            document.getElementById("mBloco").value = u.bloco;
-            document.getElementById("mUnidade").value = u.unidade;
-            document.getElementById("mUnidade").readOnly = true;
-
-            document.getElementById("mSituacao").value = u.situacao;
-            document.getElementById("mFinanceiro").value = u.statusFinanceiro;
-            document.getElementById("mHabitavel").value = u.habitavel;
-            document.getElementById("mCVCO").value = u.cvco;
-            document.getElementById("mChaves").value = u.chaves;
-
-            document.getElementById("mDataVistoria").value = u.dataVistoria || "";
-            document.getElementById("mHoraVistoria").value = u.horaVistoria || "";
-            document.getElementById("mAgendadoPor").value = u.agendadoPor || "";
-            document.getElementById("mDataLiberacao").value = u.dataLiberacao || "";
-            document.getElementById("mObservacao").value = u.observacao || "";
-
-            document.getElementById("modalFundo").style.display = "flex";
+            const campos = {
+                mEmpreendimento: u.empreendimento,
+                mBloco: u.bloco,
+                mUnidade: u.unidade,
+                mSituacao: u.situacao,
+                mFinanceiro: u.statusFinanceiro,
+                mHabitavel: u.habitavel,
+                mCVCO: u.cvco,
+                mChaves: u.chaves,
+                mDataVistoria: u.dataVistoria || "",
+                mHoraVistoria: u.horaVistoria || "",
+                mAgendadoPor: u.agendadoPor || "",
+                mDataLiberacao: u.dataLiberacao || "",
+                mObservacao: u.observacao || ""
+            };
+            
+            Object.keys(campos).forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = campos[id];
+            });
+            
+            if (unidadeInput) unidadeInput.readOnly = true;
+            if (modal) modal.style.display = "flex";
         }
     } catch (error) {
         console.error("Erro ao carregar dados para edição:", error);
@@ -252,14 +294,19 @@ async function abrirModalEdicao(id) {
 }
 
 function fecharModal() {
-    document.getElementById("modalFundo").style.display = "none";
+    const modal = document.getElementById("modalFundo");
+    if (modal) modal.style.display = "none";
     idAtual = null;
 }
 
 async function salvarModal() {
-    const empreendimento = document.getElementById("mEmpreendimento").value;
-    const bloco = document.getElementById("mBloco").value;
-    const unidade = document.getElementById("mUnidade").value;
+    console.log("Função salvarModal chamada"); // DEBUG
+    
+    const empreendimento = document.getElementById("mEmpreendimento")?.value;
+    const bloco = document.getElementById("mBloco")?.value;
+    const unidade = document.getElementById("mUnidade")?.value;
+
+    console.log("Valores:", { empreendimento, bloco, unidade }); // DEBUG
 
     if (!empreendimento || !bloco || !unidade) {
         mostrarNotificacao("Empreendimento, Bloco e Unidade são obrigatórios!", "error");
@@ -270,20 +317,22 @@ async function salvarModal() {
         empreendimento,
         bloco,
         unidade,
-        situacao: document.getElementById("mSituacao").value,
-        statusFinanceiro: document.getElementById("mFinanceiro").value,
-        habitavel: document.getElementById("mHabitavel").value,
-        cvco: document.getElementById("mCVCO").value,
-        chaves: document.getElementById("mChaves").value,
-        dataVistoria: document.getElementById("mDataVistoria").value,
-        horaVistoria: document.getElementById("mHoraVistoria").value,
-        agendadoPor: document.getElementById("mAgendadoPor").value,
-        dataLiberacao: document.getElementById("mDataLiberacao").value,
-        observacao: document.getElementById("mObservacao").value
+        situacao: document.getElementById("mSituacao")?.value || "Em obra",
+        statusFinanceiro: document.getElementById("mFinanceiro")?.value || "Pendente",
+        habitavel: document.getElementById("mHabitavel")?.value || "Não",
+        cvco: document.getElementById("mCVCO")?.value || "Pendente",
+        chaves: document.getElementById("mChaves")?.value || "Não entregue",
+        dataVistoria: document.getElementById("mDataVistoria")?.value || null,
+        horaVistoria: document.getElementById("mHoraVistoria")?.value || null,
+        agendadoPor: document.getElementById("mAgendadoPor")?.value || null,
+        dataLiberacao: document.getElementById("mDataLiberacao")?.value || null,
+        observacao: document.getElementById("mObservacao")?.value || null
     };
 
     const metodo = idAtual ? 'PUT' : 'POST';
     const url = idAtual ? `/unidades/${idAtual}` : '/unidades';
+
+    console.log("Enviando:", { metodo, url, dados }); // DEBUG
 
     try {
         const res = await fetch(url, {
@@ -292,14 +341,18 @@ async function salvarModal() {
             body: JSON.stringify(dados)
         });
 
+        console.log("Resposta status:", res.status); // DEBUG
+
         if (res.ok) {
             fecharModal();
-            listarUnidades();
+            await listarUnidades();
             mostrarNotificacao(
                 idAtual ? "Unidade atualizada com sucesso!" : "Unidade cadastrada com sucesso!",
                 "success"
             );
         } else {
+            const erro = await res.text();
+            console.error("Erro do servidor:", erro); // DEBUG
             mostrarNotificacao("Erro ao salvar unidade", "error");
         }
     } catch (error) {
@@ -315,42 +368,61 @@ function configurarCalculoLote() {
     const inicio = document.getElementById('lUnidadeInicio');
     const fim = document.getElementById('lUnidadeFim');
     
+    if (!inicio || !fim) return;
+    
     [inicio, fim].forEach(input => {
         input.addEventListener('input', calcularQuantidadeLote);
     });
 }
 
 function calcularQuantidadeLote() {
-    const inicio = parseInt(document.getElementById('lUnidadeInicio').value);
-    const fim = parseInt(document.getElementById('lUnidadeFim').value);
+    const inicioEl = document.getElementById('lUnidadeInicio');
+    const fimEl = document.getElementById('lUnidadeFim');
+    const quantEl = document.getElementById('quantidadeLote');
+    const alertEl = document.getElementById('alertaQuantidade');
+    
+    if (!inicioEl || !fimEl || !quantEl || !alertEl) return;
+    
+    const inicio = parseInt(inicioEl.value);
+    const fim = parseInt(fimEl.value);
     
     if (inicio && fim && inicio <= fim) {
         const quantidade = fim - inicio + 1;
-        document.getElementById('quantidadeLote').textContent = quantidade;
-        document.getElementById('alertaQuantidade').style.display = 'block';
+        quantEl.textContent = quantidade;
+        alertEl.style.display = 'block';
     } else {
-        document.getElementById('alertaQuantidade').style.display = 'none';
+        alertEl.style.display = 'none';
     }
 }
 
 function abrirModalLote() {
-    document.getElementById("lEmpreendimento").value = "";
-    document.getElementById("lBloco").value = "";
-    document.getElementById("lUnidadeInicio").value = "";
-    document.getElementById("lUnidadeFim").value = "";
-    document.getElementById("alertaQuantidade").style.display = "none";
-    document.getElementById("modalLoteFundo").style.display = "flex";
+    const modal = document.getElementById("modalLoteFundo");
+    const alertEl = document.getElementById("alertaQuantidade");
+    
+    const campos = ['lEmpreendimento', 'lBloco', 'lUnidadeInicio', 'lUnidadeFim'];
+    campos.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = "";
+    });
+    
+    if (alertEl) alertEl.style.display = "none";
+    if (modal) modal.style.display = "flex";
 }
 
 function fecharModalLote() {
-    document.getElementById("modalLoteFundo").style.display = "none";
+    const modal = document.getElementById("modalLoteFundo");
+    if (modal) modal.style.display = "none";
 }
 
 async function salvarModalLote() {
-    const empreendimento = document.getElementById("lEmpreendimento").value;
-    const bloco = document.getElementById("lBloco").value;
-    const inicio = parseInt(document.getElementById("lUnidadeInicio").value);
-    const fim = parseInt(document.getElementById("lUnidadeFim").value);
+    console.log("Função salvarModalLote chamada"); // DEBUG
+    
+    const empreendimento = document.getElementById("lEmpreendimento")?.value;
+    const bloco = document.getElementById("lBloco")?.value;
+    const inicio = parseInt(document.getElementById("lUnidadeInicio")?.value);
+    const fim = parseInt(document.getElementById("lUnidadeFim")?.value);
+
+    console.log("Valores Lote:", { empreendimento, bloco, inicio, fim }); // DEBUG
 
     if (!empreendimento || !bloco || isNaN(inicio) || isNaN(fim) || inicio > fim) {
         mostrarNotificacao("Preencha todos os campos corretamente!", "error");
@@ -367,6 +439,8 @@ async function salvarModalLote() {
 
     const dadosLote = { empreendimento, bloco, inicio, fim };
 
+    console.log("Enviando lote:", dadosLote); // DEBUG
+
     try {
         const res = await fetch('/unidades/lote', {
             method: 'POST',
@@ -374,12 +448,15 @@ async function salvarModalLote() {
             body: JSON.stringify(dadosLote)
         });
 
+        console.log("Resposta lote status:", res.status); // DEBUG
+
         if (res.ok) {
             fecharModalLote();
-            listarUnidades();
+            await listarUnidades();
             mostrarNotificacao(`${quantidade} unidades cadastradas com sucesso!`, "success");
         } else {
             const erro = await res.json();
+            console.error("Erro lote:", erro); // DEBUG
             mostrarNotificacao(`Erro: ${erro.message || 'Verifique os dados'}`, "error");
         }
     } catch (error) {
@@ -400,7 +477,7 @@ async function excluirUnidade(id) {
         const res = await fetch(`/unidades/${id}`, { method: 'DELETE' });
         
         if (res.ok) {
-            listarUnidades();
+            await listarUnidades();
             mostrarNotificacao("Unidade excluída com sucesso!", "success");
         } else {
             mostrarNotificacao("Erro ao excluir unidade", "error");
@@ -417,6 +494,11 @@ async function excluirUnidade(id) {
 function exportarParaExcel() {
     if (unidadesFiltradas.length === 0) {
         mostrarNotificacao('Nenhum dado para exportar!', 'error');
+        return;
+    }
+
+    if (typeof XLSX === 'undefined') {
+        mostrarNotificacao('Biblioteca de Excel não carregada. Recarregue a página.', 'error');
         return;
     }
 
@@ -477,3 +559,16 @@ function mostrarNotificacao(mensagem, tipo = 'info') {
         setTimeout(() => notificacao.remove(), 300);
     }, 3000);
 }
+
+// Torna as funções globais acessíveis
+window.abrirModalNovo = abrirModalNovo;
+window.abrirModalEdicao = abrirModalEdicao;
+window.fecharModal = fecharModal;
+window.salvarModal = salvarModal;
+window.abrirModalLote = abrirModalLote;
+window.fecharModalLote = fecharModalLote;
+window.salvarModalLote = salvarModalLote;
+window.excluirUnidade = excluirUnidade;
+window.filtrarTabela = filtrarTabela;
+window.limparFiltros = limparFiltros;
+window.exportarParaExcel = exportarParaExcel;
