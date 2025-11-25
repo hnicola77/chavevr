@@ -1,87 +1,162 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
+/************************************************************
+ * DASHBOARD – JAVASCRIPT PRINCIPAL (public/dashboard.js)
+ * VERSÃO FINAL CORRIGIDA (Remove CVCO e Corrige Filtros)
+ ************************************************************/
 
-<head>
-    <meta charset="UTF-8">
-    <title>Dashboard – ChaveVR</title>
+let todasUnidades = [];
+let unidadesFiltradas = [];
+
+// Dados fixos (Hardcoded) para preencher os selects. 
+// Devem ser os mesmos usados no chavesvr.js
+const EMPREENDIMENTOS_FIXOS = [
+    "Residencial Horizonte",
+    "New Jersey",
+    "Honolulu",
+    "Plaza de Espanha",
+    "Plaza Valencia",
+    "Boulevard Fecile",
+    "Federico Fellini"
+];
+
+const BLOCOS_FIXOS = [
+    "Torre A",
+    "Torre B",
+    "Bloco 01",
+    "Bloco 02",
+    "Bloco 03",
+];
+
+/************************************************************
+ * LOAD INICIAL
+ ************************************************************/
+document.addEventListener("DOMContentLoaded", async () => {
+    // 1. Garante que os selects de Empreendimento e Bloco usem valores iniciais vazios
+    preencherSelectsIniciais();
     
-    <link rel="stylesheet" href="/styles.css"> 
+    // 2. Carrega todos os dados do servidor
+    await carregarDados();
     
-    <script src="/dashboard.js" defer></script>
-</head>
+    // 3. Aplica o filtro inicial (agora funciona corretamente, mostrando tudo)
+    aplicarFiltro();
 
-<body>
+    // 4. Adiciona listener de evento para o filtro de Empreendimento
+    document.getElementById("fEmpreendimento").addEventListener("change", preencherFiltroBloco);
+});
 
-    <div class="top-menu">
-        <a href="/index.html">Módulos</a>
-        <a href="/cadastro_unidades.html">Cadastro de Unidades</a>
-        <a class="ativo" href="/dashboard.html">Dashboard</a>
-    </div>
+/************************************************************
+ * CORREÇÃO 1: PREENCHER FILTROS COM value=""
+ * (Impede que o filtro inicial bloqueie a visualização dos dados)
+ ************************************************************/
+function preencherSelectsIniciais() {
+    
+    // 1. Preenche o fEmpreendimento
+    const selectEmp = document.getElementById("fEmpreendimento");
+    // GARANTIDO: A primeira opção DEVE ter value="" para o filtro inicial funcionar
+    selectEmp.innerHTML = '<option value="">Empreendimento</option>'; 
+    
+    EMPREENDIMENTOS_FIXOS.forEach(e => {
+        selectEmp.innerHTML += `<option value="${e}">${e}</option>`;
+    });
 
-    <div class="container">
+    // 2. Chama a função para preencher o Bloco
+    preencherFiltroBloco(); 
+}
 
-        <h1>Dashboard - ChaveVR</h1>
+function preencherFiltroBloco() {
+    const selectBloco = document.getElementById("fBloco");
+    
+    // Reinicia o select de Bloco
+    selectBloco.innerHTML = '<option value="">Bloco</option>'; // GARANTIDO: Início vazio
 
-        <div class="cards">
-            <div id="cardTotal" class="card" style="background-color:#ffe0b2;">
-                <h2>Total Unidades</h2>
-                <p>0</p>
-            </div>
-            <div id="cardEntregues" class="card" style="background-color:#ff7070; color:white;">
-                <h2>Chaves Entregues</h2>
-                <p>0</p>
-            </div>
-            <div id="cardPendentes" class="card" style="background-color:#9fa8da;">
-                <h2>Unidades Pendentes</h2>
-                <p>0</p>
-            </div>
-            <div id="cardLiberadas" class="card" style="background-color:#81c784;">
-                <h2>Liberadas (Obra)</h2>
-                <p>0</p>
-            </div>
-            <div id="cardAprovadas" class="card" style="background-color:#4db6ac;">
-                <h2>Vistorias Aprovadas</h2>
-                <p>0</p>
-            </div>
-            </div>
+    BLOCOS_FIXOS.forEach(b => {
+        selectBloco.innerHTML += `<option value="${b}">${b}</option>`;
+    });
+}
 
-        <div class="filtros">
-            <select id="fEmpreendimento" onchange="aplicarFiltro()">
-                </select>
-            
-            <select id="fBloco" onchange="aplicarFiltro()">
-                </select>
 
-            <select id="fSituacao" onchange="aplicarFiltro()">
-                <option value="">Situação</option> 
-                <option value="Em obra">Em obra</option>
-                <option value="Ajuste de cliente">Ajuste de cliente</option>
-                <option value="Liberada">Liberada</option>
-                <option value="Aprovada">Aprovada</option>
-            </select>
+/************************************************************
+ * CARREGAR DADOS DO SERVIDOR
+ ************************************************************/
+async function carregarDados() {
+    try {
+        const res = await fetch("/unidades");
+        todasUnidades = await res.json();
+    } catch (error) {
+        // CORREÇÃO 2: Se houver erro, loga no console, mas não trava o aplicativo.
+        console.error("Erro ao carregar dados para o Dashboard:", error); 
+    }
+}
 
-            <button class="btn-primary" onclick="aplicarFiltro()">Filtrar</button>
-        </div>
+/************************************************************
+ * LÓGICA DE FILTRO E ATUALIZAÇÃO
+ ************************************************************/
+function aplicarFiltro() {
+    const fEmp = document.getElementById("fEmpreendimento").value;
+    const fBloco = document.getElementById("fBloco").value;
+    const fSit = document.getElementById("fSituacao").value;
 
-        <table>
-            <thead>
-                <tr>
-                    <th>Empreendimento</th>
-                    <th>Bloco</th>
-                    <th>Unidade</th>
-                    <th>Situação</th>
-                    <th>Financeiro</th>
-                    <th>Habitável</th>
-                    <th>Chaves</th>
-                    <th>Vistoria</th>
-                    <th>Liberação</th>
-                </tr>
-            </thead>
-            <tbody id="tabelaDash">
-                </tbody>
-        </table>
+    unidadesFiltradas = todasUnidades.filter(u => {
+        // O filtro só é aplicado se o valor não for uma string vazia ("")
+        const matchEmp = !fEmp || u.empreendimento === fEmp;
+        const matchBloco = !fBloco || u.bloco === fBloco;
+        const matchSit = !fSit || u.situacao === fSit;
 
-    </div>
+        return matchEmp && matchBloco && matchSit;
+    });
 
-</body>
-</html>
+    atualizarDashboard();
+}
+
+/************************************************************
+ * ATUALIZAR CARDS E TABELA (CVCO REMOVIDO)
+ ************************************************************/
+function atualizarDashboard() {
+    
+    // --- 1. CALCULAR TOTAIS ---
+    const total = unidadesFiltradas.length;
+    
+    const entregues = unidadesFiltradas.filter(u => u.chaves === "Entregue").length;
+    
+    const pendentes = unidadesFiltradas.filter(u => 
+        u.situacao !== "Liberada" && u.situacao !== "Aprovada"
+    ).length;
+    
+    const liberadas = unidadesFiltradas.filter(u => u.situacao === "Liberada").length;
+    
+    const aprovadas = unidadesFiltradas.filter(u => u.situacao === "Aprovada").length;
+
+    // --- 2. ATUALIZAR CARDS ---
+    document.querySelector("#cardTotal p").textContent = total;
+    document.querySelector("#cardEntregues p").textContent = entregues;
+    document.querySelector("#cardPendentes p").textContent = pendentes;
+    document.querySelector("#cardLiberadas p").textContent = liberadas;
+    document.querySelector("#cardAprovadas p").textContent = aprovadas;
+    // O Card CVCO já foi removido do HTML.
+
+    // --- 3. ATUALIZAR TABELA ---
+    const tbody = document.getElementById("tabelaDash");
+    tbody.innerHTML = "";
+
+    if (total === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">Nenhuma unidade encontrada com estes filtros.</td></tr>';
+        return;
+    }
+
+    unidadesFiltradas.forEach(u => {
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+            <td>${u.empreendimento}</td>
+            <td>${u.bloco}</td>
+            <td>${u.unidade}</td>
+            <td>${u.situacao}</td>
+            <td>${u.statusFinanceiro}</td>
+            <td>${u.habitavel}</td>
+            <td>${u.chaves}</td>
+            <td>${u.dataVistoria || '-'}</td>
+            <td>${u.dataLiberacao || '-'}</td>
+        `;
+
+        tbody.appendChild(tr);
+    });
+}
