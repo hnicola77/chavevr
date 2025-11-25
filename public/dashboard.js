@@ -19,8 +19,6 @@ const EMPREENDIMENTOS_FIXOS = [
 ];
 
 const BLOCOS_FIXOS = [
-    "Torre A",
-    "Torre B",
     "Bloco 01",
     "Bloco 02",
     "Bloco 03",
