@@ -86,7 +86,11 @@ async function carregarUnidades() {
                 <td>${u.unidade}</td>
                 <td>${u.situacao}</td>
                 <td>${u.statusFinanceiro}</td>
+                <td>${u.habitavel}</td>
+                <td>${u.cvco}</td>
                 <td>${u.chaves}</td>
+                <td>${u.dataVistoria || '-'}</td>
+                <td>${u.dataLiberacao || '-'}</td>
                 <td>
                     <button class="btn-small btn-editar" onclick="abrirModalEditar(${u.id})">Editar</button>
                     <button class="btn-small btn-excluir" onclick="excluirUnidade(${u.id})">Excluir</button>
@@ -236,3 +240,4 @@ async function excluirUnidade(id) {
         alert("Falha ao excluir. Verifique o console.");
     }
 }
+
