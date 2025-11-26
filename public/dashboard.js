@@ -22,6 +22,13 @@ const BLOCOS_FIXOS = [
     "Bloco 01",
     "Bloco 02",
     "Bloco 03",
+    "Bloco 04",
+    "Bloco 05",
+    "Bloco 06",
+    "Bloco 07",
+    "Bloco 08",
+    "Bloco 09",
+    "Bloco 10",
 ];
 
 /************************************************************
