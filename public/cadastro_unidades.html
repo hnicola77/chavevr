@@ -1,30 +1,33 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
     <meta charset="UTF-8">
-    <title>Cadastro de Unidades — ChaveVR</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Unidades - ChaveVR</title>
     <link rel="stylesheet" href="/styles.css">
 </head>
-
 <body>
 
+    <!-- MENU SUPERIOR -->
     <div class="top-menu">
         <a href="/index.html">Módulos</a>
         <a class="ativo" href="/cadastro_unidades.html">Cadastro de Unidades</a>
         <a href="/dashboard.html">Dashboard</a>
     </div>
 
+    <!-- CONTEÚDO PRINCIPAL -->
     <div class="container">
-
+        
         <h1>Gerenciamento de Unidades</h1>
-        <p>Utilize os botões abaixo para adicionar ou gerenciar o status das unidades.</p>
+        <p>Cadastre e gerencie as unidades dos empreendimentos</p>
 
-        <div style="margin-bottom: 20px;">
-            <button class="btn-primary" onclick="abrirModalNovo()">+ Nova Unidade (Individual)</button>
-            <button class="btn-secondary" onclick="abrirModalLote()">+ Nova Unidade em Lote</button>
+        <!-- BOTÕES DE AÇÃO -->
+        <div style="margin: 20px 0;">
+            <button class="btn-primary" id="btnNovaUnidade">+ Nova Unidade Individual</button>
+            <button class="btn-secondary" id="btnCadastroLote">+ Cadastro em Lote</button>
         </div>
 
+        <!-- TABELA DE UNIDADES -->
         <table>
             <thead>
                 <tr>
@@ -42,154 +45,146 @@
                 </tr>
             </thead>
             <tbody id="tabelaUnidades">
+                <tr>
+                    <td colspan="11" style="text-align:center;">Carregando...</td>
+                </tr>
             </tbody>
         </table>
 
     </div>
 
-    <!-- MODAL INDIVIDUAL -->
-    <div id="modalFundo" class="modal-fundo" style="display: none;">
-        <div class="modal">
-            <div class="modal-header">
-                <h2 id="tituloModal">Nova Unidade</h2>
-                <span class="fechar" onclick="fecharModal()">&times;</span>
-            </div>
-
-            <div class="modal-body">
-
-                <div class="form-group-triple">
-                    <label for="mEmpreendimento">Empreendimento:</label>
-                    <select id="mEmpreendimento" required></select>
-                </div>
-                <div class="form-group-triple">
-                    <label for="mBloco">Bloco:</label>
-                    <select id="mBloco" required></select>
-                </div>
-                <div class="form-group-triple">
-                    <label for="mUnidade">Nº da Unidade:</label>
-                    <input type="text" id="mUnidade" required>
-                </div>
+    <!-- MODAL CADASTRO INDIVIDUAL -->
+    <div id="modalIndividual" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000;">
+        <div style="background:white; max-width:800px; margin:50px auto; padding:30px; border-radius:8px; max-height:90vh; overflow-y:auto;">
+            
+            <h2 id="tituloModalIndividual">Nova Unidade</h2>
+            
+            <form id="formIndividual">
                 
-                <hr>
-
-                <div class="form-group-quad">
-                    <label for="mSituacao">Situação:</label>
-                    <select id="mSituacao">
-                        <option>Em obra</option>
-                        <option>Ajuste de cliente</option>
-                        <option>Liberada</option>
-                        <option>Aprovada</option>
-                    </select>
-                </div>
-                <div class="form-group-quad">
-                    <label for="mFinanceiro">Status Financeiro:</label>
-                    <select id="mFinanceiro">
-                        <option>Liberada</option>
-                        <option>Pendente</option>
-                    </select>
-                </div>
-                <div class="form-group-quad">
-                    <label for="mHabitavel">Habitável:</label>
-                    <select id="mHabitavel">
-                        <option>Sim</option>
-                        <option>Não</option>
-                    </select>
-                </div>
-                <div class="form-group-quad">
-                    <label for="mCVCO">Status CVCO:</label>
-                    <select id="mCVCO">
-                        <option>Liberado</option>
-                        <option>Pendente</option>
-                    </select>
-                </div>
-
-                <hr>
-
-                <div class="form-group-quad">
-                    <label for="mChaves">Status Chaves:</label>
-                    <select id="mChaves">
-                        <option>Não entregue</option>
-                        <option>Entregue</option>
-                    </select>
-                </div>
-                <div class="form-group-quad">
-                    <label for="mDataVistoria">Data Vistoria:</label>
-                    <input type="date" id="mDataVistoria">
-                </div>
-                <div class="form-group-quad">
-                    <label for="mHoraVistoria">Hora Vistoria:</label>
-                    <input type="time" id="mHoraVistoria">
-                </div>
-                <div class="form-group-quad">
-                    <label for="mAgendadoPor">Agendado Por:</label>
-                    <input type="text" id="mAgendadoPor">
-                </div>
+                <!-- LOCALIZAÇÃO -->
+                <h3 style="color:#007bff; margin-top:20px;">Localização</h3>
                 
-                <div class="form-group-full">
-                    <label for="mDataLiberacao">Data Liberação (Geral):</label>
-                    <input type="date" id="mDataLiberacao">
-                </div>
-                
-                <div class="form-group-full">
-                    <label for="mObservacao">Observações:</label>
-                    <textarea id="mObservacao" rows="3"></textarea>
+                <label>Empreendimento *</label>
+                <select id="iEmpreendimento" required>
+                    <option value="">Selecione</option>
+                </select>
+
+                <label>Bloco *</label>
+                <select id="iBloco" required>
+                    <option value="">Selecione</option>
+                </select>
+
+                <label>Nº da Unidade *</label>
+                <input type="text" id="iUnidade" required placeholder="Ex: 101">
+
+                <!-- STATUS -->
+                <h3 style="color:#007bff; margin-top:20px;">Status da Unidade</h3>
+
+                <label>Situação</label>
+                <select id="iSituacao">
+                    <option>Em obra</option>
+                    <option>Ajuste de cliente</option>
+                    <option>Liberada</option>
+                    <option>Aprovada</option>
+                </select>
+
+                <label>Status Financeiro</label>
+                <select id="iFinanceiro">
+                    <option>Pendente</option>
+                    <option>Liberada</option>
+                </select>
+
+                <label>Habitável</label>
+                <select id="iHabitavel">
+                    <option>Não</option>
+                    <option>Sim</option>
+                </select>
+
+                <label>Status CVCO</label>
+                <select id="iCVCO">
+                    <option>Pendente</option>
+                    <option>Liberado</option>
+                </select>
+
+                <!-- CHAVES E VISTORIA -->
+                <h3 style="color:#007bff; margin-top:20px;">Chaves e Vistoria</h3>
+
+                <label>Status Chaves</label>
+                <select id="iChaves">
+                    <option>Não entregue</option>
+                    <option>Entregue</option>
+                </select>
+
+                <label>Data Vistoria</label>
+                <input type="date" id="iDataVistoria">
+
+                <label>Hora Vistoria</label>
+                <input type="time" id="iHoraVistoria">
+
+                <label>Agendado Por</label>
+                <input type="text" id="iAgendadoPor">
+
+                <label>Data Liberação</label>
+                <input type="date" id="iDataLiberacao">
+
+                <label>Observações</label>
+                <textarea id="iObservacao" rows="3"></textarea>
+
+                <!-- BOTÕES -->
+                <div style="margin-top:20px; text-align:right;">
+                    <button type="button" class="btn-secondary" id="btnCancelarIndividual">Cancelar</button>
+                    <button type="submit" class="btn-primary">Salvar</button>
                 </div>
 
-            </div>
-
-            <div class="modal-footer">
-                <button class="btn-secondary" onclick="fecharModal()">Cancelar</button>
-                <button class="btn-primary" onclick="salvarModal()">Salvar</button>
-            </div>
+            </form>
 
         </div>
     </div>
 
-    <!-- MODAL LOTE -->
-    <div id="modalLoteFundo" class="modal-fundo" style="display: none;">
-        <div class="modal">
-
-            <div class="modal-header">
-                <h2 id="tituloModalLote">Cadastro de Unidades em Lote</h2>
-                <span class="fechar" onclick="fecharModalLote()">&times;</span>
-            </div>
-
-            <div class="modal-body">
-
-                <p>Preencha o empreendimento, o bloco e a faixa numérica de unidades para cadastrar.</p>
-
-                <div class="form-group-triple">
-                    <label for="lEmpreendimento">Empreendimento:</label>
-                    <select id="lEmpreendimento" required></select>
-                </div>
-                <div class="form-group-triple">
-                    <label for="lBloco">Bloco:</label>
-                    <select id="lBloco" required></select>
-                </div>
-                <div class="form-group-triple">
-                    <label for="lUnidadeInicio">Faixa Início (Ex: 101):</label>
-                    <input type="number" id="lUnidadeInicio" required>
-                </div>
-                <div class="form-group-triple">
-                    <label for="lUnidadeFim">Faixa Fim (Ex: 110):</label>
-                    <input type="number" id="lUnidadeFim" required>
-                </div>
+    <!-- MODAL CADASTRO EM LOTE -->
+    <div id="modalLote" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000;">
+        <div style="background:white; max-width:600px; margin:100px auto; padding:30px; border-radius:8px;">
+            
+            <h2>Cadastro em Lote</h2>
+            <p>Cadastre múltiplas unidades de uma vez</p>
+            
+            <form id="formLote">
                 
-            </div>
+                <label>Empreendimento *</label>
+                <select id="lEmpreendimento" required>
+                    <option value="">Selecione</option>
+                </select>
 
-            <div class="modal-footer">
-                <button class="btn-secondary" onclick="fecharModalLote()">Cancelar</button>
-                <button class="btn-primary" onclick="salvarModalLote()">Cadastrar Lote</button>
-            </div>
+                <label>Bloco *</label>
+                <select id="lBloco" required>
+                    <option value="">Selecione</option>
+                </select>
+
+                <label>Unidade Início *</label>
+                <input type="number" id="lInicio" required placeholder="Ex: 101" min="1">
+
+                <label>Unidade Fim *</label>
+                <input type="number" id="lFim" required placeholder="Ex: 110" min="1">
+
+                <div id="avisoQuantidade" style="display:none; margin:15px 0; padding:10px; background:#fff3cd; border-left:4px solid #ffc107; border-radius:4px;">
+                    Serão cadastradas <strong id="quantidadeUnidades">0</strong> unidades.
+                </div>
+
+                <!-- BOTÕES -->
+                <div style="margin-top:20px; text-align:right;">
+                    <button type="button" class="btn-secondary" id="btnCancelarLote">Cancelar</button>
+                    <button type="submit" class="btn-primary">Cadastrar Lote</button>
+                </div>
+
+            </form>
 
         </div>
     </div>
 
-    <!-- JAVASCRIPT INLINE (DENTRO DO HTML) -->
+    <!-- JAVASCRIPT -->
     <script>
-        console.log("Script carregado!"); // Teste se o script roda
-
-        const EMPREENDIMENTOS_FIXOS = [
+        // ========== CONFIGURAÇÕES ==========
+        const EMPREENDIMENTOS = [
             "New Jersey",
             "Honolulu",
             "Plaza de Espanha",
@@ -198,43 +193,51 @@
             "Federico Fellini"
         ];
 
-        const BLOCOS_FIXOS = [
+        const BLOCOS = [
             "Bloco 01",
             "Bloco 02",
-            "Bloco 03",
+            "Bloco 03"
         ];
 
-        let idAtual = null;
+        let unidadeEditandoId = null;
 
-        document.addEventListener("DOMContentLoaded", () => {
-            console.log("DOM carregado!");
+        // ========== INICIALIZAÇÃO ==========
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Sistema iniciado');
             preencherSelects();
-            listarUnidades();
+            carregarUnidades();
+            configurarEventos();
         });
 
+        // ========== PREENCHER SELECTS ==========
         function preencherSelects() {
-            console.log("preencherSelects chamado");
-            preencherSelect(document.getElementById("mEmpreendimento"), EMPREENDIMENTOS_FIXOS, "Selecione o Empreendimento");
-            preencherSelect(document.getElementById("mBloco"), BLOCOS_FIXOS, "Selecione o Bloco");
-            preencherSelect(document.getElementById("lEmpreendimento"), EMPREENDIMENTOS_FIXOS, "Selecione o Empreendimento");
-            preencherSelect(document.getElementById("lBloco"), BLOCOS_FIXOS, "Selecione o Bloco");
+            // Modal Individual
+            preencherSelect('iEmpreendimento', EMPREENDIMENTOS);
+            preencherSelect('iBloco', BLOCOS);
+            
+            // Modal Lote
+            preencherSelect('lEmpreendimento', EMPREENDIMENTOS);
+            preencherSelect('lBloco', BLOCOS);
         }
 
-        function preencherSelect(selectElement, options, defaultText) {
-            if (!selectElement) return;
-            selectElement.innerHTML = `<option value="">${defaultText}</option>`;
-            options.forEach(option => {
-                selectElement.innerHTML += `<option value="${option}">${option}</option>`;
+        function preencherSelect(id, opcoes) {
+            const select = document.getElementById(id);
+            opcoes.forEach(opcao => {
+                const option = document.createElement('option');
+                option.value = opcao;
+                option.textContent = opcao;
+                select.appendChild(option);
             });
         }
 
-        async function listarUnidades() {
-            console.log("listarUnidades chamado");
+        // ========== CARREGAR UNIDADES ==========
+        async function carregarUnidades() {
             try {
-                const res = await fetch("/unidades");
-                const unidades = await res.json();
-                const tbody = document.getElementById("tabelaUnidades");
-                tbody.innerHTML = "";
+                const response = await fetch('/unidades');
+                const unidades = await response.json();
+                
+                const tbody = document.getElementById('tabelaUnidades');
+                tbody.innerHTML = '';
 
                 if (unidades.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;">Nenhuma unidade cadastrada</td></tr>';
@@ -242,7 +245,7 @@
                 }
 
                 unidades.forEach(u => {
-                    const tr = document.createElement("tr");
+                    const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td>${u.empreendimento}</td>
                         <td>${u.bloco}</td>
@@ -255,210 +258,243 @@
                         <td>${u.dataVistoria || '-'}</td>
                         <td>${u.dataLiberacao || '-'}</td>
                         <td>
-                            <button class="btn-small btn-editar" onclick="abrirModalEdicao('${u.id}')">Editar</button>
+                            <button class="btn-small btn-editar" onclick="editarUnidade('${u.id}')">Editar</button>
                             <button class="btn-small btn-excluir" onclick="excluirUnidade('${u.id}')">Excluir</button>
                         </td>
                     `;
                     tbody.appendChild(tr);
                 });
+
+                console.log(`${unidades.length} unidades carregadas`);
             } catch (error) {
-                console.error("Erro ao listar unidades:", error);
-                alert("Erro ao carregar unidades.");
+                console.error('Erro ao carregar unidades:', error);
+                alert('Erro ao carregar unidades');
             }
         }
 
-        function abrirModalNovo() {
-            console.log("abrirModalNovo chamado!");
-            document.getElementById("tituloModal").textContent = "Nova Unidade";
-            idAtual = null;
-            document.getElementById("modalFundo").style.display = "flex";
-            document.getElementById("mUnidade").readOnly = false;
-            document.getElementById("mEmpreendimento").value = "";
-            document.getElementById("mBloco").value = "";
-            document.getElementById("mUnidade").value = "";
-            document.getElementById("mSituacao").value = "Em obra";
-            document.getElementById("mFinanceiro").value = "Pendente";
-            document.getElementById("mHabitavel").value = "Não";
-            document.getElementById("mCVCO").value = "Pendente";
-            document.getElementById("mChaves").value = "Não entregue";
-            document.getElementById("mDataVistoria").value = "";
-            document.getElementById("mHoraVistoria").value = "";
-            document.getElementById("mAgendadoPor").value = "";
-            document.getElementById("mDataLiberacao").value = "";
-            document.getElementById("mObservacao").value = "";
+        // ========== EVENTOS ==========
+        function configurarEventos() {
+            // Botões principais
+            document.getElementById('btnNovaUnidade').addEventListener('click', abrirModalNovaUnidade);
+            document.getElementById('btnCadastroLote').addEventListener('click', abrirModalLote);
+            
+            // Botões de cancelar
+            document.getElementById('btnCancelarIndividual').addEventListener('click', fecharModalIndividual);
+            document.getElementById('btnCancelarLote').addEventListener('click', fecharModalLote);
+            
+            // Forms
+            document.getElementById('formIndividual').addEventListener('submit', salvarUnidadeIndividual);
+            document.getElementById('formLote').addEventListener('submit', salvarLote);
+            
+            // Cálculo de quantidade no lote
+            document.getElementById('lInicio').addEventListener('input', calcularQuantidade);
+            document.getElementById('lFim').addEventListener('input', calcularQuantidade);
         }
 
-        async function salvarModal() {
-            console.log("salvarModal chamado!");
+        // ========== MODAL INDIVIDUAL ==========
+        function abrirModalNovaUnidade() {
+            console.log('Abrindo modal nova unidade');
+            unidadeEditandoId = null;
+            document.getElementById('tituloModalIndividual').textContent = 'Nova Unidade';
+            document.getElementById('formIndividual').reset();
+            document.getElementById('iUnidade').readOnly = false;
+            document.getElementById('modalIndividual').style.display = 'block';
+        }
 
-            const empreendimento = document.getElementById("mEmpreendimento").value;
-            const bloco = document.getElementById("mBloco").value;
-            const unidade = document.getElementById("mUnidade").value;
+        function fecharModalIndividual() {
+            document.getElementById('modalIndividual').style.display = 'none';
+            unidadeEditandoId = null;
+        }
 
-            console.log("Valores:", { empreendimento, bloco, unidade });
-
-            if (!empreendimento || !bloco || !unidade) {
-                alert("Empreendimento, Bloco e Unidade são obrigatórios.");
-                return;
-            }
+        async function salvarUnidadeIndividual(e) {
+            e.preventDefault();
+            console.log('Salvando unidade individual');
 
             const dados = {
-                empreendimento,
-                bloco,
-                unidade,
-                situacao: document.getElementById("mSituacao").value,
-                statusFinanceiro: document.getElementById("mFinanceiro").value,
-                habitavel: document.getElementById("mHabitavel").value,
-                cvco: document.getElementById("mCVCO").value,
-                chaves: document.getElementById("mChaves").value,
-                dataVistoria: document.getElementById("mDataVistoria").value || null,
-                horaVistoria: document.getElementById("mHoraVistoria").value || null,
-                agendadoPor: document.getElementById("mAgendadoPor").value || null,
-                dataLiberacao: document.getElementById("mDataLiberacao").value || null,
-                observacao: document.getElementById("mObservacao").value || null
+                empreendimento: document.getElementById('iEmpreendimento').value,
+                bloco: document.getElementById('iBloco').value,
+                unidade: document.getElementById('iUnidade').value,
+                situacao: document.getElementById('iSituacao').value,
+                statusFinanceiro: document.getElementById('iFinanceiro').value,
+                habitavel: document.getElementById('iHabitavel').value,
+                cvco: document.getElementById('iCVCO').value,
+                chaves: document.getElementById('iChaves').value,
+                dataVistoria: document.getElementById('iDataVistoria').value || null,
+                horaVistoria: document.getElementById('iHoraVistoria').value || null,
+                agendadoPor: document.getElementById('iAgendadoPor').value || null,
+                dataLiberacao: document.getElementById('iDataLiberacao').value || null,
+                observacao: document.getElementById('iObservacao').value || null
             };
 
-            const metodo = idAtual ? 'PUT' : 'POST';
-            const url = idAtual ? `/unidades/${idAtual}` : '/unidades';
-
-            console.log("Enviando:", { metodo, url, dados });
-
             try {
-                const res = await fetch(url, {
-                    method: metodo,
+                const url = unidadeEditandoId ? `/unidades/${unidadeEditandoId}` : '/unidades';
+                const method = unidadeEditandoId ? 'PUT' : 'POST';
+
+                const response = await fetch(url, {
+                    method: method,
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(dados)
                 });
 
-                console.log("Status:", res.status);
-
-                if (res.ok) {
-                    fecharModal();
-                    listarUnidades();
-                    alert("Unidade salva com sucesso!");
+                if (response.ok) {
+                    alert(unidadeEditandoId ? 'Unidade atualizada!' : 'Unidade cadastrada!');
+                    fecharModalIndividual();
+                    carregarUnidades();
                 } else {
-                    const erro = await res.text();
-                    console.error("Erro servidor:", erro);
-                    alert("Erro ao salvar.");
+                    alert('Erro ao salvar unidade');
                 }
             } catch (error) {
-                console.error("Erro comunicação:", error);
-                alert("Erro na comunicação com o servidor.");
+                console.error('Erro:', error);
+                alert('Erro ao salvar unidade');
             }
         }
 
-        function fecharModal() {
-            document.getElementById("modalFundo").style.display = "none";
-            idAtual = null;
-        }
-
-        async function abrirModalEdicao(id) {
-            try {
-                const res = await fetch(`/unidades/${id}`);
-                const u = await res.json();
-
-                if (u) {
-                    document.getElementById("tituloModal").textContent = "Editar Unidade";
-                    idAtual = id;
-                    document.getElementById("mEmpreendimento").value = u.empreendimento;
-                    document.getElementById("mBloco").value = u.bloco;
-                    document.getElementById("mUnidade").value = u.unidade;
-                    document.getElementById("mUnidade").readOnly = true;
-                    document.getElementById("mSituacao").value = u.situacao;
-                    document.getElementById("mFinanceiro").value = u.statusFinanceiro;
-                    document.getElementById("mHabitavel").value = u.habitavel;
-                    document.getElementById("mCVCO").value = u.cvco;
-                    document.getElementById("mChaves").value = u.chaves;
-                    document.getElementById("mDataVistoria").value = u.dataVistoria || "";
-                    document.getElementById("mHoraVistoria").value = u.horaVistoria || "";
-                    document.getElementById("mAgendadoPor").value = u.agendadoPor || "";
-                    document.getElementById("mDataLiberacao").value = u.dataLiberacao || "";
-                    document.getElementById("mObservacao").value = u.observacao || "";
-                    document.getElementById("modalFundo").style.display = "flex";
-                }
-            } catch (error) {
-                console.error("Erro ao editar:", error);
-                alert("Erro ao carregar dados da unidade.");
-            }
-        }
-
-        async function excluirUnidade(id) {
-            if (!confirm("Tem certeza que deseja excluir esta unidade?")) return;
+        // ========== EDITAR UNIDADE ==========
+        window.editarUnidade = async function(id) {
+            console.log('Editando unidade:', id);
             
             try {
-                const res = await fetch(`/unidades/${id}`, { method: 'DELETE' });
-                if (res.ok) {
-                    listarUnidades();
-                    alert("Unidade excluída com sucesso!");
+                const response = await fetch(`/unidades/${id}`);
+                const unidade = await response.json();
+
+                unidadeEditandoId = id;
+                document.getElementById('tituloModalIndividual').textContent = 'Editar Unidade';
+                
+                document.getElementById('iEmpreendimento').value = unidade.empreendimento;
+                document.getElementById('iBloco').value = unidade.bloco;
+                document.getElementById('iUnidade').value = unidade.unidade;
+                document.getElementById('iUnidade').readOnly = true;
+                document.getElementById('iSituacao').value = unidade.situacao;
+                document.getElementById('iFinanceiro').value = unidade.statusFinanceiro;
+                document.getElementById('iHabitavel').value = unidade.habitavel;
+                document.getElementById('iCVCO').value = unidade.cvco;
+                document.getElementById('iChaves').value = unidade.chaves;
+                document.getElementById('iDataVistoria').value = unidade.dataVistoria || '';
+                document.getElementById('iHoraVistoria').value = unidade.horaVistoria || '';
+                document.getElementById('iAgendadoPor').value = unidade.agendadoPor || '';
+                document.getElementById('iDataLiberacao').value = unidade.dataLiberacao || '';
+                document.getElementById('iObservacao').value = unidade.observacao || '';
+
+                document.getElementById('modalIndividual').style.display = 'block';
+            } catch (error) {
+                console.error('Erro ao carregar unidade:', error);
+                alert('Erro ao carregar unidade');
+            }
+        };
+
+        // ========== EXCLUIR UNIDADE ==========
+        window.excluirUnidade = async function(id) {
+            if (!confirm('Deseja realmente excluir esta unidade?')) return;
+
+            try {
+                const response = await fetch(`/unidades/${id}`, { method: 'DELETE' });
+                
+                if (response.ok) {
+                    alert('Unidade excluída!');
+                    carregarUnidades();
                 } else {
-                    alert("Erro ao excluir unidade.");
+                    alert('Erro ao excluir unidade');
                 }
             } catch (error) {
-                console.error("Erro ao excluir:", error);
-                alert("Erro ao excluir unidade.");
+                console.error('Erro:', error);
+                alert('Erro ao excluir unidade');
             }
-        }
+        };
 
+        // ========== MODAL LOTE ==========
         function abrirModalLote() {
-            console.log("abrirModalLote chamado!");
-            document.getElementById("lEmpreendimento").value = "";
-            document.getElementById("lBloco").value = "";
-            document.getElementById("lUnidadeInicio").value = "";
-            document.getElementById("lUnidadeFim").value = "";
-            document.getElementById("modalLoteFundo").style.display = "flex";
+            console.log('Abrindo modal lote');
+            document.getElementById('formLote').reset();
+            document.getElementById('avisoQuantidade').style.display = 'none';
+            document.getElementById('modalLote').style.display = 'block';
         }
 
         function fecharModalLote() {
-            document.getElementById("modalLoteFundo").style.display = "none";
+            document.getElementById('modalLote').style.display = 'none';
         }
 
-        async function salvarModalLote() {
-            console.log("salvarModalLote chamado!");
-            
-            const empreendimento = document.getElementById("lEmpreendimento").value;
-            const bloco = document.getElementById("lBloco").value;
-            const inicio = parseInt(document.getElementById("lUnidadeInicio").value);
-            const fim = parseInt(document.getElementById("lUnidadeFim").value);
+        function calcularQuantidade() {
+            const inicio = parseInt(document.getElementById('lInicio').value);
+            const fim = parseInt(document.getElementById('lFim').value);
 
-            console.log("Valores lote:", { empreendimento, bloco, inicio, fim });
+            if (inicio && fim && inicio <= fim) {
+                const quantidade = fim - inicio + 1;
+                document.getElementById('quantidadeUnidades').textContent = quantidade;
+                document.getElementById('avisoQuantidade').style.display = 'block';
+            } else {
+                document.getElementById('avisoQuantidade').style.display = 'none';
+            }
+        }
 
-            if (!empreendimento || !bloco || isNaN(inicio) || isNaN(fim) || inicio > fim) {
-                alert("Preencha todos os campos corretamente!");
+        async function salvarLote(e) {
+            e.preventDefault();
+            console.log('Salvando lote');
+
+            const dados = {
+                empreendimento: document.getElementById('lEmpreendimento').value,
+                bloco: document.getElementById('lBloco').value,
+                inicio: parseInt(document.getElementById('lInicio').value),
+                fim: parseInt(document.getElementById('lFim').value)
+            };
+
+            const quantidade = dados.fim - dados.inicio + 1;
+
+            if (quantidade > 100 && !confirm(`Você vai cadastrar ${quantidade} unidades. Confirma?`)) {
                 return;
             }
-            
-            const quantidade = fim - inicio + 1;
-            if (quantidade > 100) {
-                if (!confirm(`Você está prestes a cadastrar ${quantidade} unidades. Tem certeza?`)) return;
-            }
-
-            const dadosLote = { empreendimento, bloco, inicio, fim };
-            console.log("Enviando lote:", dadosLote);
 
             try {
-                const res = await fetch('/unidades/lote', {
+                const response = await fetch('/unidades/lote', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(dadosLote)
+                    body: JSON.stringify(dados)
                 });
 
-                console.log("Status lote:", res.status);
-
-                if (res.ok) {
+                if (response.ok) {
+                    alert(`${quantidade} unidades cadastradas!`);
                     fecharModalLote();
-                    listarUnidades();
-                    alert(`${quantidade} unidades cadastradas com sucesso!`);
+                    carregarUnidades();
                 } else {
-                    const erro = await res.json();
-                    console.error("Erro lote:", erro);
-                    alert(`Erro: ${erro.message || 'Verifique os dados'}`);
+                    alert('Erro ao cadastrar lote');
                 }
             } catch (error) {
-                console.error("Erro comunicação lote:", error);
-                alert("Erro na comunicação com o servidor.");
+                console.error('Erro:', error);
+                alert('Erro ao cadastrar lote');
             }
         }
     </script>
+
+    <style>
+        label {
+            display: block;
+            margin-top: 10px;
+            font-weight: bold;
+            color: #333;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .btn-small {
+            padding: 5px 10px;
+            margin: 0 2px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .btn-editar {
+            background: #17a2b8;
+            color: white;
+        }
+        .btn-excluir {
+            background: #dc3545;
+            color: white;
+        }
+    </style>
 
 </body>
 </html>
