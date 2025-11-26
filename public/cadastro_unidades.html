@@ -731,3 +731,120 @@
                 document.getElementById('iSituacao').value = u.situacao;
                 document.getElementById('iFinanceiro').value = u.statusFinanceiro;
                 document.getElementById('iHabitavel').value = u.habitavel;
+                document.getElementById('iCVCO').value = u.cvco;
+                document.getElementById('iChaves').value = u.chaves;
+                document.getElementById('iDataVistoria').value = u.dataVistoria || '';
+                document.getElementById('iHoraVistoria').value = u.horaVistoria || '';
+                document.getElementById('iAgendadoPor').value = u.agendadoPor || '';
+                document.getElementById('iDataLiberacao').value = u.dataLiberacao || '';
+                document.getElementById('iObservacao').value = u.observacao || '';
+                document.getElementById('modalIndividual').style.display = 'flex';
+            } catch (error) {
+                console.error('Erro ao carregar:', error);
+                alert('❌ Erro ao carregar unidade');
+            }
+        };
+
+        window.excluirUnidade = async function(id) {
+            if (!confirm('⚠️ Deseja realmente excluir esta unidade?')) return;
+            try {
+                const response = await fetch(`/unidades/${id}`, { method: 'DELETE' });
+                if (response.ok) {
+                    alert('✅ Unidade excluída!');
+                    carregarUnidades();
+                } else {
+                    alert('❌ Erro ao excluir');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('❌ Erro ao excluir');
+            }
+        };
+
+        function abrirModalLote() {
+            document.getElementById('formLote').reset();
+            document.getElementById('avisoQuantidade').style.display = 'none';
+            document.getElementById('modalLote').style.display = 'flex';
+        }
+
+        function fecharModalLote() {
+            document.getElementById('modalLote').style.display = 'none';
+        }
+
+        function calcularQuantidade() {
+            const inicio = parseInt(document.getElementById('lInicio').value);
+            const fim = parseInt(document.getElementById('lFim').value);
+            if (inicio && fim && inicio <= fim) {
+                const quantidade = fim - inicio + 1;
+                document.getElementById('quantidadeUnidades').textContent = quantidade;
+                document.getElementById('avisoQuantidade').style.display = 'block';
+            } else {
+                document.getElementById('avisoQuantidade').style.display = 'none';
+            }
+        }
+
+        async function salvarLote(e) {
+            e.preventDefault();
+            const dados = {
+                empreendimento: document.getElementById('lEmpreendimento').value,
+                bloco: document.getElementById('lBloco').value,
+                inicio: parseInt(document.getElementById('lInicio').value),
+                fim: parseInt(document.getElementById('lFim').value)
+            };
+
+            const quantidade = dados.fim - dados.inicio + 1;
+            if (quantidade > 100 && !confirm(`⚠️ Você vai cadastrar ${quantidade} unidades. Confirma?`)) return;
+
+            try {
+                const response = await fetch('/unidades/lote', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dados)
+                });
+
+                if (response.ok) {
+                    alert(`✅ ${quantidade} unidades cadastradas!`);
+                    fecharModalLote();
+                    carregarUnidades();
+                } else {
+                    alert('❌ Erro ao cadastrar lote');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('❌ Erro ao cadastrar lote');
+            }
+        }
+
+        function exportarExcel() {
+            if (unidadesFiltradas.length === 0) {
+                alert('⚠️ Nenhum dado para exportar!');
+                return;
+            }
+
+            const dados = unidadesFiltradas.map(u => ({
+                'Empreendimento': u.empreendimento,
+                'Bloco': u.bloco,
+                'Unidade': u.unidade,
+                'Situação': u.situacao,
+                'Financeiro': u.statusFinanceiro,
+                'Habitável': u.habitavel,
+                'CVCO': u.cvco,
+                'Chaves': u.chaves,
+                'Data Vistoria': u.dataVistoria || '',
+                'Hora Vistoria': u.horaVistoria || '',
+                'Agendado Por': u.agendadoPor || '',
+                'Data Liberação': u.dataLiberacao || '',
+                'Observação': u.observacao || ''
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(dados);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Unidades");
+            const dataAtual = new Date().toISOString().split('T')[0];
+            XLSX.writeFile(wb, `ChaveVR_Unidades_${dataAtual}.xlsx`);
+            alert('✅ Excel exportado com sucesso!');
+        }
+    </script>
+
+</body>
+</html>
