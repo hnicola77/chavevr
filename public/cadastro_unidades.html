@@ -5,6 +5,230 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cadastro de Unidades - ChaveVR</title>
     <link rel="stylesheet" href="/styles.css">
+    <style>
+        /* ESTILOS ADICIONAIS */
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .stat-card h3 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .stat-card .number {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 0;
+        }
+        .stat-card.green { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+        .stat-card.orange { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+        .stat-card.blue { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        
+        .filters-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            align-items: end;
+        }
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .filter-group label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #333;
+            font-size: 14px;
+        }
+        .filter-group input,
+        .filter-group select {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+        .filter-group input:focus,
+        .filter-group select:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .table-wrapper {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        table {
+            width: 100%;
+            margin: 0;
+        }
+        
+        .action-cell {
+            white-space: nowrap;
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+        }
+        .btn-icon {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .btn-edit {
+            background: #17a2b8;
+            color: white;
+        }
+        .btn-edit:hover {
+            background: #138496;
+            transform: translateY(-2px);
+        }
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+        }
+        .btn-delete:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+        }
+        
+        .footer-info {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #6c757d;
+        }
+        .footer-info strong {
+            color: #007bff;
+        }
+        
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background: white;
+            max-width: 900px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        .modal-header {
+            padding: 20px 30px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #007bff;
+            color: white;
+            border-radius: 12px 12px 0 0;
+        }
+        .modal-header h2 {
+            margin: 0;
+            font-size: 22px;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            line-height: 1;
+        }
+        .modal-body {
+            padding: 30px;
+        }
+        .modal-section {
+            margin-bottom: 25px;
+        }
+        .modal-section h3 {
+            color: #007bff;
+            margin: 0 0 15px 0;
+            font-size: 16px;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 8px;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        .form-full {
+            grid-column: 1 / -1;
+        }
+        .modal-footer {
+            padding: 20px 30px;
+            border-top: 1px solid #ddd;
+            text-align: right;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        
+        .badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge-success { background: #28a745; color: white; }
+        .badge-warning { background: #ffc107; color: #333; }
+        .badge-danger { background: #dc3545; color: white; }
+        .badge-info { background: #17a2b8; color: white; }
+        .badge-secondary { background: #6c757d; color: white; }
+        
+        .alert-info {
+            background: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 15px 0;
+            color: #0c5460;
+        }
+    </style>
 </head>
 <body>
 
@@ -18,190 +242,291 @@
     <!-- CONTEÚDO PRINCIPAL -->
     <div class="container">
         
-        <h1>Gerenciamento de Unidades</h1>
-        <p>Cadastre e gerencie as unidades dos empreendimentos</p>
+        <h1>🏢 Gerenciamento de Unidades</h1>
+        <p style="color: #6c757d;">Cadastre e gerencie todas as unidades dos empreendimentos</p>
 
-        <!-- BOTÕES DE AÇÃO -->
-        <div style="margin: 20px 0;">
-            <button class="btn-primary" id="btnNovaUnidade">+ Nova Unidade Individual</button>
-            <button class="btn-secondary" id="btnCadastroLote">+ Cadastro em Lote</button>
+        <!-- CARDS DE ESTATÍSTICAS -->
+        <div class="stats-cards">
+            <div class="stat-card">
+                <h3>Total de Unidades</h3>
+                <p class="number" id="statTotal">0</p>
+            </div>
+            <div class="stat-card green">
+                <h3>Liberadas</h3>
+                <p class="number" id="statLiberadas">0</p>
+            </div>
+            <div class="stat-card orange">
+                <h3>Chaves Entregues</h3>
+                <p class="number" id="statEntregues">0</p>
+            </div>
+            <div class="stat-card blue">
+                <h3>Em Obra</h3>
+                <p class="number" id="statEmObra">0</p>
+            </div>
         </div>
 
-        <!-- TABELA DE UNIDADES -->
-        <table>
-            <thead>
-                <tr>
-                    <th>Empreendimento</th>
-                    <th>Bloco</th>
-                    <th>Unidade</th>
-                    <th>Situação</th>
-                    <th>Financeiro</th>
-                    <th>Habitável</th>
-                    <th>CVCO</th>
-                    <th>Chaves</th>
-                    <th>Data Vistoria</th>
-                    <th>Data Liberação</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody id="tabelaUnidades">
-                <tr>
-                    <td colspan="11" style="text-align:center;">Carregando...</td>
-                </tr>
-            </tbody>
-        </table>
+        <!-- BOTÕES DE AÇÃO -->
+        <div class="action-buttons">
+            <button class="btn-primary" id="btnNovaUnidade">
+                ➕ Nova Unidade Individual
+            </button>
+            <button class="btn-secondary" id="btnCadastroLote">
+                📦 Cadastro em Lote
+            </button>
+            <button class="btn-primary" id="btnExportarExcel" style="margin-left: auto;">
+                📥 Exportar Excel
+            </button>
+        </div>
+
+        <!-- FILTROS -->
+        <div class="filters-section">
+            <div class="filter-group">
+                <label>🔍 Busca Rápida</label>
+                <input type="text" id="filtBusca" placeholder="Digite bloco ou unidade...">
+            </div>
+            <div class="filter-group">
+                <label>🏢 Empreendimento</label>
+                <select id="filtEmpreendimento">
+                    <option value="">Todos</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>🏗️ Bloco</label>
+                <select id="filtBloco">
+                    <option value="">Todos</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>📋 Situação</label>
+                <select id="filtSituacao">
+                    <option value="">Todas</option>
+                    <option value="Em obra">Em obra</option>
+                    <option value="Ajuste de cliente">Ajuste de cliente</option>
+                    <option value="Liberada">Liberada</option>
+                    <option value="Aprovada">Aprovada</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>🔑 Chaves</label>
+                <select id="filtChaves">
+                    <option value="">Todas</option>
+                    <option value="Entregue">Entregue</option>
+                    <option value="Não entregue">Não entregue</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <button class="btn-secondary" onclick="limparFiltros()" style="width: 100%;">
+                    🗑️ Limpar Filtros
+                </button>
+            </div>
+        </div>
+
+        <!-- TABELA -->
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Empreendimento</th>
+                        <th>Bloco</th>
+                        <th>Unidade</th>
+                        <th>Situação</th>
+                        <th>Financeiro</th>
+                        <th>Habitável</th>
+                        <th>CVCO</th>
+                        <th>Chaves</th>
+                        <th>Data Vistoria</th>
+                        <th>Data Liberação</th>
+                        <th style="text-align: center;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelaUnidades">
+                    <tr>
+                        <td colspan="11" style="text-align:center; padding: 40px;">Carregando...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- RODAPÉ COM INFO -->
+        <div class="footer-info">
+            Exibindo <strong id="totalExibindo">0</strong> de <strong id="totalGeral">0</strong> unidades
+        </div>
 
     </div>
 
     <!-- MODAL CADASTRO INDIVIDUAL -->
-    <div id="modalIndividual" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000;">
-        <div style="background:white; max-width:800px; margin:50px auto; padding:30px; border-radius:8px; max-height:90vh; overflow-y:auto;">
-            
-            <h2 id="tituloModalIndividual">Nova Unidade</h2>
-            
+    <div id="modalIndividual" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="tituloModalIndividual">Nova Unidade</h2>
+                <button class="modal-close" onclick="fecharModalIndividual()">&times;</button>
+            </div>
             <form id="formIndividual">
-                
-                <!-- LOCALIZAÇÃO -->
-                <h3 style="color:#007bff; margin-top:20px;">Localização</h3>
-                
-                <label>Empreendimento *</label>
-                <select id="iEmpreendimento" required>
-                    <option value="">Selecione</option>
-                </select>
+                <div class="modal-body">
+                    
+                    <div class="modal-section">
+                        <h3>📍 Localização</h3>
+                        <div class="form-grid">
+                            <div>
+                                <label>Empreendimento *</label>
+                                <select id="iEmpreendimento" required>
+                                    <option value="">Selecione</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label>Bloco *</label>
+                                <select id="iBloco" required>
+                                    <option value="">Selecione</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label>Nº da Unidade *</label>
+                                <input type="text" id="iUnidade" required placeholder="Ex: 101">
+                            </div>
+                        </div>
+                    </div>
 
-                <label>Bloco *</label>
-                <select id="iBloco" required>
-                    <option value="">Selecione</option>
-                </select>
+                    <div class="modal-section">
+                        <h3>📋 Status da Unidade</h3>
+                        <div class="form-grid">
+                            <div>
+                                <label>Situação</label>
+                                <select id="iSituacao">
+                                    <option>Em obra</option>
+                                    <option>Ajuste de cliente</option>
+                                    <option>Liberada</option>
+                                    <option>Aprovada</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label>Status Financeiro</label>
+                                <select id="iFinanceiro">
+                                    <option>Pendente</option>
+                                    <option>Liberada</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label>Habitável</label>
+                                <select id="iHabitavel">
+                                    <option>Não</option>
+                                    <option>Sim</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label>Status CVCO</label>
+                                <select id="iCVCO">
+                                    <option>Pendente</option>
+                                    <option>Liberado</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
 
-                <label>Nº da Unidade *</label>
-                <input type="text" id="iUnidade" required placeholder="Ex: 101">
+                    <div class="modal-section">
+                        <h3>🔑 Chaves e Vistoria</h3>
+                        <div class="form-grid">
+                            <div>
+                                <label>Status Chaves</label>
+                                <select id="iChaves">
+                                    <option>Não entregue</option>
+                                    <option>Entregue</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label>Data Vistoria</label>
+                                <input type="date" id="iDataVistoria">
+                            </div>
+                            <div>
+                                <label>Hora Vistoria</label>
+                                <input type="time" id="iHoraVistoria">
+                            </div>
+                            <div>
+                                <label>Agendado Por</label>
+                                <input type="text" id="iAgendadoPor" placeholder="Nome">
+                            </div>
+                            <div class="form-full">
+                                <label>Data Liberação</label>
+                                <input type="date" id="iDataLiberacao">
+                            </div>
+                        </div>
+                    </div>
 
-                <!-- STATUS -->
-                <h3 style="color:#007bff; margin-top:20px;">Status da Unidade</h3>
+                    <div class="modal-section">
+                        <h3>📝 Observações</h3>
+                        <textarea id="iObservacao" rows="3" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px;" placeholder="Informações adicionais..."></textarea>
+                    </div>
 
-                <label>Situação</label>
-                <select id="iSituacao">
-                    <option>Em obra</option>
-                    <option>Ajuste de cliente</option>
-                    <option>Liberada</option>
-                    <option>Aprovada</option>
-                </select>
-
-                <label>Status Financeiro</label>
-                <select id="iFinanceiro">
-                    <option>Pendente</option>
-                    <option>Liberada</option>
-                </select>
-
-                <label>Habitável</label>
-                <select id="iHabitavel">
-                    <option>Não</option>
-                    <option>Sim</option>
-                </select>
-
-                <label>Status CVCO</label>
-                <select id="iCVCO">
-                    <option>Pendente</option>
-                    <option>Liberado</option>
-                </select>
-
-                <!-- CHAVES E VISTORIA -->
-                <h3 style="color:#007bff; margin-top:20px;">Chaves e Vistoria</h3>
-
-                <label>Status Chaves</label>
-                <select id="iChaves">
-                    <option>Não entregue</option>
-                    <option>Entregue</option>
-                </select>
-
-                <label>Data Vistoria</label>
-                <input type="date" id="iDataVistoria">
-
-                <label>Hora Vistoria</label>
-                <input type="time" id="iHoraVistoria">
-
-                <label>Agendado Por</label>
-                <input type="text" id="iAgendadoPor">
-
-                <label>Data Liberação</label>
-                <input type="date" id="iDataLiberacao">
-
-                <label>Observações</label>
-                <textarea id="iObservacao" rows="3"></textarea>
-
-                <!-- BOTÕES -->
-                <div style="margin-top:20px; text-align:right;">
-                    <button type="button" class="btn-secondary" id="btnCancelarIndividual">Cancelar</button>
-                    <button type="submit" class="btn-primary">Salvar</button>
                 </div>
-
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" onclick="fecharModalIndividual()">Cancelar</button>
+                    <button type="submit" class="btn-primary">💾 Salvar</button>
+                </div>
             </form>
-
         </div>
     </div>
 
     <!-- MODAL CADASTRO EM LOTE -->
-    <div id="modalLote" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000;">
-        <div style="background:white; max-width:600px; margin:100px auto; padding:30px; border-radius:8px;">
-            
-            <h2>Cadastro em Lote</h2>
-            <p>Cadastre múltiplas unidades de uma vez</p>
-            
+    <div id="modalLote" class="modal-overlay">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2>📦 Cadastro em Lote</h2>
+                <button class="modal-close" onclick="fecharModalLote()">&times;</button>
+            </div>
             <form id="formLote">
-                
-                <label>Empreendimento *</label>
-                <select id="lEmpreendimento" required>
-                    <option value="">Selecione</option>
-                </select>
+                <div class="modal-body">
+                    <p style="color: #6c757d;">Cadastre múltiplas unidades sequenciais de uma vez</p>
+                    
+                    <div style="margin: 20px 0;">
+                        <label>Empreendimento *</label>
+                        <select id="lEmpreendimento" required style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px;">
+                            <option value="">Selecione</option>
+                        </select>
+                    </div>
 
-                <label>Bloco *</label>
-                <select id="lBloco" required>
-                    <option value="">Selecione</option>
-                </select>
+                    <div style="margin: 20px 0;">
+                        <label>Bloco *</label>
+                        <select id="lBloco" required style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px;">
+                            <option value="">Selecione</option>
+                        </select>
+                    </div>
 
-                <label>Unidade Início *</label>
-                <input type="number" id="lInicio" required placeholder="Ex: 101" min="1">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0;">
+                        <div>
+                            <label>Unidade Início *</label>
+                            <input type="number" id="lInicio" required placeholder="Ex: 101" min="1" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px;">
+                        </div>
+                        <div>
+                            <label>Unidade Fim *</label>
+                            <input type="number" id="lFim" required placeholder="Ex: 110" min="1" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px;">
+                        </div>
+                    </div>
 
-                <label>Unidade Fim *</label>
-                <input type="number" id="lFim" required placeholder="Ex: 110" min="1">
-
-                <div id="avisoQuantidade" style="display:none; margin:15px 0; padding:10px; background:#fff3cd; border-left:4px solid #ffc107; border-radius:4px;">
-                    Serão cadastradas <strong id="quantidadeUnidades">0</strong> unidades.
+                    <div id="avisoQuantidade" class="alert-info" style="display:none;">
+                        ⚠️ Serão cadastradas <strong id="quantidadeUnidades">0</strong> unidades.
+                    </div>
                 </div>
-
-                <!-- BOTÕES -->
-                <div style="margin-top:20px; text-align:right;">
-                    <button type="button" class="btn-secondary" id="btnCancelarLote">Cancelar</button>
-                    <button type="submit" class="btn-primary">Cadastrar Lote</button>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" onclick="fecharModalLote()">Cancelar</button>
+                    <button type="submit" class="btn-primary">📦 Cadastrar Lote</button>
                 </div>
-
             </form>
-
         </div>
     </div>
 
     <!-- JAVASCRIPT -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
-        // ========== CONFIGURAÇÕES ==========
         const EMPREENDIMENTOS = [
-            "New Jersey",
-            "Honolulu",
-            "Plaza de Espanha",
-            "Plaza Valencia",
-            "Boulevard Fecile",
-            "Federico Fellini"
+            "New Jersey", "Honolulu", "Plaza de Espanha",
+            "Plaza Valencia", "Boulevard Fecile", "Federico Fellini"
         ];
+        const BLOCOS = ["Bloco 01", "Bloco 02", "Bloco 03"];
 
-        const BLOCOS = [
-            "Bloco 01",
-            "Bloco 02",
-            "Bloco 03"
-        ];
-
+        let todasUnidades = [];
+        let unidadesFiltradas = [];
         let unidadeEditandoId = null;
 
-        // ========== INICIALIZAÇÃO ==========
+        // INICIALIZAÇÃO
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Sistema iniciado');
             preencherSelects();
@@ -209,15 +534,13 @@
             configurarEventos();
         });
 
-        // ========== PREENCHER SELECTS ==========
         function preencherSelects() {
-            // Modal Individual
             preencherSelect('iEmpreendimento', EMPREENDIMENTOS);
             preencherSelect('iBloco', BLOCOS);
-            
-            // Modal Lote
             preencherSelect('lEmpreendimento', EMPREENDIMENTOS);
             preencherSelect('lBloco', BLOCOS);
+            preencherSelect('filtEmpreendimento', EMPREENDIMENTOS);
+            preencherSelect('filtBloco', BLOCOS);
         }
 
         function preencherSelect(id, opcoes) {
@@ -230,75 +553,124 @@
             });
         }
 
-        // ========== CARREGAR UNIDADES ==========
         async function carregarUnidades() {
             try {
                 const response = await fetch('/unidades');
-                const unidades = await response.json();
-                
-                const tbody = document.getElementById('tabelaUnidades');
-                tbody.innerHTML = '';
-
-                if (unidades.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;">Nenhuma unidade cadastrada</td></tr>';
-                    return;
-                }
-
-                unidades.forEach(u => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td>${u.empreendimento}</td>
-                        <td>${u.bloco}</td>
-                        <td>${u.unidade}</td>
-                        <td>${u.situacao}</td>
-                        <td>${u.statusFinanceiro}</td>
-                        <td>${u.habitavel}</td>
-                        <td>${u.cvco}</td>
-                        <td>${u.chaves}</td>
-                        <td>${u.dataVistoria || '-'}</td>
-                        <td>${u.dataLiberacao || '-'}</td>
-                        <td>
-                            <button class="btn-small btn-editar" onclick="editarUnidade('${u.id}')">Editar</button>
-                            <button class="btn-small btn-excluir" onclick="excluirUnidade('${u.id}')">Excluir</button>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-
-                console.log(`${unidades.length} unidades carregadas`);
+                todasUnidades = await response.json();
+                aplicarFiltros();
+                atualizarEstatisticas();
             } catch (error) {
-                console.error('Erro ao carregar unidades:', error);
+                console.error('Erro ao carregar:', error);
                 alert('Erro ao carregar unidades');
             }
         }
 
-        // ========== EVENTOS ==========
+        function aplicarFiltros() {
+            const busca = document.getElementById('filtBusca').value.toLowerCase();
+            const emp = document.getElementById('filtEmpreendimento').value;
+            const bloco = document.getElementById('filtBloco').value;
+            const sit = document.getElementById('filtSituacao').value;
+            const chaves = document.getElementById('filtChaves').value;
+
+            unidadesFiltradas = todasUnidades.filter(u => {
+                if (busca && !u.bloco.toLowerCase().includes(busca) && !u.unidade.toLowerCase().includes(busca)) return false;
+                if (emp && u.empreendimento !== emp) return false;
+                if (bloco && u.bloco !== bloco) return false;
+                if (sit && u.situacao !== sit) return false;
+                if (chaves && u.chaves !== chaves) return false;
+                return true;
+            });
+
+            renderizarTabela();
+            atualizarFooter();
+        }
+
+        function renderizarTabela() {
+            const tbody = document.getElementById('tabelaUnidades');
+            tbody.innerHTML = '';
+
+            if (unidadesFiltradas.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="11" style="text-align:center; padding: 40px;">Nenhuma unidade encontrada</td></tr>';
+                return;
+            }
+
+            unidadesFiltradas.forEach(u => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${u.empreendimento}</td>
+                    <td>${u.bloco}</td>
+                    <td><strong>${u.unidade}</strong></td>
+                    <td><span class="badge badge-${getBadgeClass(u.situacao)}">${u.situacao}</span></td>
+                    <td><span class="badge badge-${u.statusFinanceiro === 'Liberada' ? 'success' : 'warning'}">${u.statusFinanceiro}</span></td>
+                    <td><span class="badge badge-${u.habitavel === 'Sim' ? 'success' : 'secondary'}">${u.habitavel}</span></td>
+                    <td><span class="badge badge-${u.cvco === 'Liberado' ? 'success' : 'warning'}">${u.cvco}</span></td>
+                    <td><span class="badge badge-${u.chaves === 'Entregue' ? 'danger' : 'info'}">${u.chaves}</span></td>
+                    <td>${u.dataVistoria || '-'}</td>
+                    <td>${u.dataLiberacao || '-'}</td>
+                    <td>
+                        <div class="action-cell">
+                            <button class="btn-icon btn-edit" onclick="editarUnidade('${u.id}')">✏️ Editar</button>
+                            <button class="btn-icon btn-delete" onclick="excluirUnidade('${u.id}')">🗑️ Excluir</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function getBadgeClass(situacao) {
+            const map = {
+                'Em obra': 'warning',
+                'Ajuste de cliente': 'info',
+                'Liberada': 'success',
+                'Aprovada': 'success',
+                'Cancelada': 'secondary'
+            };
+            return map[situacao] || 'secondary';
+        }
+
+        function atualizarEstatisticas() {
+            document.getElementById('statTotal').textContent = todasUnidades.length;
+            document.getElementById('statLiberadas').textContent = todasUnidades.filter(u => u.situacao === 'Liberada').length;
+            document.getElementById('statEntregues').textContent = todasUnidades.filter(u => u.chaves === 'Entregue').length;
+            document.getElementById('statEmObra').textContent = todasUnidades.filter(u => u.situacao === 'Em obra').length;
+        }
+
+        function atualizarFooter() {
+            document.getElementById('totalExibindo').textContent = unidadesFiltradas.length;
+            document.getElementById('totalGeral').textContent = todasUnidades.length;
+        }
+
         function configurarEventos() {
-            // Botões principais
             document.getElementById('btnNovaUnidade').addEventListener('click', abrirModalNovaUnidade);
             document.getElementById('btnCadastroLote').addEventListener('click', abrirModalLote);
-            
-            // Botões de cancelar
-            document.getElementById('btnCancelarIndividual').addEventListener('click', fecharModalIndividual);
-            document.getElementById('btnCancelarLote').addEventListener('click', fecharModalLote);
-            
-            // Forms
+            document.getElementById('btnExportarExcel').addEventListener('click', exportarExcel);
             document.getElementById('formIndividual').addEventListener('submit', salvarUnidadeIndividual);
             document.getElementById('formLote').addEventListener('submit', salvarLote);
             
-            // Cálculo de quantidade no lote
+            ['filtBusca', 'filtEmpreendimento', 'filtBloco', 'filtSituacao', 'filtChaves'].forEach(id => {
+                document.getElementById(id).addEventListener('input', aplicarFiltros);
+            });
+            
             document.getElementById('lInicio').addEventListener('input', calcularQuantidade);
             document.getElementById('lFim').addEventListener('input', calcularQuantidade);
         }
 
-        // ========== MODAL INDIVIDUAL ==========
+        function limparFiltros() {
+            document.getElementById('filtBusca').value = '';
+            document.getElementById('filtEmpreendimento').value = '';
+            document.getElementById('filtBloco').value = '';
+            document.getElementById('filtSituacao').value = '';
+            document.getElementById('filtChaves').value = '';
+            aplicarFiltros();
+        }
+
         function abrirModalNovaUnidade() {
-            console.log('Abrindo modal nova unidade');
             unidadeEditandoId = null;
             document.getElementById('tituloModalIndividual').textContent = 'Nova Unidade';
             document.getElementById('formIndividual').reset();
             document.getElementById('iUnidade').readOnly = false;
-            document.getElementById('modalIndividual').style.display = 'block';
+            document.getElementById('modalIndividual').style.display = 'flex';
         }
 
         function fecharModalIndividual() {
@@ -308,8 +680,6 @@
 
         async function salvarUnidadeIndividual(e) {
             e.preventDefault();
-            console.log('Salvando unidade individual');
-
             const dados = {
                 empreendimento: document.getElementById('iEmpreendimento').value,
                 bloco: document.getElementById('iBloco').value,
@@ -329,7 +699,6 @@
             try {
                 const url = unidadeEditandoId ? `/unidades/${unidadeEditandoId}` : '/unidades';
                 const method = unidadeEditandoId ? 'PUT' : 'POST';
-
                 const response = await fetch(url, {
                     method: method,
                     headers: { 'Content-Type': 'application/json' },
@@ -337,164 +706,28 @@
                 });
 
                 if (response.ok) {
-                    alert(unidadeEditandoId ? 'Unidade atualizada!' : 'Unidade cadastrada!');
+                    alert(unidadeEditandoId ? '✅ Unidade atualizada!' : '✅ Unidade cadastrada!');
                     fecharModalIndividual();
                     carregarUnidades();
                 } else {
-                    alert('Erro ao salvar unidade');
+                    alert('❌ Erro ao salvar');
                 }
             } catch (error) {
                 console.error('Erro:', error);
-                alert('Erro ao salvar unidade');
+                alert('❌ Erro ao salvar');
             }
         }
 
-        // ========== EDITAR UNIDADE ==========
         window.editarUnidade = async function(id) {
-            console.log('Editando unidade:', id);
-            
             try {
                 const response = await fetch(`/unidades/${id}`);
-                const unidade = await response.json();
-
+                const u = await response.json();
                 unidadeEditandoId = id;
                 document.getElementById('tituloModalIndividual').textContent = 'Editar Unidade';
-                
-                document.getElementById('iEmpreendimento').value = unidade.empreendimento;
-                document.getElementById('iBloco').value = unidade.bloco;
-                document.getElementById('iUnidade').value = unidade.unidade;
+                document.getElementById('iEmpreendimento').value = u.empreendimento;
+                document.getElementById('iBloco').value = u.bloco;
+                document.getElementById('iUnidade').value = u.unidade;
                 document.getElementById('iUnidade').readOnly = true;
-                document.getElementById('iSituacao').value = unidade.situacao;
-                document.getElementById('iFinanceiro').value = unidade.statusFinanceiro;
-                document.getElementById('iHabitavel').value = unidade.habitavel;
-                document.getElementById('iCVCO').value = unidade.cvco;
-                document.getElementById('iChaves').value = unidade.chaves;
-                document.getElementById('iDataVistoria').value = unidade.dataVistoria || '';
-                document.getElementById('iHoraVistoria').value = unidade.horaVistoria || '';
-                document.getElementById('iAgendadoPor').value = unidade.agendadoPor || '';
-                document.getElementById('iDataLiberacao').value = unidade.dataLiberacao || '';
-                document.getElementById('iObservacao').value = unidade.observacao || '';
-
-                document.getElementById('modalIndividual').style.display = 'block';
-            } catch (error) {
-                console.error('Erro ao carregar unidade:', error);
-                alert('Erro ao carregar unidade');
-            }
-        };
-
-        // ========== EXCLUIR UNIDADE ==========
-        window.excluirUnidade = async function(id) {
-            if (!confirm('Deseja realmente excluir esta unidade?')) return;
-
-            try {
-                const response = await fetch(`/unidades/${id}`, { method: 'DELETE' });
-                
-                if (response.ok) {
-                    alert('Unidade excluída!');
-                    carregarUnidades();
-                } else {
-                    alert('Erro ao excluir unidade');
-                }
-            } catch (error) {
-                console.error('Erro:', error);
-                alert('Erro ao excluir unidade');
-            }
-        };
-
-        // ========== MODAL LOTE ==========
-        function abrirModalLote() {
-            console.log('Abrindo modal lote');
-            document.getElementById('formLote').reset();
-            document.getElementById('avisoQuantidade').style.display = 'none';
-            document.getElementById('modalLote').style.display = 'block';
-        }
-
-        function fecharModalLote() {
-            document.getElementById('modalLote').style.display = 'none';
-        }
-
-        function calcularQuantidade() {
-            const inicio = parseInt(document.getElementById('lInicio').value);
-            const fim = parseInt(document.getElementById('lFim').value);
-
-            if (inicio && fim && inicio <= fim) {
-                const quantidade = fim - inicio + 1;
-                document.getElementById('quantidadeUnidades').textContent = quantidade;
-                document.getElementById('avisoQuantidade').style.display = 'block';
-            } else {
-                document.getElementById('avisoQuantidade').style.display = 'none';
-            }
-        }
-
-        async function salvarLote(e) {
-            e.preventDefault();
-            console.log('Salvando lote');
-
-            const dados = {
-                empreendimento: document.getElementById('lEmpreendimento').value,
-                bloco: document.getElementById('lBloco').value,
-                inicio: parseInt(document.getElementById('lInicio').value),
-                fim: parseInt(document.getElementById('lFim').value)
-            };
-
-            const quantidade = dados.fim - dados.inicio + 1;
-
-            if (quantidade > 100 && !confirm(`Você vai cadastrar ${quantidade} unidades. Confirma?`)) {
-                return;
-            }
-
-            try {
-                const response = await fetch('/unidades/lote', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(dados)
-                });
-
-                if (response.ok) {
-                    alert(`${quantidade} unidades cadastradas!`);
-                    fecharModalLote();
-                    carregarUnidades();
-                } else {
-                    alert('Erro ao cadastrar lote');
-                }
-            } catch (error) {
-                console.error('Erro:', error);
-                alert('Erro ao cadastrar lote');
-            }
-        }
-    </script>
-
-    <style>
-        label {
-            display: block;
-            margin-top: 10px;
-            font-weight: bold;
-            color: #333;
-        }
-        input, select, textarea {
-            width: 100%;
-            padding: 8px;
-            margin-top: 5px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        .btn-small {
-            padding: 5px 10px;
-            margin: 0 2px;
-            border: none;
-            border-radius: 3px;
-            cursor: pointer;
-        }
-        .btn-editar {
-            background: #17a2b8;
-            color: white;
-        }
-        .btn-excluir {
-            background: #dc3545;
-            color: white;
-        }
-    </style>
-
-</body>
-</html>
+                document.getElementById('iSituacao').value = u.situacao;
+                document.getElementById('iFinanceiro').value = u.statusFinanceiro;
+                document.getElementById('iHabitavel').value = u.habitavel;
