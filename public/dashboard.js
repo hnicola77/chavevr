@@ -102,7 +102,9 @@ async function carregarDados() {
         if (!response.ok) throw new Error('Falha ao carregar unidades.');
         todasUnidades = await response.json();
         
-        // Preencher filtro de Financeiro com valores únicos
+        // Preencher filtros dinâmicos com valores únicos do banco
+        preencherFiltrosSituacao();
+        preencherFiltrosChaves();
         preencherFiltroFinanceiro();
     } catch (error) {
         console.error('Erro ao carregar dados:', error);
@@ -111,10 +113,70 @@ async function carregarDados() {
     }
 }
 
+// Preenche o filtro de Situação com valores únicos do banco
+function preencherFiltrosSituacao() {
+    const fSituacao = document.getElementById('fSituacao');
+    if (!fSituacao) return;
+    
+    // Extrai valores únicos
+    const situacoesUnicas = [...new Set(
+        todasUnidades
+            .map(u => u.situacao)
+            .filter(s => s && s.trim() !== '')
+    )].sort();
+    
+    // Limpa e preenche
+    fSituacao.innerHTML = '<option value="">Todas</option>';
+    situacoesUnicas.forEach(situacao => {
+        const opt = document.createElement('option');
+        opt.value = situacao;
+        opt.textContent = situacao;
+        fSituacao.appendChild(opt);
+    });
+    
+    console.log('Filtro Situação preenchido com:', situacoesUnicas);
+}
+
+// Preenche o filtro de Chaves com valores únicos do banco
+function preencherFiltrosChaves() {
+    const fChaves = document.getElementById('fChaves');
+    if (!fChaves) return;
+    
+    // Extrai valores únicos
+    const chavesUnicas = [...new Set(
+        todasUnidades
+            .map(u => u.chaves)
+            .filter(c => c && c.trim() !== '')
+    )].sort();
+    
+    // Limpa e preenche
+    fChaves.innerHTML = '<option value="">Todas</option>';
+    chavesUnicas.forEach(chave => {
+        const opt = document.createElement('option');
+        opt.value = chave;
+        opt.textContent = chave;
+        fChaves.appendChild(opt);
+    });
+    
+    console.log('Filtro Chaves preenchido com:', chavesUnicas);
+}
+
 // Preenche o filtro de Financeiro com valores únicos do banco
 function preencherFiltroFinanceiro() {
-    const financeirosUnicos = [...new Set(todasUnidades.map(u => u.statusFinanceiro).filter(f => f))];
-    preencherSelect(document.getElementById('fFinanceiro'), financeirosUnicos.sort(), 'Todos');
+    const fFinanceiro = document.getElementById('fFinanceiro');
+    if (!fFinanceiro) return;
+    
+    // Extrai valores únicos de statusFinanceiro que não sejam null/undefined/vazio
+    const financeirosUnicos = [...new Set(
+        todasUnidades
+            .map(u => u.statusFinanceiro)
+            .filter(f => f && f.trim() !== '')
+    )].sort();
+    
+    // Preenche o select
+    preencherSelect(fFinanceiro, financeirosUnicos, 'Todos');
+    
+    console.log('Filtro Financeiro preenchido com:', financeirosUnicos);
 }
 
 /************************************************************
