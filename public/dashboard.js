@@ -101,11 +101,20 @@ async function carregarDados() {
         const response = await fetch('/unidades');
         if (!response.ok) throw new Error('Falha ao carregar unidades.');
         todasUnidades = await response.json();
+        
+        // Preencher filtro de Financeiro com valores únicos
+        preencherFiltroFinanceiro();
     } catch (error) {
         console.error('Erro ao carregar dados:', error);
         alert('Erro ao carregar dados do servidor.');
         todasUnidades = [];
     }
+}
+
+// Preenche o filtro de Financeiro com valores únicos do banco
+function preencherFiltroFinanceiro() {
+    const financeirosUnicos = [...new Set(todasUnidades.map(u => u.statusFinanceiro).filter(f => f))];
+    preencherSelect(document.getElementById('fFinanceiro'), financeirosUnicos.sort(), 'Todos');
 }
 
 /************************************************************
@@ -163,6 +172,7 @@ function aplicarFiltro() {
     const empreendimento = document.getElementById("fEmpreendimento").value;
     const bloco = document.getElementById("fBloco").value;
     const situacao = document.getElementById("fSituacao").value;
+    const financeiro = document.getElementById("fFinanceiro").value;
 
     // 2. Marca o card ativo visualmente
     marcarCardAtivo();
@@ -177,6 +187,9 @@ function aplicarFiltro() {
 
         // Filtro de Situação
         if (situacao && u.situacao !== situacao) return false;
+
+        // Filtro de Financeiro
+        if (financeiro && u.statusFinanceiro !== financeiro) return false;
 
         return true;
     });
