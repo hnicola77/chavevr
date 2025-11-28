@@ -1,346 +1,248 @@
+/************************************************************
+ * DASHBOARD – JAVASCRIPT PRINCIPAL (public/dashboard.js)
+ * VERSÃO FINAL COM CORREÇÕES DE FILTRO, SEM CVCO E COM FILTRO POR CARD
+ ************************************************************/
+
 let todasUnidades = [];
 let unidadesFiltradas = [];
+let currentCardFilter = 'total'; // Novo estado para o filtro ativo do card. 'total' é o padrão (sem filtro).
 
-// Elementos do DOM
-const filtroBuscaRapida = document.getElementById('filtroBuscaRapida');
-const filtroEmpreendimento = document.getElementById('filtroEmpreendimento');
-const filtroBloco = document.getElementById('filtroBloco');
-const filtroSituacao = document.getElementById('filtroSituacao');
-const filtroChaves = document.getElementById('filtroChaves');
-const filtroFinanceiro = document.getElementById('filtroFinanceiro');
-const filtroHabitavel = document.getElementById('filtroHabitavel');
-const filtroVistoria = document.getElementById('filtroVistoria');
-const filtroLiberacao = document.getElementById('filtroLiberacao');
+// Dados fixos (Hardcoded) para preencher os selects. 
+// Estes devem ser os mesmos usados no chavesvr.js
+const EMPREENDIMENTOS_FIXOS = [
+    "New Jersey",
+    "Honolulu",
+    "Plaza de Espanha",
+    "Plaza Valencia",
+    "Boulevard Fecile",
+    "Federico Fellini"
+];
 
-const btnAplicarFiltros = document.getElementById('btnAplicarFiltros');
-const btnLimparTudo = document.getElementById('btnLimparTudo');
-const btnExportar = document.getElementById('btnExportar');
+const BLOCOS_FIXOS = [
+    "Bloco 01",
+    "Bloco 02",
+    "Bloco 03",
+    "Bloco 04",
+    "Bloco 05",
+    "Bloco 06",
+    "Bloco 07",
+    "Bloco 08",
+    "Bloco 09",
+    "Bloco 10",
+];
 
-const corpoTabela = document.getElementById('corpoTabela');
-const emptyMessage = document.getElementById('emptyMessage');
-
-let chartSituacao = null;
-let chartEntrega = null;
-
-// ==================== CARREGAR UNIDADES ====================
-async function carregarUnidades() {
-  try {
-    const resp = await fetch('/api/unidades');
-    if (resp.status === 401 || resp.status === 403) {
-      window.location.href = '/login.html';
-      return;
-    }
-    if (!resp.ok) {
-      console.error('Erro ao carregar unidades');
-      return;
-    }
-    todasUnidades = await resp.json();
-    unidadesFiltradas = [...todasUnidades];
+/************************************************************
+ * LOAD INICIAL
+ ************************************************************/
+document.addEventListener("DOMContentLoaded", async () => {
+    // 1. Preenche os filtros com a opção inicial "vazia"
+    preencherSelectsIniciais();
     
-    popularFiltros();
-    atualizarDashboard();
-  } catch (err) {
-    console.error('Erro:', err);
-  }
-}
-
-// ==================== POPULAR FILTROS ====================
-function popularFiltros() {
-  const empreendimentos = new Set();
-  const blocos = new Set();
-  const situacoes = new Set();
-  const chaves = new Set();
-  const financeiros = new Set();
-  const habitaveis = new Set();
-  const vistorias = new Set();
-  const liberacoes = new Set();
-
-  todasUnidades.forEach(u => {
-    if (u.empreendimento) empreendimentos.add(u.empreendimento);
-    if (u.bloco) blocos.add(u.bloco);
-    if (u.situacao) situacoes.add(u.situacao);
-    if (u.chaves) chaves.add(u.chaves);
-    if (u.financeiro) financeiros.add(u.financeiro);
-    if (u.habitavel) habitaveis.add(u.habitavel);
-    if (u.vistoria) vistorias.add(u.vistoria);
-    if (u.liberacao) liberacoes.add(u.liberacao);
-  });
-
-  popularSelect(filtroEmpreendimento, Array.from(empreendimentos).sort());
-  popularSelect(filtroBloco, Array.from(blocos).sort());
-  popularSelect(filtroSituacao, Array.from(situacoes).sort());
-  popularSelect(filtroChaves, Array.from(chaves).sort());
-  popularSelect(filtroFinanceiro, Array.from(financeiros).sort());
-  popularSelect(filtroHabitavel, Array.from(habitaveis).sort());
-  popularSelect(filtroVistoria, Array.from(vistorias).sort());
-  popularSelect(filtroLiberacao, Array.from(liberacoes).sort());
-}
-
-function popularSelect(selectElement, valores) {
-  if (!selectElement) return;
-  
-  const opcaoTodos = selectElement.querySelector('option[value=""]');
-  selectElement.innerHTML = '';
-  if (opcaoTodos) selectElement.appendChild(opcaoTodos);
-
-  valores.forEach(valor => {
-    const option = document.createElement('option');
-    option.value = valor;
-    option.textContent = valor;
-    selectElement.appendChild(option);
-  });
-}
-
-// ==================== APLICAR FILTROS ====================
-function aplicarFiltros() {
-  unidadesFiltradas = todasUnidades.filter(u => {
-    // Busca rápida
-    if (filtroBuscaRapida && filtroBuscaRapida.value.trim()) {
-      const termo = filtroBuscaRapida.value.toLowerCase();
-      const encontrado = 
-        (u.bloco || '').toLowerCase().includes(termo) ||
-        (u.unidade || '').toLowerCase().includes(termo) ||
-        (u.empreendimento || '').toLowerCase().includes(termo);
-      if (!encontrado) return false;
-    }
-
-    // Filtros por coluna
-    if (filtroEmpreendimento && filtroEmpreendimento.value && u.empreendimento !== filtroEmpreendimento.value) {
-      return false;
-    }
-    if (filtroBloco && filtroBloco.value && u.bloco !== filtroBloco.value) {
-      return false;
-    }
-    if (filtroSituacao && filtroSituacao.value && u.situacao !== filtroSituacao.value) {
-      return false;
-    }
-    if (filtroChaves && filtroChaves.value && u.chaves !== filtroChaves.value) {
-      return false;
-    }
-    // ✨ NOVOS FILTROS
-    if (filtroFinanceiro && filtroFinanceiro.value && u.financeiro !== filtroFinanceiro.value) {
-      return false;
-    }
-    if (filtroHabitavel && filtroHabitavel.value && u.habitavel !== filtroHabitavel.value) {
-      return false;
-    }
-    if (filtroVistoria && filtroVistoria.value && u.vistoria !== filtroVistoria.value) {
-      return false;
-    }
-    if (filtroLiberacao && filtroLiberacao.value && u.liberacao !== filtroLiberacao.value) {
-      return false;
-    }
-
-    return true;
-  });
-
-  atualizarDashboard();
-}
-
-// ==================== LIMPAR FILTROS ====================
-function limparFiltros() {
-  if (filtroBuscaRapida) filtroBuscaRapida.value = '';
-  if (filtroEmpreendimento) filtroEmpreendimento.value = '';
-  if (filtroBloco) filtroBloco.value = '';
-  if (filtroSituacao) filtroSituacao.value = '';
-  if (filtroChaves) filtroChaves.value = '';
-  if (filtroFinanceiro) filtroFinanceiro.value = '';
-  if (filtroHabitavel) filtroHabitavel.value = '';
-  if (filtroVistoria) filtroVistoria.value = '';
-  if (filtroLiberacao) filtroLiberacao.value = '';
-  
-  aplicarFiltros();
-}
-
-// ==================== ATUALIZAR DASHBOARD ====================
-function atualizarDashboard() {
-  atualizarCards();
-  atualizarGraficos();
-  renderizarTabela();
-}
-
-function atualizarCards() {
-  const total = unidadesFiltradas.length;
-  const entregues = unidadesFiltradas.filter(u => u.chaves === 'Entregue').length;
-  const pendentes = unidadesFiltradas.filter(u => u.chaves === 'Não entregue' || u.chaves === 'Pendente').length;
-  const liberadas = unidadesFiltradas.filter(u => u.liberacao === 'Liberada').length;
-  const aprovadas = unidadesFiltradas.filter(u => u.situacao === 'Aprovada').length;
-
-  document.getElementById('cardTotal').textContent = total;
-  document.getElementById('cardEntregues').textContent = entregues;
-  document.getElementById('cardEntreguesPercent').textContent = total > 0 ? `${((entregues/total)*100).toFixed(1)}%` : '0%';
-  
-  document.getElementById('cardPendentes').textContent = pendentes;
-  document.getElementById('cardPendentesPercent').textContent = total > 0 ? `${((pendentes/total)*100).toFixed(1)}%` : '0%';
-  
-  document.getElementById('cardLiberadas').textContent = liberadas;
-  document.getElementById('cardLiberadasPercent').textContent = total > 0 ? `${((liberadas/total)*100).toFixed(1)}%` : '0%';
-  
-  document.getElementById('cardAprovadas').textContent = aprovadas;
-  document.getElementById('cardAprovadasPercent').textContent = total > 0 ? `${((aprovadas/total)*100).toFixed(1)}%` : '0%';
-}
-
-function atualizarGraficos() {
-  // Gráfico de Situação
-  const situacoes = {};
-  unidadesFiltradas.forEach(u => {
-    const sit = u.situacao || 'Sem situação';
-    situacoes[sit] = (situacoes[sit] || 0) + 1;
-  });
-
-  const ctxSituacao = document.getElementById('chartSituacao');
-  if (ctxSituacao) {
-    if (chartSituacao) chartSituacao.destroy();
+    // 2. Carrega todos os dados do servidor
+    await carregarDados();
     
-    chartSituacao = new Chart(ctxSituacao, {
-      type: 'bar',
-      data: {
-        labels: Object.keys(situacoes),
-        datasets: [{
-          label: 'Quantidade',
-          data: Object.values(situacoes),
-          backgroundColor: [
-            'rgba(234, 179, 8, 0.8)',
-            'rgba(6, 182, 212, 0.8)',
-            'rgba(34, 197, 94, 0.8)',
-            'rgba(59, 130, 246, 0.8)',
-            'rgba(239, 68, 68, 0.8)'
-          ],
-          borderWidth: 2,
-          borderColor: '#fff'
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false }
-        }
-      }
-    });
-  }
+    // 3. Aplica o filtro inicial (mostra todos os dados, pois o filtro é "")
+    aplicarFiltro();
 
-  // Gráfico de Entrega
-  const entregues = unidadesFiltradas.filter(u => u.chaves === 'Entregue').length;
-  const naoEntregues = unidadesFiltradas.length - entregues;
-
-  const ctxEntrega = document.getElementById('chartEntrega');
-  if (ctxEntrega) {
-    if (chartEntrega) chartEntrega.destroy();
-    
-    chartEntrega = new Chart(ctxEntrega, {
-      type: 'doughnut',
-      data: {
-        labels: ['Entregue', 'Não Entregue'],
-        datasets: [{
-          data: [entregues, naoEntregues],
-          backgroundColor: [
-            'rgba(239, 68, 68, 0.8)',
-            'rgba(156, 163, 175, 0.8)'
-          ],
-          borderWidth: 2,
-          borderColor: '#fff'
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false
-      }
-    });
-  }
-}
-
-function renderizarTabela() {
-  if (!corpoTabela) return;
-  
-  corpoTabela.innerHTML = '';
-
-  if (unidadesFiltradas.length === 0) {
-    if (emptyMessage) emptyMessage.style.display = 'block';
-    return;
-  }
-
-  if (emptyMessage) emptyMessage.style.display = 'none';
-
-  unidadesFiltradas.forEach(u => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${u.empreendimento || ''}</td>
-      <td>${u.bloco || ''}</td>
-      <td>${u.unidade || ''}</td>
-      <td>${u.situacao || ''}</td>
-      <td>${u.financeiro || ''}</td>
-      <td>${u.habitavel || ''}</td>
-      <td>${u.chaves || ''}</td>
-      <td>${u.vistoria || ''}</td>
-      <td>${u.liberacao || ''}</td>
-    `;
-    corpoTabela.appendChild(tr);
-  });
-}
-
-// ==================== EXPORTAR ====================
-function exportarExcel() {
-  if (unidadesFiltradas.length === 0) {
-    alert('Nenhuma unidade para exportar.');
-    return;
-  }
-
-  const header = [
-    'Empreendimento',
-    'Bloco',
-    'Unidade',
-    'Situação',
-    'Financeiro',
-    'Habitável',
-    'Chaves',
-    'Vistoria',
-    'Liberação'
-  ];
-
-  const linhas = unidadesFiltradas.map(u => [
-    u.empreendimento || '',
-    u.bloco || '',
-    u.unidade || '',
-    u.situacao || '',
-    u.financeiro || '',
-    u.habitavel || '',
-    u.chaves || '',
-    u.vistoria || '',
-    u.liberacao || ''
-  ]);
-
-  const csv = [header, ...linhas]
-    .map(linha => linha.map(v => `"${String(v).replace(/"/g, '""')}"`).join(';'))
-    .join('\n');
-
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'chavevr_unidades.csv';
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-// ==================== EVENTOS ====================
-document.addEventListener('DOMContentLoaded', () => {
-  carregarUnidades();
-
-  // Busca rápida em tempo real
-  if (filtroBuscaRapida) {
-    filtroBuscaRapida.addEventListener('input', aplicarFiltros);
-  }
-
-  if (btnAplicarFiltros) {
-    btnAplicarFiltros.addEventListener('click', aplicarFiltros);
-  }
-
-  if (btnLimparTudo) {
-    btnLimparTudo.addEventListener('click', limparFiltros);
-  }
-
-  if (btnExportar) {
-    btnExportar.addEventListener('click', exportarExcel);
-  }
+    // 4. Adiciona listener de evento para o filtro de Empreendimento
+    document.getElementById("fEmpreendimento").addEventListener("change", preencherFiltroBloco);
 });
+
+/************************************************************
+ * PREENCHER FILTROS
+ * (Garante que o value inicial seja "" para não filtrar o array)
+ ************************************************************/
+function preencherSelect(selectElement, options, defaultText) {
+    selectElement.innerHTML = '';
+    const defaultOption = document.createElement('option');
+    defaultOption.value = '';
+    defaultOption.textContent = defaultText;
+    selectElement.appendChild(defaultOption);
+
+    options.forEach(option => {
+        const opt = document.createElement('option');
+        opt.value = option;
+        opt.textContent = option;
+        selectElement.appendChild(opt);
+    });
+}
+
+function preencherSelectsIniciais() {
+    preencherSelect(document.getElementById('fEmpreendimento'), EMPREENDIMENTOS_FIXOS, 'Empreendimento');
+    // Para o bloco, a lista inicial é vazia, mas com o texto padrão
+    const fBloco = document.getElementById('fBloco');
+    fBloco.innerHTML = '<option value="">Bloco</option>'; 
+}
+
+// Preenche o filtro de Bloco com base no Empreendimento selecionado (ou todos)
+function preencherFiltroBloco() {
+    const empreendimentoSelecionado = document.getElementById("fEmpreendimento").value;
+    const fBloco = document.getElementById('fBloco');
+    
+    // Resetar o filtro de Bloco antes de preencher
+    preencherSelect(fBloco, [], 'Bloco');
+    
+    if (empreendimentoSelecionado) {
+        // Em um sistema real, você filtraria os blocos por empreendimento.
+        // Aqui, para o propósito do teste, apenas preenchemos com a lista fixa.
+        preencherSelect(fBloco, BLOCOS_FIXOS, 'Bloco');
+    }
+    
+    // Dispara a aplicação do filtro após a mudança
+    aplicarFiltro();
+}
+
+
+/************************************************************
+ * FUNÇÕES DE CARREGAMENTO DE DADOS
+ ************************************************************/
+async function carregarDados() {
+    try {
+        const response = await fetch('/unidades');
+        if (!response.ok) throw new Error('Falha ao carregar unidades.');
+        todasUnidades = await response.json();
+    } catch (error) {
+        console.error('Erro ao carregar dados:', error);
+        alert('Erro ao carregar dados do servidor.');
+        todasUnidades = [];
+    }
+}
+
+/************************************************************
+ * FUNÇÕES DE FILTRO POR CARD
+ ************************************************************/
+
+// 1. Função chamada ao clicar em um card
+function filtrarPorCard(filterKey) {
+    if (currentCardFilter === filterKey) {
+        // Se clicar no card ativo, limpa o filtro do card (volta para 'total')
+        currentCardFilter = 'total';
+    } else {
+        currentCardFilter = filterKey;
+    }
+    aplicarFiltro();
+}
+
+// 2. Limpa apenas os filtros dos selects
+function limparFiltrosGerais() {
+    document.getElementById("fEmpreendimento").value = '';
+    document.getElementById("fBloco").value = '';
+    document.getElementById("fSituacao").value = '';
+    preencherFiltroBloco(); // Repreencher o Bloco (que chama aplicarFiltro)
+}
+
+// 3. Limpa o filtro do card
+function limparFiltroCards() {
+    currentCardFilter = 'total';
+    aplicarFiltro();
+}
+
+// 4. Função para marcar o card ativo
+function marcarCardAtivo() {
+    document.querySelectorAll('.card-clickable').forEach(card => {
+        card.classList.remove('active-filter');
+    });
+
+    // Marca o card ativo, exceto 'total' (que é o padrão sem filtro)
+    if (currentCardFilter !== 'total') {
+        // Converte 'entregues' para 'cardEntregues' para encontrar o elemento
+        const cardId = 'card' + currentCardFilter.charAt(0).toUpperCase() + currentCardFilter.slice(1);
+        const activeCard = document.getElementById(cardId);
+        if (activeCard) {
+            activeCard.classList.add('active-filter');
+        }
+    }
+}
+
+
+/************************************************************
+ * APLICAÇÃO DE FILTROS E RENDERIZAÇÃO
+ ************************************************************/
+function aplicarFiltro() {
+    // 1. Coleta os valores de filtro dos selects
+    const empreendimento = document.getElementById("fEmpreendimento").value;
+    const bloco = document.getElementById("fBloco").value;
+    const situacao = document.getElementById("fSituacao").value;
+
+    // 2. Marca o card ativo visualmente
+    marcarCardAtivo();
+
+    // 3. Filtra o array principal com base nos FILTROS GERAIS (selects)
+    let unidadesGerais = todasUnidades.filter(u => {
+        // Filtro de Empreendimento
+        if (empreendimento && u.empreendimento !== empreendimento) return false;
+
+        // Filtro de Bloco
+        if (bloco && u.bloco !== bloco) return false;
+
+        // Filtro de Situação
+        if (situacao && u.situacao !== situacao) return false;
+
+        return true;
+    });
+    
+    // 4. Recalcula os cards (sempre baseado no array filtrado pelos selects)
+    // Os contadores dos cards refletem o universo filtrado pelos selects
+
+    const totalGeral = unidadesGerais.length;
+    const entreguesGeral = unidadesGerais.filter(u => u.chaves === "Entregue").length;
+    const pendentesGeral = unidadesGerais.filter(u => 
+        u.situacao !== 'Liberada' && u.situacao !== 'Aprovada' && u.chaves !== 'Entregue'
+    ).length;
+    const liberadasGeral = unidadesGerais.filter(u => u.situacao === "Liberada").length;
+    const aprovadasGeral = unidadesGerais.filter(u => u.situacao === "Aprovada").length;
+
+    // --- 5. ATUALIZAR CARDS (com base em unidadesGerais) ---
+    document.querySelector("#cardTotal p").textContent = totalGeral;
+    document.querySelector("#cardEntregues p").textContent = entreguesGeral;
+    document.querySelector("#cardPendentes p").textContent = pendentesGeral;
+    document.querySelector("#cardLiberadas p").textContent = liberadasGeral;
+    document.querySelector("#cardAprovadas p").textContent = aprovadasGeral;
+
+    // 6. Aplica o FILTRO DO CARD sobre o array já filtrado pelos selects
+    unidadesFiltradas = unidadesGerais.filter(u => {
+        switch (currentCardFilter) {
+            case 'total':
+                return true; // Sem filtro adicional
+            case 'entregues':
+                return u.chaves === "Entregue";
+            case 'pendentes':
+                // A unidade é pendente se não for Liberada, Aprovada, nem Chaves Entregues
+                return u.situacao !== 'Liberada' && u.situacao !== 'Aprovada' && u.chaves !== 'Entregue';
+            case 'liberadas':
+                return u.situacao === "Liberada";
+            case 'aprovadas':
+                return u.situacao === "Aprovada";
+            default:
+                return true;
+        }
+    });
+
+    // 7. Renderiza a tabela com o resultado final (unidadesFiltradas)
+    const tbody = document.getElementById("tabelaDash");
+    tbody.innerHTML = "";
+
+    if (unidadesFiltradas.length === 0) {
+        // Colspan é 9 (verificado no HTML)
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;">Nenhuma unidade encontrada com estes filtros.</td></tr>';
+        return;
+    }
+
+    unidadesFiltradas.forEach(u => {
+        const tr = document.createElement("tr");
+
+        // Inclui todos os campos: Empreendimento, Bloco, Unidade, Situação, Financeiro, Habitável, Chaves, Vistoria, Liberação
+        tr.innerHTML = `
+            <td>${u.empreendimento}</td>
+            <td>${u.bloco}</td>
+            <td>${u.unidade}</td>
+            <td>${u.situacao}</td>
+            <td>${u.statusFinanceiro}</td>
+            <td>${u.habitavel}</td>
+            <td>${u.chaves}</td>
+            <td>${u.dataVistoria || '-'}</td>
+            <td>${u.dataLiberacao || '-'}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
